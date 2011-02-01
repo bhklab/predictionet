@@ -1,0 +1,3 @@
+useDynLib(predictionet)
+
+export(netinf,netinf.cv,netinf.predict,fit.regrnet.causal,rank.genes.causal.perturbations,pred.onegene.regrnet.fs,regrnet2topo,pred.score,net.stab,data.discretize,mcc,network2triplets,get.pairs,get.ii4triplets.gaussian,build2.mim)

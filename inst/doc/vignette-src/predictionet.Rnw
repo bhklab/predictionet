@@ -1,0 +1,402 @@
+% Benjamin Haibe-Kains
+%
+% 
+% December 20 2010
+
+%\VignetteIndexEntry{predictionet}
+%\VignetteDepends{predictionet}
+%\VignetteKeywords{predictionet}
+%\VignettePackage{predictionet}
+
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{helvet}
+\usepackage[helvet]{sfmath}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[american]{babel}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{a4wide}
+%\usepackage{colortbl}
+%\usepackage{longtable}
+%\usepackage{multirow}
+%\usepackage{rotating}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{authblk}
+%additional packages
+%\usepackage{minitoc}
+%\usepackage{amsmath}
+%\usepackage{bm}
+%\usepackage{algorithm}
+%\usepackage{algpseudocode}
+\usepackage{tikz}
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+
+\title{\Rpackage{predictionet}: a package for inferring predictive networks from high-dimensional genomic data}
+\author[1,2]{Benjamin Haibe-Kains}
+\author[3]{Catharina Olsen}
+\author[3]{Gianluca Bontempi}
+\author[1,2]{John Quackenbush}
+\affil[1]{Computational Biology and Functional Genomics Laboratory, Dana-Farber Cancer Institute, Harvard School of Public Health}
+\affil[2]{Center for Cancer Computational Biology, Dana-Farber Cancer Institute}
+\affil[3]{Machine Learning Group, Universit\'{e} Libre de Bruxelles}
+
+\begin{document}
+
+\SweaveOpts{highlight=TRUE, tidy=TRUE, keep.space=TRUE, keep.blank.space=FALSE, keep.comment=TRUE, tex.driver=pdflatex}
+
+<<setup,echo=FALSE>>=
+setCacheDir("cache")
+options(keep.source=TRUE)
+@
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+\section{Introduction}
+
+This document describes an R package for inferring \textit{predictive} networks from high-dimensional genomic data. The goal is to develop a an inference method able to:
+\begin{itemize}
+\item combine prior information retrieved from full-text pubmed articles and structured biological databases, with genomic data (gene expression for example)
+\item deal with high-dimensional data (hundreds to thousand of variables)
+\item make predictions
+\item handle data perturbations, i.e., gene knockdowns or over-expression
+\end{itemize}
+
+\section{Getting started}
+
+
+After starting R, the package should be loaded using the following command:
+
+<<loadlib,echo=TRUE,results=hide,eval=TRUE>>=
+library(predictionet)
+@
+
+This will load \Rpackage{predictionet} as well as the dependencies.
+
+The example data named \Robject{expO.colon.ras}, which includes gene expressions (\Robject{mydata}), annotations (\Robject{myannot}), clinical data (\Robject{mydemo}), and priors (\Robject{mypriors}), is loaded with the following data command.
+
+<<loadata,echo=TRUE,results=hide,eval=TRUE>>=
+data(expO.colon.ras)
+@
+
+In order to illustrate the use of the \Rpackage{predictionet} packge to infer a network, we select the top 10 genes most differentially expressed with respect to KRAS mutation status, as published in \citep{bild2006oncogenic}.
+
+<<readata,echo=TRUE,results=hide,eval=TRUE>>=
+## number of genes to select for the analysis
+genen <- 10
+
+## select only the top genes
+goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
+mydata <- data.ras[ , goi, drop=FALSE]
+myannot <- annot.ras[goi, , drop=FALSE]
+mypriors <- priors.ras[goi, goi, drop=FALSE]
+mydemo <- demo.ras
+@
+
+The \Robject{expO.colon.ras} dataset is purely observational, the human colon tumors come from a cross-sectional study called \href{http://www.intgen.org/expo/}{expO}\footnote{\url{http://www.intgen.org/expo/}}. Therefore there is no perturbations in the data (no genes have been artificially knocked down or over-expressed); the matrix of perturbations will then be full of '0'.
+
+<<pert,echo=TRUE,results=hide,eval=TRUE>>=
+## create matrix of perturbations (no perturbations in our case)
+mypert <- matrix(0, nrow=nrow(mydata), ncol=ncol(mydata), dimnames=dimnames(mydata))
+@
+
+Let's now infer a network from the entire dataset (gene expression data and priors). The maximum number of parents is set to three (\Robject{maxparents} = 5), the priors and gene expression data are equally weighted (\Robject{priors.weight} = 0.5) and the regression based method is used to infer the network (\Robject{method} = "regrnet").
+
+<<regrnetinf,echo=TRUE,results=hide,eval=TRUE>>=
+## infer global network from data and priors
+set.seed(54321)
+mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet")
+@
+
+Once the network is inferred, its topology can be easily displayed using the \Rpackage{network} package. The resulting topology is illustrated in Figure~\ref{fig:mytopo}.
+
+<<regrnetopo,echo=TRUE,fig=TRUE,results=hide,eval=FALSE>>=
+## network topology
+mytopoglobal <- regrnet2topo(net=mynet$net, coefficients=FALSE)
+library(network)
+xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
+mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=3, vertex.col="royalblue", jitter=FALSE, pad=0.5)
+@
+
+\begin{figure}[h!]
+\centering
+<<regrnetopofig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
+## network topology
+mytopoglobal <- regrnet2topo(net=mynet$net, coefficients=FALSE)
+library(network)
+xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
+mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=3, vertex.col="royalblue", jitter=FALSE, pad=0.5)
+@
+\caption{Directed graph representing the topology of the network inferred from priors and gene expression data.}
+\label{fig:mytopo}
+\end{figure}
+
+\clearpage
+\section{Predictive ability}
+
+The network that is inferred is able to predict the expression of a gene given the expression of its parents. We argue that interactions with genes accurately predicted in the network are biologically relevant. However, as for all prediction models, such predictive ability should be assess using independent data. In this example, predictive ability will be assessed in 10-fold cross-validation.
+
+Two performance criteria have been implemented to assess the predictive ability of a network, depending on the type of model and prediction. The first performance criterion is a continuous estimate of the predictive ability of each node in the network: the normalized root mean squared error (NMSE) and the loglikelihood for the regression-based and bayesian network inference respectively.The second performance criterion is the classification accuracy, as estimated using the Matthew's correlation coefficient (MCC). Although such an criterion is easier to interpret, it relies on the discretization of the data, what is a non trivial task.
+
+The code below first discretizes the gene expressions into three equally frequent categories, and then performs a cross-validation to get an unbiased estimate of classification accuracy.
+
+<<regrnetinfcv,echo=TRUE,results=hide,eval=FALSE>>=
+## discretize gene expression data
+## categories for each variable (same number of categories for each variable in the current version)
+nbcat <- 3  ## each gene expressions will discretized in 3 equally frequent categories
+mycats <- NULL
+for(i in 1:ncol(mydata)) { mycats <- c(mycats, list(1:nbcat)) }
+names(mycats) <- dimnames(mydata)[[2]]
+cuts.discr <- t(apply(mydata, 2, quantile, probs=seq(0, 1, length.out=nbcat+1)[-c(1, nbcat+1)], na.rm=TRUE))
+cuts.discr <- lapply(apply(cuts.discr, 1, list), function(x) { return(x[[1]]) })
+## actual gene expression data
+mydata.discr <- data.discretize(data=mydata, cuts=cuts.discr)
+
+## compute folds for cross-validation
+nfold <- 10 ## 10-fold cross-validation
+if (nfold == 1) {
+	k <- 1
+	nfold <- nrow(mydata)
+} else { k <- floor(nrow(mydata) / nfold) }
+## randomize observations to prevent potential bias in the cross-validation
+smpl <- sample(nrow(mydata))
+
+## perform cross-validation
+mypredscore <- mytopo <- NULL
+for (i in 1:nfold) {
+	## fold of cross-validation
+	if (i == nfold) { s.ix <- smpl[c(((i - 1) * k + 1):nrow(mydata))] }	else { s.ix <- smpl[c(((i - 1) * k + 1):(i * k))] }
+	## s.ix contains the indices of the test set
+	
+	## infer network from training data and priors
+	mynet <- netinf(data=mydata[-s.ix, , drop=FALSE], perturbations=mypert[-s.ix, , drop=FALSE], priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet")
+	
+	## compute predictions
+	mynet.pred <-  netinf.predict(net=mynet, data=mydata[s.ix, , drop=FALSE], perturbations=mypert[s.ix, , drop=FALSE])
+
+	## performance estimation: R2
+	mynet.r2 <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="r2")
+		
+	## performance estimation: NRMSE
+	mynet.nrmse <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="nrmse")
+
+	## performance estimation: MCC
+	## discretize predicted gene expression data
+	pred.discr <- data.discretize(data=mynet.pred, cuts=cuts.discr)
+	mynet.mcc <- pred.score(data=mydata.discr[s.ix, , drop=FALSE], pred=pred.discr, categories=categories, method="mcc")
+	
+	## adjacency matrix
+	topol <- regrnet2topo(net=mynet$net, coefficients=FALSE)
+	
+	## save results
+	myr2 <- rbind(myr2, mynet.r2)
+	mynrmse <- rbind(mynrmse, mynet.nrmse)
+	mymcc <- rbind(mymcc, mynet.mcc)
+	mytopo <- c(mytopo, list(topol))
+}
+dimnames(myr2)[[1]] <- dimnames(mynrmse)[[1]] <- dimnames(mymcc)[[1]] <- names(mytopo) <- names(mynets) <- paste("fold", 1:nfold, sep=".")
+@
+
+Alternatively, you can use the function \Rfunction{netinf.cv}
+
+<<regrnetinfcvfun,echo=TRUE,results=hide,eval=FALSE>>=
+netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, maxparents=3, method="regrnet", nfold=10)
+@
+
+<<regrnetinfcvfun2,echo=FALSE,results=hide,eval=TRUE>>=
+res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, maxparents=3, method="regrnet", nfold=10)
+mypredscore.r2 <- res$prediction.score.cv$r2
+mypredscore.nrmse <- res$prediction.score.cv$nrmse
+mypredscore.mcc <- res$prediction.score.cv$mcc
+mytopo <- res$topology.cv
+mytopoglobal <- res$topology
+@
+
+The $R^2$ estimated for each gene in each fold of the cross-validation can be represented in a boxplot (Figure~\ref{fig:boxplotr2}).
+
+<<regrnetinfcvr2,echo=TRUE,fig=TRUE,results=hide,eval=FALSE>>=
+par(las=3)
+boxplot(mypredscore.r2, ylim=c(0, 1), ylab="R2 in cross-validation")
+@
+
+\begin{figure}[h!]
+\centering
+<<regrnetinfcvr2fig,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
+par(las=3,mar=c(6, 4, 4, 2) + 0.1)
+boxplot(mypredscore.r2, ylim=c(0, 1), ylab="R2 in cross-validation")
+@
+\caption{$R^2$ estimated in 10-fold cross-validation for each gene separately. As can be seen, some of the genes yielded prediction accuracy close to random ($R^2 \approx 0$), the analyst may then want to focus on the genes yielding better prediction accuracy.}
+\label{fig:boxplotr2}
+\end{figure}
+
+The $NRMSE$ estimated for each gene in each fold of the cross-validation can be represented in a boxplot (Figure~\ref{fig:boxplotnrmse}).
+
+<<regrnetinfcvnrmse,echo=TRUE,fig=TRUE,results=hide,eval=FALSE>>=
+par(las=3)
+tt <- 1 - mypredscore.nrmse
+tt[tt < 0] <- 0
+boxplot(tt, ylim=c(0, 1), ylab="(1 - NRMSE) in cross-validation")
+@
+
+\begin{figure}[h!]
+\centering
+<<regrnetinfcvnrmsefig,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
+par(las=3,mar=c(6, 4, 4, 2) + 0.1)
+tt <- 1 - mypredscore.nrmse
+tt[tt < 0] <- 0
+boxplot(tt, ylim=c(0, 1), ylab="(1 - NRMSE) in cross-validation")
+@
+\caption{$1 - NRMSE$ estimated in 10-fold cross-validation for each gene separately. As can be seen, some of the genes yielded prediction accuracy close to random ($(1 - NRMSE) \approx 0$), the analyst may then want to focus on the genes yielding better prediction accuracy.}
+\label{fig:boxplotnrmse}
+\end{figure}
+
+The $MCC$ estimated for each gene in each fold of the cross-validation can be represented in a boxplot (Figure~\ref{fig:boxplotmcc}).
+
+<<regrnetinfcvmcc,echo=TRUE,fig=TRUE,results=hide,eval=FALSE>>=
+par(las=3)
+boxplot(mypredscore.mcc, ylim=c(0, 1), ylab="MCC in cross-validation")
+abline(h=0.5, lwd=1, lty=2, col="red")
+@
+
+\begin{figure}[h!]
+\centering
+<<regrnetinfcvmccfig,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
+par(las=3,mar=c(6, 4, 4, 2) + 0.1)
+boxplot(mypredscore.mcc, ylim=c(0, 1), ylab="MCC in cross-validation")
+abline(h=0.5, lwd=1, lty=2, col="red")
+@
+\caption{$MCC$ estimated in 10-fold cross-validation for each gene separately. As can be seen, some of the genes yielded prediction accuracy close to random ($MCC \approx 0.5$), the analyst may then want to focus on the genes yielding better prediction accuracy.}
+\label{fig:boxplotmcc}
+\end{figure}
+
+\clearpage
+\section{Stability}
+
+Stability of network inference -- existence of an (un)directed edge, conservation of order relation,\dots -- can be assessed using resampling procedures. The function \Rfunction{net.stab} performs a bootstrap analysis to estimate such stability criteria. Since we already performed a 10-fold cross-validation, we will use these ten resamplings to compute the number of times the directed edges are selected during the network inference.
+
+<<topostab,echo=TRUE,results=hide,eval=TRUE>>=
+## compute stability for each edge
+edgestab <- matrix(0, nrow=ncol(mydata), ncol=ncol(mydata), dimnames=list(dimnames(mydata)[[2]], dimnames(mydata)[[2]]))
+for(i in 1:length(mytopo)) {
+	edgestab <- edgestab + mytopo[[i]]
+}
+edgestab <- edgestab / length(mytopo)
+
+## report stability of edges present in the global network
+edgestab2 <- matrix(0, nrow=ncol(mydata), ncol=ncol(mydata), dimnames=list(dimnames(mydata)[[2]], dimnames(mydata)[[2]]))
+edgestab2[mytopoglobal] <- edgestab[mytopoglobal]
+@
+
+The corresponding topology where the edges are colored according to their stability is illustrated in Figure~\ref{fig:topostab}.
+
+<<edgecol,echo=TRUE,results=hide,eval=TRUE>>=
+## preparing colors
+ii <- 0:10
+mycols <- c("#BEBEBE", rev(rainbow(10, v=0.8, alpha=0.5)))
+names(mycols) <- as.character(ii/10)
+myedgecols <- matrix("#00000000", nrow=nrow(mytopoglobal), ncol=ncol(mytopoglobal), dimnames=dimnames(mytopoglobal))
+for(k in 1:length(mycols)) { myedgecols[edgestab2 == names(mycols)[k]] <- mycols[k] }
+myedgecols[!mytopoglobal] <- "#00000000"
+@
+
+<<edgestab,echo=TRUE,fig=TRUE,results=hide,eval=FALSE>>=
+layout(rbind(1,2), heights=rbind(8,1))
+par(mar=c(1,1,1,1))
+## network topology
+xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
+plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=3, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col=myedgecols, coord=mynetlayout)
+par(mar=c(0,3,1,3))
+plot(ii+1, ii+10/6+1, bty="n", type="n", yaxt="n", xaxt="n", ylab="", xlab ="", main="Stability scale", cex.main=1)
+rect(xleft=ii+0.5, ybottom=3, xright=ii+1.4, ytop=10+3, col=mycols, border="grey")
+text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
+@
+
+\begin{figure}[h!]
+\centering
+<<edgestabfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
+layout(rbind(1,2), heights=rbind(8,1))
+par(mar=c(1,1,1,1))
+## network topology
+xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
+plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=3, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col=myedgecols, coord=mynetlayout)
+par(mar=c(0,3,1,3))
+plot(ii+1, ii+10/6+1, bty="n", type="n", yaxt="n", xaxt="n", ylab="", xlab ="", main="Stability scale", cex.main=1)
+rect(xleft=ii+0.5, ybottom=3, xright=ii+1.4, ytop=10+3, col=mycols, border="grey")
+text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
+@
+\caption{Network topology where the edges are colored according to their stability.}
+\label{fig:topostab}
+\end{figure}
+
+\clearpage
+\section{Priors}
+
+The priors can be retrieved through the \href{http://www.predictivenetworks.org}{\textit{Predictive Networks}}\footnote{\url{http://www.predictivenetworks.org}} web application developed by the \href{http://www.dfci.org}{Dana-Farber Cancer institute}\footnote{\url{http://www.dfci.org}} in collaboration with \href{http://www.entagen.com}{Entagen}\footnote{\url{http://www.entagen.com}}. Once the list of genes of interest is uploaded in the web application, one can download a \texttt{csv} file with all the interactions reported in the biomedical literature and structured biological databases. 
+
+Let's assume that the name of suche a file is \texttt{priors\_ras\_from\_webapp.csv}. One can easily read this file, count the number of times a citation is actually reported and create a matrix containing such counts.
+
+<<readpriors,echo=TRUE,results=hide,eval=TRUE>>=
+## read priors generated by the Predictive Networks web application
+pn.priors <- read.csv("priors_ras_from_webapp.csv", stringsAsFactors=FALSE)
+## the column names should be: subject, predicate, object, direction, evidence, sentence, article, source
+
+## select only the interactions in which the genes are comprised in our gene expression dataset
+myx <- is.element(pn.priors[ , "subject"], dimnames(mydata)[[2]]) & is.element(pn.priors[ , "object"], dimnames(mydata)[[2]])
+pn.priors <- pn.priors[myx, , drop=FALSE]
+
+## build prior counts
+priors.count <- matrix(0, nrow=ncol(mydata), ncol=ncol(mydata), dimnames=list(dimnames(mydata)[[2]], dimnames(mydata)[[2]]))
+
+for(i in 1:nrow(pn.priors)) {
+	switch(tolower(pn.priors[i, "direction"]), 
+	"right"={ priors.count[pn.priors[i, "subject"], pn.priors[i, "object"]] <- priors.count[pn.priors[i, "subject"], pn.priors[i, "object"]] + ifelse(tolower(pn.priors[i, "evidence"]) == "positive", +1, -1) }, 
+	"left"={ priors.count[pn.priors[i, "object"], pn.priors[i, "subject"]] <- priors.count[pn.priors[i, "object"], pn.priors[i, "subject"]] + ifelse(tolower(pn.priors[i, "evidence"]) == "positive", +1, -1) }, 
+	"undirected"={
+		priors.count[pn.priors[i, "subject"], pn.priors[i, "object"]] <- priors.count[pn.priors[i, "subject"], pn.priors[i, "object"]] + ifelse(tolower(pn.priors[i, "evidence"]) == "positive", +1, -1)
+		priors.count[pn.priors[i, "object"], pn.priors[i, "subject"]] <- priors.count[pn.priors[i, "object"], pn.priors[i, "subject"]] + ifelse(tolower(pn.priors[i, "evidence"]) == "positive", +1, -1)
+	})
+}
+## negative count represent evidence for ABSENCE of an interaction, positive otherwise
+@
+
+In order to prevent some very frequently cited interactions to skew the distribution of priors counts, one can truncate the counts to some quantile.
+
+<<truncatepriors,echo=TRUE,results=hide,keep.comment=TRUE,eval=TRUE>>=
+## quantile of maximum count
+maxcit <- 0.01
+## truncate the number of frequently cited interactions
+maxcitq <- ceiling(quantile(abs(priors.count[priors.count != 0]), probs=1-maxcit))
+if(maxcitq > 0) {  
+	priors.count[priors.count > maxcitq] <- maxcitq
+	priors.count[priors.count < -maxcitq] <- -maxcitq
+}
+@
+
+<<priorsproba,echo=FALSE,results=hide,eval=FALSE>>=
+## priors for bayesian network inference
+mypriors <- matrix(NA, nrow=nrow(priors.count), ncol=ncol(priors.count), dimnames=dimnames(priors.count))
+myx <- priors.count >= 0
+mypriors[myx] <- 0.5 + (priors.weight / 2) * priors.countn[myx]
+myx <- priors.count < 0
+mypriors[myx] <- 0.5 + (priors.weight / 2) * priors.countn[myx]
+## no priors on self interaction
+diag(mypriors) <- 0.5
+## the prior topology is not a DAG
+## TODO: implement a DFS algorithm to transform mypriors into a DAG
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{biblio}
+
+\end{document}
+
