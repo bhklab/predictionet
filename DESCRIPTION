@@ -1,0 +1,13 @@
+Package: predictionet
+Type: Package
+Title: Inference for predictive networks designed for (but not limited to) genomic data
+Version: 0.5
+Date: 2011
+Author: Benjamin Haibe-Kains, Catharina Olsen, Gianluca Bontempi, John Quackenbush
+Maintainer: Benjamin Haibe-Kains <bhaibeka@jimmy.harvard.edu>
+Description: This package contains a set of functions related to network inference combining genomic data and prior information extracted from biomedical literature and structured biological databases.The main function is able to generate networks using bayesian or regression-based inference methods; while the former is limited to < 100 of variables, the latter may infer network with hundreds of variables. Several statistics at the edge and node levels have been implemented (edge stability, predictive ability of each node, ...) in order to help the user to focus on high quality subnetworks. Ultimately, this package is used in the 'Predictive Networks' web application developed by the Dana-Farber Cancer Institute in collaboration with Entagen.
+Depends: penalized, R (>= 2.5.0)
+Suggests: catnet, network, minet
+License: GPL (>= 3)
+URL: http://compbio.dfci.harvard.edu, http://www.ulb.ac.be/di/mlg
+LazyData: yes
