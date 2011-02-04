@@ -150,20 +150,40 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 
 	data.original <- data
 	
+	if(all(apply(perturbations, 2, sum, na.rm=TRUE) == 0) & sum(is.na(perturbations)) == 0) {
+		## no perturbations
+		## estimate the mutual information matrix for all pairs of genes
+		mim.global <- build2.mim(data.original)
+		## compute mrmr score for the target genes
+		mrmr.global <- .Call("mrnet_adapted", mim.global, ncol(data.original), -1000)
+		mrmr.global <- matrix(mrmr.global, nrow=nrow(mim.global), ncol=ncol(mim.global))
+		dimnames(mrmr.global) <- list(colnames(data.original), colnames(data.original))
+	}
+	
 	for(i in 1:length(predn)) {
 		data <- data.frame(data.original)
 		
 		## remove observation where the target variabl ewas perturbed (no link between observation and target variable)
-		ind <- which(perturbations[, predn[i]] == 1)
-		if(length(ind)>0) { data <- data[-ind,] }
+		ind <- which(is.na(perturbations[, predn[i]]) | perturbations[, predn[i]] == 1)
+		if(length(ind)>0) {
+			data <- data[-ind,]
+			## since the target gene has been perturbed in some of the experiments we should recompute the mim and mrmr matrices
+			## estimate the mutual information matrix for all pairs of genes
+			mim <- build2.mim(data)
+			## compute mrmr score for the target genes
+			mrmr <- .Call("mrnet_adapted", mim, ncol(data), -1000)
+			mrmr <- matrix(mrmr, nrow=nrow(mim), ncol=ncol(mim))
+			dimnames(mrmr) <- list(colnames(data),colnames(data))
+		} else {
+			mim <- mim.global
+			mrmr <- mrmr.global
+		}
 
 		########################
 		### compute mrmr score matrix
 		########################
-		mim <- build2.mim(data)
-		mrmr <- .Call("mrnet_adapted",mim,ncol(data),-1000)
-		mrmr <- matrix(mrmr, nrow=nrow(mim), ncol=ncol(mim))
-		dimnames(mrmr) <- list(colnames(data),colnames(data))
+		
+		
 		## normalization of mrmr scores
 		mrmr <- mrmr/max(mrmr)
 		## make score symmetric
