@@ -1,30 +1,23 @@
-\name{pred.onegene.regrnet.fs}
-\alias{pred.onegene.regrnet.fs}
+\name{net2topo}
+\alias{net2topo}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-function predicting one gene at the time for the test data using the regression model built on the training data
+function transforming a network model into an adjacency matrix: parents in rows, children in columns.
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-pred.onegene.regrnet.fs(net, data, perturbations, subset, predn)
+net2topo(net, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{net}{
 %%     ~~Describe \code{net} here~~
 }
-  \item{data}{
-%%     ~~Describe \code{data} here~~
+  \item{...}{
+%%     ~~Describe \code{coefficients} here~~
 }
-  \item{perturbations}{
-%%     ~~Describe \code{perturbations} here~~
-}
-  \item{subset}{
-%%     ~~Describe \code{net} here~~
-}
-  \item{predn}{indices or names of variables to fit during network inference. If missing, all the variables will be used for network inference. }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -49,13 +42,12 @@ pred.onegene.regrnet.fs(net, data, perturbations, subset, predn)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\link{regrnet2topo}, \link{bayesnet2topo}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,
 ##--	or do  help(data=index)  for the standard data sets.
-
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

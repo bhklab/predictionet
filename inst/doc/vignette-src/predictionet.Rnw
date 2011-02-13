@@ -112,15 +112,14 @@ Let's now infer a network from the entire dataset (gene expression data and prio
 
 <<regrnetinf,echo=TRUE,results=hide,eval=TRUE>>=
 ## infer global network from data and priors
-set.seed(54321)
-mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet")
+mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
 @
 
 Once the network is inferred, its topology can be easily displayed using the \Rpackage{network} package. The resulting topology is illustrated in Figure~\ref{fig:mytopo}.
 
 <<regrnetopo,echo=TRUE,fig=TRUE,results=hide,eval=FALSE>>=
 ## network topology
-mytopoglobal <- regrnet2topo(net=mynet$net, coefficients=FALSE)
+mytopoglobal <- net2topo(net=mynet, coefficients=FALSE)
 library(network)
 xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
 mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=3, vertex.col="royalblue", jitter=FALSE, pad=0.5)
@@ -130,7 +129,7 @@ mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, bo
 \centering
 <<regrnetopofig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 ## network topology
-mytopoglobal <- regrnet2topo(net=mynet$net, coefficients=FALSE)
+mytopoglobal <- net2topo(net=mynet, coefficients=FALSE)
 library(network)
 xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
 mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=3, vertex.col="royalblue", jitter=FALSE, pad=0.5)
@@ -194,7 +193,7 @@ for (i in 1:nfold) {
 	mynet.mcc <- pred.score(data=mydata.discr[s.ix, , drop=FALSE], pred=pred.discr, categories=categories, method="mcc")
 	
 	## adjacency matrix
-	topol <- regrnet2topo(net=mynet$net, coefficients=FALSE)
+	topol <- net2topo(net=mynet, coefficients=FALSE)
 	
 	## save results
 	myr2 <- rbind(myr2, mynet.r2)
@@ -391,6 +390,12 @@ mypriors[myx] <- 0.5 + (priors.weight / 2) * priors.countn[myx]
 diag(mypriors) <- 0.5
 ## the prior topology is not a DAG
 ## TODO: implement a DFS algorithm to transform mypriors into a DAG
+@
+
+\section*{Session Info}
+
+<<sessioninfo,echo=FALSE,results=tex>>=
+toLatex(sessionInfo(), locale=FALSE)
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

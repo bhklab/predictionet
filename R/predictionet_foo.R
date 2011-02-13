@@ -26,8 +26,10 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		priors <- matrix(0, nrow=ncol(data), ncol=ncol(data), dimnames=list(dimnames(data)[[2]], dimnames(data)[[2]]))
 	}
 	if(priors.weight < 0 || priors.weight > 1) { stop("'priors.weight' should be in [0, 1]!") }
-	data <- data[subset, , drop=FALSE]
-	perturbations <- perturbations[subset, , drop=FALSE]
+	if(!missing(subset)) {
+		data <- data[subset, , drop=FALSE]
+		perturbations <- perturbations[subset, , drop=FALSE]
+	}
 	switch(method, 
 	"bayesnet"={
 		cat("Bayesian network inference is not implemented yet!\n")
@@ -57,8 +59,6 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 ### Function predicting values of nodes from a previously inferred network
 `netinf.predict` <- 
 function(net, data, categories, perturbations, subset, predn) {
-	data <- data[subset, , drop=FALSE]
-	perturbations <- perturbations[subset, , drop=FALSE]
 	switch(net$method, 
 		"bayesnet"={
 			cat("Bayesian network inference is not implemented yet!\n")
@@ -66,7 +66,7 @@ function(net, data, categories, perturbations, subset, predn) {
 		}, 
 		"regrnet"={
 		if(missing(categories)){
-			res <- pred.onegene.regrnet.fs(net=net$net, data=data, perturbations=perturbations, predn=predn)
+			res <- pred.onegene.regrnet.fs(net=net$net, data=data, perturbations=perturbations, subset=subset, predn=predn)
 			return(res)
 		} else {
 			return(0)
@@ -294,12 +294,16 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 ## predn: indices or names of variables (genes) to predict
 ### return continuous predictions for each gene
 `pred.onegene.regrnet.fs` <- 
-function(net, data, perturbations, predn) {
+function(net, data, perturbations, subset, predn) {
 	if(missing(perturbations) || is.null(perturbations)) {
 		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
 	} else {
 		perturbations <- apply(perturbations, 2, as.logical)
 		dimnames(perturbations) <- dimnames(data)
+	}
+	if(!missing(subset)) {
+		data <- data[subset, , drop=FALSE]
+		perturbations <- perturbations[subset, , drop=FALSE]
 	}
 	if(missing(predn) || is.null(predn)) { predn <- match(names(net$input), dimnames(data)[[2]]) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
 	if(!all(is.element(predn, match(names(net$input), dimnames(data)[[2]])))) { stop("some genes cannot be predicted because they have not been fitted in the network!")}
@@ -329,17 +333,43 @@ function(net, coefficients=FALSE) {
 	nr <- length(geneid)
 	net.model <- net$model
 	res <- matrix(0, nrow=length(net$varnames), ncol=nr, dimnames=list(net$varnames,geneid))
-
 	for (i in 1:nr) {
 		model.i <- net.model[[i]]
 		if(!is.numeric(model.i)) { ## non null model
-			beta <- coefficients(object=model.i)
-			res[names(beta)[-1], geneid[i]] <- beta[-1]
+			if(coefficients) {
+				beta <- coefficients(object=model.i)
+				res[names(beta)[-1], geneid[i]] <- beta[-1]
+			} else { res[net$input[[i]], geneid[i]] <- 1 }
 		}
 	}
-	
-	if(!coefficients) { res <- res != 0 }
+	return(res)
+}
 
+### function transforming a regression model into an adjacency matrix
+## net: regression model for each gene
+## coeffcients: if TRUE, the coefficients are extracted from the regression models for each existing edges,  boolean representing the presence of the edges otherwise
+### returns adjacency matrix: parents in rows and children in columns (res[i,j]==1 means edge from i to j)
+`bayesnet2topo` <- 
+function(net) {
+	stop("not implemented yet!")
+}
+
+### function transforming a regression model into an adjacency matrix
+## net: regression model for each gene
+## coeffcients: if TRUE, the coefficients are extracted from the regression models for each existing edges,  boolean representing the presence of the edges otherwise
+### returns adjacency matrix: parents in rows and children in columns (res[i,j]==1 means edge from i to j)
+`net2topo` <- 
+function(net, ...) {
+	switch(net$method, 
+	"regrnet"={
+		res <- regrnet2topo(net=net$net, ...)
+	},
+	"bayesnet"={
+		res <- bayesnet2topo(net=net$net, ...)
+	}, 
+	{
+		stop("method used to infer the network is unknown!")
+	})
 	return(res)
 }
 
@@ -352,34 +382,32 @@ function(net, coefficients=FALSE) {
 `pred.score` <- 
 function(data, pred, categories, method=c("r2", "nrmse", "mcc")) {
 	method <- match.arg(method)
-	
-	if(!missing(categories)) {
-		## discretize gene expression data
-		if(is.numeric(categories)) {
-			## discretize the data in equal frequency bins
-			if(length(categories) == 1) {
-				## use the same number of categories for each variable
-				mycats <- NULL
-				for(i in 1:ncol(data)) { mycats <- c(mycats, list(1:categories)) }
-				names(mycats) <- dimnames(data)[[2]]
-				categories <- mycats
-			} else {
-				## different number of categories for the variables
-				cuts.discr <- apply(cbind("nbcat"=categories, data), 2, function(x) { y <- x[1]; x <- x[-1]; return(quantile(x=x, probs=seq(0, 1, length.out=y+1), na.rm=TRUE)[-c(1, y+1)]) })
-			}
-		} else { cuts.discr <- categories } ## list of cutoffs for each variable
-	
-		## discretize the actual gene expression data using cutoffs identified from the training set
-		mydata.discr <- data.discretize(data=data, cuts=cuts.discr)
-		mypred.discr <- data.discretize(data=pred, cuts=cuts.discr)
-		nbcat <- sapply(cuts.discr, length) + 1
-	} else {
-		mydata.discr <- data
-		mypred.discr <- pred
-		nbcat <- apply(rbind(mydata.discr, mypred.discr), 2, max)
-		## not ideal solution since we may miss a higher class not present in the data
-	}
 
+	if(method %in% c("mcc")) {
+		## need to discretize the data to compute this performance criterion
+		if(!missing(categories)) {
+			## discretize gene expression data
+			if(is.numeric(categories)) {
+				if(length(categories) == 1) {
+					## use the same number of categories for each variable
+					categories <- rep(categories, ncol(data))
+					names(categories) <- dimnames(data)[[2]]
+				}
+				cuts.discr <- lapply(apply(rbind("nbcat"=categories, data), 2, function(x) { y <- x[1]; x <- x[-1]; return(list(quantile(x=x, probs=seq(0, 1, length.out=y+1), na.rm=TRUE)[-c(1, y+1)])) }), function(x) { return(x[[1]]) })
+			} else { cuts.discr <- categories }
+			## discretize the actual gene expression data using cutoffs identified from the training set
+			data <- data.discretize(data=data, cuts=cuts.discr)
+			pred <- data.discretize(data=pred, cuts=cuts.discr)
+			nbcat <- sapply(cuts.discr, length) + 1
+		} else {
+			nbcat <- apply(rbind(data, pred), 2, max)
+			## not ideal solution since we may miss a higher class not present in the data
+		}
+	} else {
+		nbcat <- rep(0, ncol(data))
+		names(nbcat) <- colnames(data)
+	}
+	
 	myfoo <- function(data, pred, nbcat, method) {
 		## data and pred should be vectors
 		if(all(!complete.cases(data, pred))) { return(NA) }
@@ -649,9 +677,17 @@ function(dataset, estimator=c("pearson", "spearman", "kendall")) {
 `netinf.cv` <- 
 function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"), nfold=10, causal=TRUE, seed) {
 	if(!missing(seed)) { set.seed(seed) }
-	data <- data[subset, , drop=FALSE]
-	perturbations <- perturbations[subset, , drop=FALSE]
-	
+	if(missing(perturbations)) {
+		## create matrix of no perturbations
+		perturbations <- matrix(0, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
+	}	
+	if(!missing(subset)) {
+		## select subset of the data (observations)
+		data <- data[subset, , drop=FALSE]
+		perturbations <- perturbations[subset, , drop=FALSE]
+	}
+	if(missing(predn) || is.null(predn)) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
+	nn <- dimnames(data)[[2]][predn] ## variables (genes) to fit during network inference
 	if(!missing(categories)) {
 		## discretize gene expression data
 		if(is.numeric(categories)) {
@@ -661,12 +697,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 				names(categories) <- dimnames(data)[[2]]
 			}
 			cuts.discr <- lapply(apply(rbind("nbcat"=categories, data), 2, function(x) { y <- x[1]; x <- x[-1]; return(list(quantile(x=x, probs=seq(0, 1, length.out=y+1), na.rm=TRUE)[-c(1, y+1)])) }), function(x) { return(x[[1]]) })
-			
 		} else { cuts.discr <- categories }
-		
-		if(missing(predn) || is.null(predn)) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
-		nn <- dimnames(data)[[2]][predn] ## variables (genes) to fit during network inference
-		
 		## discretize the actual gene expression data
 		mydata.discr <- data.discretize(data=data, cuts=cuts.discr)
 		categories <- cuts.discr
@@ -708,7 +739,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		## performance estimation: MCC
 		## discretize predicted gene expression data
 		pred.discr <- data.discretize(data=mynet.pred, cuts=cuts.discr[dimnames(mynet.pred)[[2]]])
-		mynet.mcc <- pred.score(data=mydata.discr[s.ix, dimnames(mynet.pred)[[2]], drop=FALSE], pred=pred.discr, categories=categories, method="mcc")[nn]
+		mynet.mcc <- pred.score(data=mydata.discr[s.ix, dimnames(mynet.pred)[[2]], drop=FALSE], pred=pred.discr, method="mcc")[nn]
 
 		## adjacency matrix
 		topol <- regrnet2topo(net=mynet$net, coefficients=FALSE)
@@ -728,7 +759,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	}
 	edgestab <- edgestab / length(mytopo)
 	## report stability of edges present in the global network
-	edgestab2[mytopoglobal] <- edgestab[mytopoglobal]
+	edgestab2[mytopoglobal == 1] <- edgestab[mytopoglobal == 1]
 	
 	
 	return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))

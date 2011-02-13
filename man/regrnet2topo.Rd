@@ -13,14 +13,14 @@ regrnet2topo(net, coefficients = FALSE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{net}{
-%%     ~~Describe \code{net} here~~
+	network model extracted from the 'net' item of a network model object.
 }
   \item{coefficients}{
-%%     ~~Describe \code{coefficients} here~~
+	logical specifying whether the adjacency matrix contains the coefficients fitted in each local regression model or 0/1. 'TRUE' for the coefficients, 'FALSE' for generating a matrix of binary indicators (0 = no edge, 1 = edge linking gene i to gene j).
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Note that a '0' in the binary adjacency matrix represents the absence of an edge BEFORE the fitting of the local (penalized) regression model while in the matrix containing the coefficients '0' means that this gene expression is not used in the local regression model, either because it was not selected for regression or because the coefficient is 0 in the fitted regression model.
 }
 \value{
 %%  ~Describe the value returned

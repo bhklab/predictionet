@@ -29,10 +29,10 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
 %%}
 \value{
 	\item{net }{ model object of the network inferred using the entire dataset. }
-	\item{net.cv }{ list of models of networks inferred at each fold of the cross-validation. }
+	\item{net.cv }{ list of network models fitted at each fold of the cross-validation. }
 	\item{topology }{ topology of the model inferred using the entire dataset. }
 	\item{topology.cv }{ topology of the networks inferred at each fold of the cross-validation. }
-	\item{prediction.score.cv }{ list f prediction scores (R2, NRMSE, MCC) computed at each fold of the cross-validation. }
+	\item{prediction.score.cv }{ list of prediction scores (R2, NRMSE, MCC) computed at each fold of the cross-validation. }
 	\item{edge.stability }{ stability of the edges inferred during cross-validation; only the stability of the edges present in the network inferred using the entire dataset is reported. }
 	\item{edge.stability.cv }{stability of the edges inferred during cross-validation. }
 }
