@@ -6,7 +6,7 @@
 Main function of the \code{predictionet} package, \code{netinf} infers a gene network by combining priors and genomic data. The two main network inference methodologies implemented so far are the bayesian and regression-based inferences.
 }
 \usage{
-netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "bayesnet"), causal = TRUE, seed)
+netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet"), causal = TRUE, seed)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,7 +19,7 @@ netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, prio
   \item{priors.weight}{ real value in [0, 1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network). If \code{priors.weight} is missing it will be optimized gene by gene in an automatic way. }
   \item{maxparents}{ maximum number of parents allowed for each gene. }
   \item{subset}{ vector of indices to select only subset of the observations. }
-  \item{method}{ \code{bayesnet} for bayesian network inference with the \code{catnet} package (not implemented yet), \code{regrnet} for regression-based network inference. }
+  \item{method}{ \code{bayesnet} for bayesian network inference with the \code{catnet} package (not implemented yet), \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the network inference deterministic. }
 }
@@ -49,13 +49,23 @@ data(expO.colon.ras)
 ## create matrix of perturbations (no perturbations in this dataset)
 pert <- matrix(0, nrow=nrow(data.ras), ncol=ncol(data.ras), dimnames=dimnames(data.ras))
 
+## number of genes to select for the analysis
+genen <- 10
+## select only the top genes
+goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
+mydata <- data.ras[ , goi, drop=FALSE]
+myannot <- annot.ras[goi, , drop=FALSE]
+mypriors <- priors.ras[goi, goi, drop=FALSE]
+mydemo <- demo.ras
+mypert <- pert[ , goi, drop=FALSE]
+
 ## infer global network from data and priors
-mynet <- netinf(data=data.ras[ ,1:10], perturbations=pert, priors=priors.ras[1:10, 1:10], priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
+mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
 
 ## plot network topology
-mytopo <- regrnet2topo(net=mynet$net, coefficients=FALSE)
+mytopo <- net2topo(net=mynet, coefficients=FALSE)
 library(network)
-xnet <- network(x=t(mytopo), matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
+xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
 plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
 
 }

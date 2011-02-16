@@ -1,32 +1,69 @@
-#include "mrnet_adapted.h"
+#include "foo_mrmr.h"
 
-SEXP mrnet_adapted( SEXP Rmim, SEXP Rsize, SEXP Rthreshold )
-{     
-	const double *mim;
-	const int* size;
-	double *rel, *red, *res, score=1,*threshold;
+
+SEXP mrnet_adapted(SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rthreshold){     
+	double *data;
+	double *rel, *red, *res, *mim, score=1,*threshold, *tmp, *res_final;
+	
+	const int *maxparents, *nvar, *nsample, *npredn;
+	int *predn, *ind;
+	
+	
 	unsigned int n, jmax=0;
-	SEXP Rres,Rred,Rrel;
-	PROTECT(Rmim = AS_NUMERIC(Rmim));
-	PROTECT(Rsize= AS_INTEGER(Rsize));
+	
+	PROTECT(Rdata = AS_NUMERIC(Rdata));
+	PROTECT(Rmaxparents= AS_INTEGER(Rmaxparents));
+	PROTECT(Rnvar= AS_INTEGER(Rnvar));
+	PROTECT(Rnsample= AS_INTEGER(Rnsample));
+	PROTECT(Rpredn= AS_INTEGER(Rpredn));
+	PROTECT(Rnpredn= AS_INTEGER(Rnpredn));
 	PROTECT(Rthreshold= AS_NUMERIC(Rthreshold));
-	mim = NUMERIC_POINTER(Rmim);
-	size = INTEGER_POINTER(Rsize);
+	
+	
+	data = NUMERIC_POINTER(Rdata);
+	nvar = INTEGER_POINTER(Rnvar);
+	nsample = INTEGER_POINTER(Rnsample);
+	predn = INTEGER_POINTER(Rpredn);
+	npredn = INTEGER_POINTER(Rnpredn);
 	threshold = NUMERIC_POINTER(Rthreshold);
-	n = *size;
+	maxparents = INTEGER_POINTER(Rmaxparents);
+	n = *nvar;
+
+	//new variables
+	SEXP Rmim, Rres,Rred,Rrel,Rind,Rtmp,Rres_final;
+
+
+	PROTECT(Rmim = NEW_NUMERIC(n*n));
 	PROTECT(Rres = NEW_NUMERIC(n*n));
+	PROTECT(Rres_final = NEW_NUMERIC(n*n));
 	PROTECT(Rrel = NEW_NUMERIC(n));
-	PROTECT(Rred = NEW_NUMERIC(n));      
-		
+	PROTECT(Rred = NEW_NUMERIC(n)); 
+	PROTECT(Rind = NEW_INTEGER(*nsample));
+	PROTECT(Rtmp = NEW_NUMERIC(n)); 
+	
+	tmp= NUMERIC_POINTER(Rtmp);	
+	ind = INTEGER_POINTER(Rind);	
+	mim = NUMERIC_POINTER(Rmim);
 	res = NUMERIC_POINTER(Rres);
 	rel = NUMERIC_POINTER(Rrel);
 	red = NUMERIC_POINTER(Rred);
+	res_final = NUMERIC_POINTER(Rres_final);
+	
+	if(*maxparents==*nvar){
+		std::cout<<"warning: the maximum number of parents can be maximally "<<*nvar-1<<std::endl;
+	}
+	for(unsigned int i=0;i < *nsample; ++i){
+		ind[i]=i;
+	}
 		
-		
-	for( unsigned int i=0; i< n; ++i ) 
-		for( unsigned int j=0; j<n; ++j ) 
+	build_mim_subset(mim, data, n, *nsample, ind, *nsample);
+
+	for( unsigned int i=0; i< n; ++i ){
+		for( unsigned int j=0; j<n; ++j ){ 
 			res[i*n+j]=*threshold;
-					//res[i*n+j]=0;
+			res_final[i*n+j]=*threshold;
+		}
+	}
 	
 	for(unsigned int i=0; i<n; ++i ) {
 				//init rel and red and select first
@@ -55,7 +92,6 @@ SEXP mrnet_adapted( SEXP Rmim, SEXP Rsize, SEXP Rthreshold )
 			}      
 			score = (rel[jmax] - (red[jmax]/k));
 			if( res[i*n+jmax] < score ) {
-			 //      res[jmax*n+i] = score;  //symmetry!!!
 				res[i*n+jmax] = score;
 			}
 								
@@ -73,11 +109,37 @@ SEXP mrnet_adapted( SEXP Rmim, SEXP Rsize, SEXP Rthreshold )
 	for( unsigned int i=0; i< n; ++i ) {
 		for( unsigned int j=0; j<n; ++j ){
 			if(j==i){
-				res[i*n+j]=0;
+				res[i*n+j]=-1000;//diagonal
 			}
 		}
 	}
-	UNPROTECT(6);
-	return Rres;
+	// force symmetry
+	for( unsigned int i=0; i< n; ++i ) {
+		for( unsigned int j=i+1; j<n; ++j ){
+			if(res[i*n+j]>res[j*n+i]){
+				res[j*n+i]=res[i*n+j];
+			}else{
+				res[i*n+j]=res[j*n+i];
+			}
+		}
+	}
+
+	//i corresponds to column; j to row in mrmr matrix; for columns which actually should be predicted
+	for(unsigned int j=0; j< *npredn; ++j ) {
+		for(unsigned int i=0; i< n; ++i ) {
+			tmp[i]= res[i+(predn[j]-1)*n];
+		}
+	
+		sort(tmp,tmp+n);
+		for(unsigned int i=0; i< n; ++i ) {
+			if(res[i+(predn[j]-1)*n]>tmp[n-(*maxparents) - 1]){
+				res_final[i+(predn[j]-1)*n]=res[i+(predn[j]-1)*n];
+			}
+		}
+	}
+
+	UNPROTECT(14);
+
+	return Rres_final;
 }
 

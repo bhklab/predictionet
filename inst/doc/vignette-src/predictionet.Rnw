@@ -47,9 +47,10 @@
 
 \begin{document}
 
-\SweaveOpts{highlight=TRUE, tidy=TRUE, keep.space=TRUE, keep.blank.space=FALSE, keep.comment=TRUE, tex.driver=pdflatex}
+\SweaveOpts{highlight=TRUE, tidy=TRUE, keep.space=TRUE, keep.blank.space=FALSE, keep.comment=TRUE}
 
 <<setup,echo=FALSE>>=
+library(pgfSweave)
 setCacheDir("cache")
 options(keep.source=TRUE)
 @
@@ -176,7 +177,7 @@ for (i in 1:nfold) {
 	## s.ix contains the indices of the test set
 	
 	## infer network from training data and priors
-	mynet <- netinf(data=mydata[-s.ix, , drop=FALSE], perturbations=mypert[-s.ix, , drop=FALSE], priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet")
+	mynet <- netinf(data=mydata[-s.ix, , drop=FALSE], perturbations=mypert[-s.ix, , drop=FALSE], priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
 	
 	## compute predictions
 	mynet.pred <-  netinf.predict(net=mynet, data=mydata[s.ix, , drop=FALSE], perturbations=mypert[s.ix, , drop=FALSE])
@@ -207,11 +208,11 @@ dimnames(myr2)[[1]] <- dimnames(mynrmse)[[1]] <- dimnames(mymcc)[[1]] <- names(m
 Alternatively, you can use the function \Rfunction{netinf.cv}
 
 <<regrnetinfcvfun,echo=TRUE,results=hide,eval=FALSE>>=
-netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, maxparents=3, method="regrnet", nfold=10)
+netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, maxparents=3, method="regrnet", nfold=10, seed=54321)
 @
 
 <<regrnetinfcvfun2,echo=FALSE,results=hide,eval=TRUE>>=
-res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, maxparents=3, method="regrnet", nfold=10)
+res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, maxparents=3, method="regrnet", nfold=10, seed=54321)
 mypredscore.r2 <- res$prediction.score.cv$r2
 mypredscore.nrmse <- res$prediction.score.cv$nrmse
 mypredscore.mcc <- res$prediction.score.cv$mcc
@@ -230,7 +231,7 @@ boxplot(mypredscore.r2, ylim=c(0, 1), ylab="R2 in cross-validation")
 \centering
 <<regrnetinfcvr2fig,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 par(las=3,mar=c(6, 4, 4, 2) + 0.1)
-boxplot(mypredscore.r2, ylim=c(0, 1), ylab="R2 in cross-validation")
+boxplot(mypredscore.r2, ylim=c(0, 1), ylab="$R^2$ in cross-validation")
 @
 \caption{$R^2$ estimated in 10-fold cross-validation for each gene separately. As can be seen, some of the genes yielded prediction accuracy close to random ($R^2 \approx 0$), the analyst may then want to focus on the genes yielding better prediction accuracy.}
 \label{fig:boxplotr2}
@@ -251,7 +252,7 @@ boxplot(tt, ylim=c(0, 1), ylab="(1 - NRMSE) in cross-validation")
 par(las=3,mar=c(6, 4, 4, 2) + 0.1)
 tt <- 1 - mypredscore.nrmse
 tt[tt < 0] <- 0
-boxplot(tt, ylim=c(0, 1), ylab="(1 - NRMSE) in cross-validation")
+boxplot(tt, ylim=c(0, 1), ylab="($1 - NRMSE$) in cross-validation")
 @
 \caption{$1 - NRMSE$ estimated in 10-fold cross-validation for each gene separately. As can be seen, some of the genes yielded prediction accuracy close to random ($(1 - NRMSE) \approx 0$), the analyst may then want to focus on the genes yielding better prediction accuracy.}
 \label{fig:boxplotnrmse}
@@ -269,7 +270,7 @@ abline(h=0.5, lwd=1, lty=2, col="red")
 \centering
 <<regrnetinfcvmccfig,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 par(las=3,mar=c(6, 4, 4, 2) + 0.1)
-boxplot(mypredscore.mcc, ylim=c(0, 1), ylab="MCC in cross-validation")
+boxplot(mypredscore.mcc, ylim=c(0, 1), ylab="$MCC$ in cross-validation")
 abline(h=0.5, lwd=1, lty=2, col="red")
 @
 \caption{$MCC$ estimated in 10-fold cross-validation for each gene separately. As can be seen, some of the genes yielded prediction accuracy close to random ($MCC \approx 0.5$), the analyst may then want to focus on the genes yielding better prediction accuracy.}
@@ -291,7 +292,7 @@ edgestab <- edgestab / length(mytopo)
 
 ## report stability of edges present in the global network
 edgestab2 <- matrix(0, nrow=ncol(mydata), ncol=ncol(mydata), dimnames=list(dimnames(mydata)[[2]], dimnames(mydata)[[2]]))
-edgestab2[mytopoglobal] <- edgestab[mytopoglobal]
+edgestab2[mytopoglobal == 1] <- edgestab[mytopoglobal == 1]
 @
 
 The corresponding topology where the edges are colored according to their stability is illustrated in Figure~\ref{fig:topostab}.
@@ -303,7 +304,7 @@ mycols <- c("#BEBEBE", rev(rainbow(10, v=0.8, alpha=0.5)))
 names(mycols) <- as.character(ii/10)
 myedgecols <- matrix("#00000000", nrow=nrow(mytopoglobal), ncol=ncol(mytopoglobal), dimnames=dimnames(mytopoglobal))
 for(k in 1:length(mycols)) { myedgecols[edgestab2 == names(mycols)[k]] <- mycols[k] }
-myedgecols[!mytopoglobal] <- "#00000000"
+myedgecols[mytopoglobal != 1] <- "#00000000"
 @
 
 <<edgestab,echo=TRUE,fig=TRUE,results=hide,eval=FALSE>>=
