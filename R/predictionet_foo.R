@@ -47,8 +47,10 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 			}
 			## rescale the priors to have values in [-1, 1]
 			priors <- priors / max(abs(priors), na.rm=TRUE)
-		} else if(max(priors)>1 || min(priors)< -1) {
-			stop("'priors' should contain count values (e.g. number of citations) for method 'regrnet' if 'priors.count' is TRUE and values in [-1,1] if'priors.count' is FALSE!")
+		} else {
+			if(max(priors, na.rm=TRUE) > 1 || min(priors, na.rm=TRUE) < 0) { stop("'priors' should contain probabilities of interactions if 'priors.count' is FALSE!") }
+			## priors are probabilties taht should be rescale in [-1, 1]
+			priors <- (priors - 0.5) * 2
 		}
 		bnet.regr <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, priors.weight=priors.weight, causal=causal, seed=seed)
 		return(list("method"=method, "net"=bnet.regr))
@@ -152,9 +154,9 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 	########################
 	### initialize variables
 	########################
-	res.netw <- matrix(0, nrow=ncol(data), ncol=length(predn), dimnames=list(dimnames(data)[[2]], dimnames(data)[[2]][predn]))
 	res <- matrix(NA, nrow=length(predn), ncol=ncol(data) - 1, dimnames=list(dimnames(data)[[2]][predn], seq(1, ncol(data) - 1)))
-
+	res.netw <- matrix(0, nrow=ncol(data), ncol=length(predn), dimnames=list(dimnames(data)[[2]], dimnames(data)[[2]][predn]))
+	
 	data.original <- data.matrix(data)
 	
 	if(all(apply(perturbations, 2, sum, na.rm=TRUE) == 0) & sum(is.na(perturbations)) == 0) {
@@ -201,7 +203,6 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 			## find all adjacencies of node to predict in score
 			########################
 			tmp.adj <- matrix(0,ncol=ncol(data),nrow=ncol(data), dimnames=list(colnames(data), colnames(data)))
-
 			tmp.adj[predn[i],] <- tmp.adj[ ,predn[i]] <- score[ ,predn[i]]
 
 			########################
@@ -245,10 +246,17 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 			parents <- which(score[ , predn[i]] != 0)
 			if(length(parents) == 0) { parents <- NULL }
 		}
-		# parents into network matrix
-		res.netw[parents,i] <- score[parents,predn[i]]
+		## parents into network matrix
+		if(!is.null(parents)) {
+			## take the minimum between the mrmr scores and 0 for the genes for which we were not able to infer causality
+			tt <- score[ ,predn[i]]
+			parix <- which(score[ ,predn[i]] != 0)
+			tt[setdiff(parix, parents)] <- ifelse(tt[setdiff(parix, parents)] < 0, tt[setdiff(parix, parents)], 0)
+			## it is not smooth but it penalized the genes with positive mrmr score but for which we do not evidence for causality
+			res.netw[ ,i] <- tt
+		}
 	}
-	
+
 	########################
 	## w*M+(1-w)*P weighted score from prior knowledge and data
 	########################
