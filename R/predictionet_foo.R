@@ -159,6 +159,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 	
 	data.original <- data.matrix(data)
 	
+	mrmr.global <- NULL
 	if(all(apply(perturbations, 2, sum, na.rm=TRUE) == 0) & sum(is.na(perturbations)) == 0) {
 		## no perturbations
 		## compute mrmr score for the target genes
@@ -168,7 +169,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 		dimnames(mrmr.global) <- list(colnames(data.original), colnames(data.original))
 		mrmr.global[mrmr.global == -1000] <- NA
 	}
-	
+
 	for(i in 1:length(predn)) {
 		data <- data.original
 		## remove observation where the target variabl ewas perturbed (no link between observation and target variable)
@@ -256,7 +257,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 			res.netw[ ,i] <- tt
 		}
 	}
-
+	
 	########################
 	## w*M+(1-w)*P weighted score from prior knowledge and data
 	########################
