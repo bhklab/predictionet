@@ -47,6 +47,7 @@ void build_mim_subset(double mim[],double data[],int nvar,int nsample, int subse
 	}
 	
 	for(unsigned int i=0; i< nvar; ++i){
+		mim[i*nvar+i]=0;
 		for(unsigned int j=i+1; j< nvar; ++j){
 			tmp=get_correlation(data_x,i*size_subset,j*size_subset,size_subset);
 			mim[j*nvar+i]= -0.5* log (1-tmp*tmp);
