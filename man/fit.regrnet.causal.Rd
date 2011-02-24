@@ -8,7 +8,7 @@ function fitting a regression model for each gene in the data
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-fit.regrnet.causal(data, perturbations, priors, predn, maxparents, priors.weight, causal = TRUE, seed)
+fit.regrnet.causal(data, perturbations, priors, predn, maxparents, priors.weight, regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,6 +28,7 @@ fit.regrnet.causal(data, perturbations, priors, predn, maxparents, priors.weight
   \item{priors.weight}{
 %%     ~~Describe \code{priors.weight} here~~
 }
+	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the network inference deterministic. }
 }

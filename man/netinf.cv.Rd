@@ -6,7 +6,7 @@
 The function \code{netinf.cv} perform a cross-validation loop and infers a gene network by combining priors and genomic data in each fold. This allows to estimate the predictive ability of the inferred network as well as edge stability.
 }
 \usage{
-netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet"), nfold=10, causal = TRUE, seed)
+netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,6 +20,7 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
   \item{maxparents}{ maximum number of parents allowed for each gene. }
   \item{subset}{ vector of indices to select only subset of the observations. }
   \item{method}{ \code{bayesnet} for bayesian network inference with the \code{catnet} package (not implemented yet), \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference. }
+	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
 	\item{nfold}{ number of folds for the cross-validation. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the cross-validation and network inference deterministic. }
