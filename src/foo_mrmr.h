@@ -16,7 +16,7 @@ using namespace std;
 extern "C" 
 {
 	SEXP mrnet_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
-	SEXP mrmr_ensemble(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP rep_boot, SEXP maxnsol);
+	SEXP mrmr_ensemble(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP rep_boot, SEXP maxnsol, SEXP threshold);
 
 }
 
