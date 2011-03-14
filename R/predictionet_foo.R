@@ -16,7 +16,7 @@
 `netinf` <- 
 function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet"), causal=TRUE, regrmodel=c("linear", "linear.penalized"), seed) {
 	
-	if(!missing(predn) && !is.null(predn) && length(predn) < 2) { stop("length of parameter 'predn' should be >= 2!") }
+	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && !method=="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
 	if(causal && maxparents > (ncol(data) * 0.5)) { warning("Maximum number of parents may be too large, causal inference requires sparsity in the inferred network; please decrease maxparents parameter for better results!") }
 	method <- match.arg(method)
 	regrmodel <- match.arg(regrmodel)
