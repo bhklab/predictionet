@@ -795,6 +795,7 @@ extract.all.parents<-function(data,res.main,maxparents,predn){
 	cnt_main<-1
 	for(imain in 1:length(predn)){
 		res.vec<-res.main[cnt_main:(cnt_main+2*res.main[cnt_main])]
+		if(length(res.vec)>3){
 		cnt_main<-cnt_main+2*res.main[cnt_main]+1
 		nsol<-sum(res.vec==0)
 		res<-matrix(0,nc=nsol,nr=(maxparents+1))
@@ -848,6 +849,7 @@ extract.all.parents<-function(data,res.main,maxparents,predn){
 			i<-i+1
 		}
 		final<-cbind(final,res)
+		}
 	}
 	dimension<-dim(final)
 	final<-colnames(data)[final]
