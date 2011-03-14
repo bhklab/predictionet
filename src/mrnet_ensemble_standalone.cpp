@@ -422,6 +422,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEX
 	
 	for(unsigned int i=0;i< *npredn;++i){
 		//initialize tree
+		std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
 		one=res_tree.insert(top, predn[i]);
 		
 		//build ensemble tree
