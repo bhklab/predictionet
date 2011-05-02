@@ -14,7 +14,7 @@
 ## regrmodel: type of regression model to fit when 'regrnet' method is selected
 ## seed: seed to make the function fully deterministic
 `netinf` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet"), causal=TRUE, regrmodel=c("linear", "linear.penalized"), seed) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet"), causal=TRUE, regrmodel=c("linear", "linear.penalized"), seed, return.option="all") {
 	
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && !method=="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
 	if(causal && maxparents > (ncol(data) * 0.5)) { warning("Maximum number of parents may be too large, causal inference requires sparsity in the inferred network; please decrease maxparents parameter for better results!") }
@@ -56,7 +56,11 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 			priors <- (priors - 0.5) * 2
 		}
 		bnet.regr <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
-		return(list("method"=method, "net"=bnet.regr))
+		if(return.option=="all"){
+		   return(list("method"=method, "net"=bnet.regr))
+		}else{
+		   return(list("topology.coeff"=regrnet2topo(net=bnet.regr,coefficients=TRUE), "topology"=regrnet2topo(net=bnet.regr,coefficients=FALSE)))
+		}
 	}, 
 	"regrnet.ensemble"={
 		## fit an ensemble regression model
@@ -278,7 +282,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 	}
 	
 	########################
-	## w*M+(1-w)*P weighted score from prior knowledge and data
+	## (1-w)*M+w*P weighted score from prior knowledge and data
 	########################
 	score <- (1-priors.weight)*res.netw+priors.weight*priors[ , predn, drop=FALSE]
 	## no self-loops
@@ -693,7 +697,7 @@ function(dataset, estimator=c("pearson", "spearman", "kendall")) {
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
 `netinf.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, return.option="all") {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
 		## create matrix of no perturbations
@@ -780,7 +784,16 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	edgestab2[mytopoglobal == 1] <- edgestab[mytopoglobal == 1]
 	
 	
-	return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+	if(return.option=="all"){
+		return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+	}else{
+		mytopo2<-NULL
+		for(i in 1:nfold){
+			mytopo2<-c(mytopo2,list(regrnet2topo(net=mynets[[i]]$net)))
+		}
+		names(mytopo2)<- paste("fold", 1:nfold, sep=".")
+		return(list("topology.coeff"=regrnet2topo(net=mynetglobal$net$net,coefficients=TRUE), "topology.cv.coeff"=mytopo2, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+	}
 }
 
 
