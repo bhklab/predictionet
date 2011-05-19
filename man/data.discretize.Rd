@@ -13,45 +13,43 @@ data.discretize(data, cuts)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{
-%%     ~~Describe \code{data} here~~
+matrix of continuous or categorical values (gene expressions for example); observations in rows, features in columns.
 }
   \item{cuts}{
-%%     ~~Describe \code{cuts} here~~
+list of cutoffs for each variable.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function is discretizing the continuous value in \code{data} using the cutoffs specified in \code{cuts} to create categories represented by increasing integers in {1,2,...n} where n is the maximum number of categories in the dataset.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+a matrix of categorical values where categories are \{1,2,..,n\} depending on the list of cutoffs specified in \code{cuts}; observations in rows, features in columns.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
-%%  ~~who you are~~
+Benjamin Haibe-Kains
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\link[infotheo]{discretize}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-
+## load gene expression data for colon cancer data, list of genes related to RAS signaling pathway and the corresponding priors
+data(expO.colon.ras)
+## discretize the data in 3 categories
+categories <- rep(3, ncol(data.ras))
+## estimate the cutoffs (tertiles) for each gene
+cuts.discr <- lapply(apply(rbind("nbcat"=categories, data.ras), 2, function(x) { y <- x[1]; x <- x[-1]; return(list(quantile(x=x, probs=seq(0, 1, length.out=y+1), na.rm=TRUE)[-c(1, y+1)])) }), function(x) { return(x[[1]]) })
+data.ras.bin <- data.discretize(data=data.ras, cuts=cuts.discr)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%%\keyword{ ~kwd1 }
+%%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

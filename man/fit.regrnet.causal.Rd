@@ -8,7 +8,7 @@ function fitting a regression model for each gene in the data
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-fit.regrnet.causal(data, perturbations, priors, predn, maxparents, priors.weight, regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed)
+fit.regrnet.causal(data, perturbations, priors, predn, maxparents = 3, priors.weight = 0.5, regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

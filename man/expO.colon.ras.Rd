@@ -1,5 +1,5 @@
 \name{expO.colon.ras}
-\alias{xpO.colon.ras}
+\alias{expO.colon.ras}
 \alias{demo.ras}
 \alias{data.ras}
 \alias{annot.ras}

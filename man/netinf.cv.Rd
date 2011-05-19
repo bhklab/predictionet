@@ -6,7 +6,7 @@
 The function \code{netinf.cv} perform a cross-validation loop and infers a gene network by combining priors and genomic data in each fold. This allows to estimate the predictive ability of the inferred network as well as edge stability.
 }
 \usage{
-netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed)
+netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed, retoptions="all", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -24,10 +24,12 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
 	\item{nfold}{ number of folds for the cross-validation. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the cross-validation and network inference deterministic. }
+	\item{retoptions}{ if retoptions="all" al the information about the inferred network will be returned. This may require a lot of memory for networks of hundreds of genes. }
+	\item{...}{ additional parameters to be passed to the network inference function, see Details.}
 }
-%%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%%}
+\details{
+	see \link[predictionet]{netinf} documentation for details about the parameters \code{...}
+}
 \value{
 	\item{net }{ model object of the network inferred using the entire dataset. }
 	\item{net.cv }{ list of network models fitted at each fold of the cross-validation. }
@@ -66,14 +68,35 @@ mypriors <- priors.ras[goi, goi, drop=FALSE]
 mydemo <- demo.ras
 mypert <- pert[ , goi, drop=FALSE]
 
+########################
+## regression-based network inference
+########################
 ## number of fold for cross-validation
-res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, method="regrnet", nfold=3, seed=54321)
+res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, priors.weight=0.5, method="regrnet", nfold=3, seed=54321)
 
 ## MCC for predictions in cross-validation
 print(res$prediction.score.cv)
 
+########################
+## bayesian network inference
+########################
+## transform priors into values in [0, 1]
+mypriors.prob <- matrix(0.5, nrow=nrow(mypriors), ncol=ncol(mypriors), dimnames=dimnames(mypriors))
+mypriors.prob[mypriors <= -1] <- 0.40
+mypriors.prob[mypriors <= -2] <- 0.30
+mypriors.prob[mypriors <= -3] <- 0.20
+mypriors.prob[mypriors >= 1] <- 0.60
+mypriors.prob[mypriors >= 2] <- 0.70
+mypriors.prob[mypriors >= 3] <- 0.80
+
+## infer a bayesian network network from data and priors
+## number of fold for cross-validation
+res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors.prob, priors.count=FALSE, priors.weight=0.5, method="bayesnet", nfold=3, seed=54321)
+
+## MCC for predictions in cross-validation
+print(res$prediction.score.cv)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%\keyword{ ~kwd1 }
+%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

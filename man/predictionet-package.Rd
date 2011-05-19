@@ -12,8 +12,8 @@ This package contains a set of functions related to network inference combining 
 \tabular{ll}{
 Package: \tab predictionet\cr
 Type: \tab Package\cr
-Version: \tab 0.7\cr
-Date: \tab 2011-02-22\cr
+Version: \tab 0.8\cr
+Date: \tab 2011-05-18\cr
 License: \tab Artistic 2.0\cr
 LazyLoad: \tab yes\cr
 }

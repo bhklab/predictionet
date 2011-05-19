@@ -2,7 +2,7 @@
 \alias{netinf.predict}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Function to make prediction of the expressions of a gene given its parents using an inferred network
+Function to make prediction of  expressions of a gene given its parents using an inferred network
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
