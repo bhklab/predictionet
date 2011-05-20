@@ -14,9 +14,10 @@
 ## regrmodel: type of regression model to fit when 'regrnet' method is selected
 ## seed: seed to make the function fully deterministic
 `netinf` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.force=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
 	
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
+	maxparents <- ifelse(maxparents >= ncol(data), ncol(data)-1, maxparents)
 	if(causal && maxparents > (ncol(data) * 0.5)) { warning("maximum number of parents may be too large, causal inference requires sparsity in the inferred network; please decrease maxparents parameter for better results!") }
 	method <- match.arg(method)
 	regrmodel <- match.arg(regrmodel)
@@ -142,7 +143,7 @@ function(net, data, categories, perturbations, subset, predn) {
 ## seed: seed to get deterministic results
 ### returns a bayesian network model
 'fit.catnet' <- 
-function(data, categories, perturbations, priors, priors.weight, maxparents=3, seed=54321, ...) {
+function(data, categories, perturbations, priors, priors.weight, maxparents=3, maxparents.force=FALSE, seed=54321, ...) {
 	## run catnet
 	require(catnet)
 	catnet::cnSetSeed(seed)
@@ -172,7 +173,7 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, s
 		#ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), ...)
 		ee.prior <- NULL
 		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), dirProb=t(priors), echo=FALSE, ...)
-		ee <- cnFindBIC(ee)
+		if(maxparents.force) { ee <- ee@nets[order(nets@complexity, decreasing=TRUE)[1]] } else { ee <- cnFindBIC(ee) }
 		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)
 		names(myparents) <- ee@nodes
 		return(list("varnames"=colnames(data), "input"=myparents, "model"=ee))
@@ -186,9 +187,10 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, s
 ## predn: indices or names of genes to fit during network inference. If missing, all the genes will be used for network inference
 ## priors.weight: real value in [0, 1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network). If 'priors.weight' is missing it will be optimized gene by hene in an automatic way.
 ## maxparents: maximum number of parents allowed for each gene
+## maxparents.force: if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. 
 ### returns a regression network 
 `fit.regrnet.causal` <- 
-function(data, perturbations, priors, predn, maxparents=3, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321) {
+function(data, perturbations, priors, predn, maxparents=3, maxparents.force=FALSE, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321) {
 	
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
@@ -205,7 +207,7 @@ function(data, perturbations, priors, predn, maxparents=3, priors.weight=0.5, re
 	########################
 	### find ranked parents for all genes
 	########################
-	mat.ranked.parents <- rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, causal=causal)
+	mat.ranked.parents <- rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, maxparents.force, causal=causal)
 	myparents <- lapply(apply(mat.ranked.parents, 1, function(x) { x <- x[!is.na(x)]; if(length(x) == 0) { x <- NULL };  return(list(x)); }), function(x) { return(x[[1]]) })
 
 	########################
@@ -250,7 +252,7 @@ function(data, perturbations, priors, predn, maxparents=3, priors.weight=0.5, re
 ## maxparents: maximum number of parents allowed for each gene
 ### returns matrix: each row corresponds to a target gene, columns contain the ranked genes (non NA values; gene names)
 `rank.genes.causal.perturbations` <- 
-function(priors, data, perturbations, predn, priors.weight, maxparents, causal=TRUE) {
+function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.force=FALSE, causal=TRUE) {
 
 	########################
 	### initialize variables
@@ -370,7 +372,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 	diag(score[dimnames(score)[[2]], dimnames(score)[[2]]]) <- 0
 	for(j in 1:length(predn)){
 		tmp.s <- sort(score[,j],decreasing=TRUE,index.return=TRUE)
-		ind.rm <- (which(tmp.s$x<=0))
+		if(priors.weight != 1 && maxparents.force) { ind.rm <- order(tmp.s$x, decreasing=TRUE)[1:maxparents] } else { ind.rm <- (which(tmp.s$x<=0)) }
 		if(length(tmp.s$x[-ind.rm])>0){
 			res[j,(1:(length(tmp.s$x[-ind.rm])))] <- names(tmp.s$x[-ind.rm])
 			if(length(tmp.s$x[-ind.rm])>maxparents){
@@ -835,7 +837,7 @@ function(dataset, estimator=c("pearson", "spearman", "kendall")) {
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
 `netinf.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.force=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
 		## create matrix of no perturbations

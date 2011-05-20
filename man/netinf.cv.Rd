@@ -6,7 +6,7 @@
 The function \code{netinf.cv} perform a cross-validation loop and infers a gene network by combining priors and genomic data in each fold. This allows to estimate the predictive ability of the inferred network as well as edge stability.
 }
 \usage{
-netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed, retoptions="all", ...)
+netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.force = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed, retoptions="all", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,6 +18,7 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
 	\item{priors.count}{ \code{TRUE} if priors specified by the user are number of citations (count) for each interaction, \code{FALSE} if probabilities or any other weight in [0,1] are reported instead. }
   \item{priors.weight}{ real value in [0,1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network).}
   \item{maxparents}{ maximum number of parents allowed for each gene. }
+ 	\item{maxparents.force}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. }
   \item{subset}{ vector of indices to select only subset of the observations. }
   \item{method}{ \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package, \code{bayesnet.ensemble} for ensemble bayesian network inference with the \code{catnet} package. }
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }

@@ -8,7 +8,7 @@ function fitting a regression model for each gene in the data
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-fit.regrnet.causal(data, perturbations, priors, predn, maxparents = 3, priors.weight = 0.5, regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321)
+fit.regrnet.causal(data, perturbations, priors, predn, maxparents = 3, maxparents.force = FALSE, priors.weight = 0.5, regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -25,6 +25,7 @@ fit.regrnet.causal(data, perturbations, priors, predn, maxparents = 3, priors.we
   \item{maxparents}{
 %%     ~~Describe \code{maxparents} here~~
 }
+ 	\item{maxparents.force}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. }
   \item{priors.weight}{
 %%     ~~Describe \code{priors.weight} here~~
 }

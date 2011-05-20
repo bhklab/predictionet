@@ -8,7 +8,7 @@ function ranking the genes based on mrmr+prior+causality for each gene as a targ
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-rank.genes.causal.perturbations(priors, data, perturbations, predn, priors.weight, maxparents, causal = TRUE)
+rank.genes.causal.perturbations(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.force = FALSE, causal = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,6 +28,7 @@ rank.genes.causal.perturbations(priors, data, perturbations, predn, priors.weigh
   \item{maxparents}{
 %%     ~~Describe \code{maxparents} here~~
 }
+ 	\item{maxparents.force}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. }
   \item{causal}{
 %%     ~~Describe \code{maxparents} here~~
 }
