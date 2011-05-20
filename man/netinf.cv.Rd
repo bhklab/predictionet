@@ -6,20 +6,20 @@
 The function \code{netinf.cv} perform a cross-validation loop and infers a gene network by combining priors and genomic data in each fold. This allows to estimate the predictive ability of the inferred network as well as edge stability.
 }
 \usage{
-netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed, retoptions="all", ...)
+netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed, retoptions="all", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{ matrix of continuous or categorical values (gene expressions for example); observations in rows, features in columns. }
   \item{categories}{ if this parameter missing, 'data' should be already discretize; otherwise either a single integer or a vector of integers specifying the number of categories used to discretize each variable (data are then discretized using equal-frequency bins) or a list of cutoffs to use to discretize each of the variables in 'data' matrix. If method='bayesnet', this parameter should be specified by the user. }
   \item{perturbations}{ matrix of {0, 1} specifying whether a gene has been perturbed (e.g., knockdown, overexpression) in some experiments. Dimensions should be the same than \code{data}. }
-  \item{priors}{ matrix of prior information available for gene-gene interaction (parents in rows, children in columns). Values may be probabilities or any other weights (citations count for instance). }
+  \item{priors}{ matrix of prior information available for gene-gene interaction (parents in rows, children in columns). Values may be probabilities or any other weights (citations count for instance). if priors counts are used the parameter \code{priors.count} should be TRUE so the priors are scaled accordingly. }
   \item{predn}{indices or names of variables to fit during network inference. If missing, all the variables will be used for network inference. }
-	\item{priors.count}{ \code{TRUE} if priors specified by the user are number of citations (count) for each interaction, \code{FALSE} if probabilities are reported instead. }
-  \item{priors.weight}{ real value in [0, 1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network). If \code{priors.weight} is missing it will be optimized gene by gene in an automatic way. }
+	\item{priors.count}{ \code{TRUE} if priors specified by the user are number of citations (count) for each interaction, \code{FALSE} if probabilities or any other weight in [0,1] are reported instead. }
+  \item{priors.weight}{ real value in [0,1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network).}
   \item{maxparents}{ maximum number of parents allowed for each gene. }
   \item{subset}{ vector of indices to select only subset of the observations. }
-  \item{method}{ \code{bayesnet} for bayesian network inference with the \code{catnet} package (not implemented yet), \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference. }
+  \item{method}{ \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package, \code{bayesnet.ensemble} for ensemble bayesian network inference with the \code{catnet} package. }
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
 	\item{nfold}{ number of folds for the cross-validation. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
@@ -80,18 +80,9 @@ print(res$prediction.score.cv)
 ########################
 ## bayesian network inference
 ########################
-## transform priors into values in [0, 1]
-mypriors.prob <- matrix(0.5, nrow=nrow(mypriors), ncol=ncol(mypriors), dimnames=dimnames(mypriors))
-mypriors.prob[mypriors <= -1] <- 0.40
-mypriors.prob[mypriors <= -2] <- 0.30
-mypriors.prob[mypriors <= -3] <- 0.20
-mypriors.prob[mypriors >= 1] <- 0.60
-mypriors.prob[mypriors >= 2] <- 0.70
-mypriors.prob[mypriors >= 3] <- 0.80
-
 ## infer a bayesian network network from data and priors
 ## number of fold for cross-validation
-res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors.prob, priors.count=FALSE, priors.weight=0.5, method="bayesnet", nfold=3, seed=54321)
+res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, method="bayesnet", nfold=3, seed=54321)
 
 ## MCC for predictions in cross-validation
 print(res$prediction.score.cv)

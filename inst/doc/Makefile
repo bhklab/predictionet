@@ -23,7 +23,7 @@ predictionet.pdf: vignette-src/predictionet.Rnw
 	cp -f vignette-src/predictionet.Rnw .
 	cp -f vignette-src/biblio.bib .
 	cp -f vignette-src/priors_ras_from_webapp.csv .
-	Rscript --vanilla -e "library(pgfSweave); pgfSweave('predictionet.Rnw');"
+	$(R_HOME)/bin/Rscript --vanilla -e "library(pgfSweave); pgfSweave('predictionet.Rnw');"
 	pdflatex predictionet
 	bibtex predictionet
 	pdflatex predictionet

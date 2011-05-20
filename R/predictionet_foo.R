@@ -14,7 +14,7 @@
 ## regrmodel: type of regression model to fit when 'regrnet' method is selected
 ## seed: seed to make the function fully deterministic
 `netinf` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
 	
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
 	if(causal && maxparents > (ncol(data) * 0.5)) { warning("maximum number of parents may be too large, causal inference requires sparsity in the inferred network; please decrease maxparents parameter for better results!") }
@@ -37,7 +37,17 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	"bayesnet"={
 		## fit bayesian network model
 		## priors
-		if(priors.count || !all(priors >= 0 & priors <= 1)) { stop("method 'bayesnet' requires priors to be specified as probabilities!") }
+		if(priors.count) {
+			## transform priors into probabilities
+			if(priors.weight == 0) { priors[] <- 0.5 } else {
+				## rescale the priors count so they lay in [0,1] with values more different from 0.5 propotionally to priors.weight
+				## maximum number of citations, without taking into the 5% largest counts
+				ma <- quantile(x=abs(priors[priors != 0]), probs=0.95)
+				pp <- (abs(priors) / ma)
+				pp[pp >= 1] <- 0.9
+				priors <- 0.5 + sign(priors) %*% (apply(X=pp, MARGIN=c(1, 2), FUN=function(x, y) { if(y < 0.5) { x <- ((1-y^x)) + x * (y) } else { x <- ((1-y^x)) + x * (1-y) }; return(x); }, y=1-priors.weight)) / 2
+			}
+		} else { if(!all(priors >= 0 & priors <= 1)) { stop("if 'priors.count' is FALSE method 'bayesnet' requires priors to be specified as probabilities!") } }
 		## categories
 		if(!missing(categories)) {
 			## discretize gene expression data
@@ -67,6 +77,9 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		} else {
 		   return(list("method"=method, "topology"=bayesnet2topo(net=bnet)))
 		}
+	}, 
+	"bayesnet.ensemble"={
+		stop("ensemble bayesian network inference is not implemented yet!")
 	}, 
 	"regrnet"={
 		## fit regression model
@@ -822,7 +835,7 @@ function(dataset, estimator=c("pearson", "spearman", "kendall")) {
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
 `netinf.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
 		## create matrix of no perturbations

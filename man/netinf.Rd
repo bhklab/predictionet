@@ -6,20 +6,20 @@
 Main function of the \code{predictionet} package, \code{netinf} infers a gene network by combining priors and genomic data. The two main network inference methodologies implemented so far are the bayesian and regression-based inferences.
 }
 \usage{
-netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet"), regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321, retoptions = "all", ...)
+netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321, retoptions = "all", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{ matrix of continuous or categorical values (gene expressions for example); observations in rows, features in columns. }
   \item{categories}{ if this parameter missing, 'data' should be already discretized; otherwise either a single integer or a vector of integers specifying the number of categories used to discretize each variable (data are then discretized using equal-frequency bins) or a list of cutoffs to use to discretize each of the variables in 'data' matrix. If method='bayesnet' and \code{categories} is missing, \code{data} should contain categorical values and the number of categories will determine from the data. }
   \item{perturbations}{ matrix of {0,1} specifying whether a gene has been perturbed (e.g., knockdown, overexpression) in some experiments. Dimensions should be the same than \code{data}. }
-  \item{priors}{ matrix of prior information available for gene-gene interaction (parents in rows, children in columns). Values may be probabilities or any other weights (citations count for instance). }
+  \item{priors}{ matrix of prior information available for gene-gene interaction (parents in rows, children in columns). Values may be probabilities or any other weights (citations count for instance). if priors counts are used the parameter \code{priors.count} should be TRUE so the priors are scaled accordingly. }
 	\item{predn}{indices or names of variables to fit during network inference. If missing, all the variables will be used for network inference. Note that for bayesian network inference (method='bayesnet') this parameter is ignored and a network will be generated using all the variables.}
-\item{priors.count}{ \code{TRUE} if priors specified by the user are number of citations (count) for each interaction, \code{FALSE} if probabilities are reported instead. }
-  \item{priors.weight}{ real value in [0,1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network). If method='bayesnet', this parameter is ignored since the priors probabilities will determine their importance during the network inference. However if \code{priors.weight}=1, only the priors will be used to identify the topology of the network and the data will not be used for this step. Similarly if \code{priors.weight}=0, only data are used to identify the network topology.}
+	\item{priors.count}{ \code{TRUE} if priors specified by the user are number of citations (count) for each interaction, \code{FALSE} if probabilities or any other weight in [0,1] are reported instead. }
+  \item{priors.weight}{ real value in [0,1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network).}
   \item{maxparents}{ maximum number of parents allowed for each gene. }
   \item{subset}{ vector of indices to select only subset of the observations. }
-  \item{method}{ \code{bayesnet} for bayesian network inference with the \code{catnet} package (not implemented yet), \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference. }
+  \item{method}{ \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package, \code{bayesnet.ensemble} for ensemble bayesian network inference with the \code{catnet} package. }
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the network inference deterministic. }
@@ -87,17 +87,9 @@ categories <- rep(3, ncol(mydata))
 ## estimate the cutoffs (tertiles) for each gene
 cuts.discr <- lapply(apply(rbind("nbcat"=categories, mydata), 2, function(x) { y <- x[1]; x <- x[-1]; return(list(quantile(x=x, probs=seq(0, 1, length.out=y+1), na.rm=TRUE)[-c(1, y+1)])) }), function(x) { return(x[[1]]) })
 mydata <- data.discretize(data=mydata, cuts=cuts.discr)
-## transform priors into values in [0, 1]
-mypriors.prob <- matrix(0.5, nrow=nrow(mypriors), ncol=ncol(mypriors), dimnames=dimnames(mypriors))
-mypriors.prob[mypriors <= -1] <- 0.40
-mypriors.prob[mypriors <= -2] <- 0.30
-mypriors.prob[mypriors <= -3] <- 0.20
-mypriors.prob[mypriors >= 1] <- 0.60
-mypriors.prob[mypriors >= 2] <- 0.70
-mypriors.prob[mypriors >= 3] <- 0.80
 
 ## infer a bayesian network network from data and priors
-mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors.prob, priors.count=FALSE, priors.weight=0.5, maxparents=3, method="bayesnet", seed=54321)
+mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="bayesnet", seed=54321)
 
 ## plot network topology
 mytopo <- net2topo(net=mynet)
