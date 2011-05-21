@@ -73,6 +73,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		## data are discretized and nbcat is a list with the corresponding categories
 		
 		bnet <- fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, seed=seed, ...)
+		
 		if(retoptions=="all") {
 		   return(list("method"=method, "net"=bnet))
 		} else {
@@ -528,7 +529,7 @@ function(net, ...) {
 		res <- regrnet2topo(net=net$net, ...)
 	},
 	"bayesnet"={
-		res <- bayesnet2topo(net=net$net, ...)
+		res <- bayesnet2topo(net=net$net)
 	}, 
 	{
 		stop("method used to infer the network is unknown!")
@@ -933,11 +934,10 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	} else {
 		mytopo2<-NULL
 		for(i in 1:nfold){
-			mytopo2<-c(mytopo2, list(net2topo(net=mynets[[i]]$net, coefficients=TRUE)))
+			mytopo2<-c(mytopo2, list(net2topo(net=mynets[[i]], coefficients=TRUE)))
 		}
-		
 		names(mytopo2)<- paste("fold", 1:nfold, sep=".")
-		return(list("topology.coeff"=net2topo(net=mynetglobal$net$net, coefficients=TRUE), "topology.cv.coeff"=mytopo2, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+		return(list("topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv.coeff"=mytopo2, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
 	}
 }
 
