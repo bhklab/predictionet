@@ -160,7 +160,8 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 		#ee <- catnet::cnSetProb(object=ee, data=t(data), nodeCats=categories, perturbations=t(perturbations))
 		ee <- catnet::cnSetProb(object=ee, data=t(data), perturbations=t(perturbations))
 		#ee <- .cnUpdateCat(object=ee, cats=categories)
-		
+		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)
+		names(myparents) <- ee@nodes
 		return(list("varnames"=colnames(data), "input"=myparents, "model"=ee))
 	} else {
 		## use data and priors infer the best topology
@@ -174,7 +175,7 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 		#ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), ...)
 		ee.prior <- NULL
 		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), dirProb=t(priors), echo=FALSE, ...)
-		if(maxparents.force) { ee <- ee@nets[order(nets@complexity, decreasing=TRUE)[1]] } else { ee <- cnFindBIC(ee) }
+		if(maxparents.force) { ee <- ee@nets[order(ee@complexity, decreasing=TRUE)[1]] } else { ee <- cnFindBIC(ee) }
 		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)
 		names(myparents) <- ee@nodes
 		return(list("varnames"=colnames(data), "input"=myparents, "model"=ee))
