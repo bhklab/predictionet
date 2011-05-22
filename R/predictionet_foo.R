@@ -72,7 +72,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		}
 		## data are discretized and nbcat is a list with the corresponding categories
 		
-		bnet <- fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, seed=seed, ...)
+		bnet <- fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, maxparents.force=maxparents.force, seed=seed, ...)
 		
 		if(retoptions=="all") {
 		   return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet))
@@ -88,8 +88,9 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		if(priors.count) {
 			## scale the priors
 			## truncate the largest counts
-			pp <- quantile(x=abs(priors[priors != 0]), probs=0.99, na.rm=TRUE)
+			pp <- quantile(x=abs(priors[priors != 0]), probs=0.95, na.rm=TRUE)
 			if(length(pp) > 0) {
+				## truncate the distribution
 				priors[priors > pp] <- pp
 				priors[priors < -pp] <- -pp
 			}
@@ -97,10 +98,10 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 			priors <- priors / max(abs(priors), na.rm=TRUE)
 		} else {
 			if(max(priors, na.rm=TRUE) > 1 || min(priors, na.rm=TRUE) < 0) { stop("'priors' should contain probabilities of interactions if 'priors.count' is FALSE!") }
-			## priors are probabilties taht should be rescale in [-1, 1]
+			## priors are probabilties that should be rescale in [-1, 1]
 			priors <- (priors - 0.5) * 2
 		}
-		bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
+		bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.force=maxparents.force, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
 		if(retoptions=="all") {
 		   return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=bnet))
 		} else {
@@ -150,7 +151,7 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 	catnet::cnSetSeed(seed)
 	## be aware that catnet package consider any adjacency matrix to have parents in COLUMNS and children in ROWS, that is the inverse of the predictionet package
 	## topology identified from the priors
-	priorparents <- sapply(1:ncol(priors), function(x, y) { tt <- which(y[ , x] > 0.5); if(length(tt) < 1) { tt <- NULL }; return(list(tt)); }, y=adj.remove.cycles(adjmat=priors)[[1]])
+	priorparents <- sapply(1:ncol(priors), function(x, y) { tt <- which(y[ , x] > 0.5); if(length(tt) < 1) { tt <- NULL }; return(list(tt)); }, y=adj.remove.cycles(adjmat=priors != 0.5)[[1]])
 	names(priorparents) <- colnames(priors)
 	if(priors.weight == 1) {
 		## use only priors to fix the topology
@@ -175,7 +176,8 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 		#ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), ...)
 		ee.prior <- NULL
 		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), dirProb=t(priors), echo=FALSE, ...)
-		if(maxparents.force) { ee <- ee@nets[order(ee@complexity, decreasing=TRUE)[1]] } else { ee <- cnFindBIC(ee) }
+		if(maxparents.force) { ee <- ee@nets[[order(ee@complexity, decreasing=TRUE)[1]]] } else { ee <- cnFindBIC(ee) }
+		## WARNING: cnSearchSA does not look for a solution with the maximum complexity, it stops before!
 		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)
 		names(myparents) <- ee@nodes
 		return(list("varnames"=colnames(data), "input"=myparents, "model"=ee))
@@ -374,7 +376,11 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	diag(score[dimnames(score)[[2]], dimnames(score)[[2]]]) <- 0
 	for(j in 1:length(predn)){
 		tmp.s <- sort(score[,j],decreasing=TRUE,index.return=TRUE)
-		if(priors.weight != 1 && maxparents.force) { ind.rm <- order(tmp.s$x, decreasing=TRUE)[1:maxparents] } else { ind.rm <- (which(tmp.s$x<=0)) }
+		if(priors.weight != 1 && maxparents.force) {
+			ttt <- tmp.s$ix[tmp.s$ix != j][1:maxparents] 
+			if(causal) { ttt <- ttt[tmp.s$x[tmp.s$ix != j][1:maxparents] > 0] }
+			ind.rm <- which(!is.element(tmp.s$ix, ttt))
+		} else { ind.rm <- (which(tmp.s$x<=0)) }
 		if(length(tmp.s$x[-ind.rm])>0){
 			res[j,(1:(length(tmp.s$x[-ind.rm])))] <- names(tmp.s$x[-ind.rm])
 			if(length(tmp.s$x[-ind.rm])>maxparents){
@@ -1116,56 +1122,60 @@ exportGML <- function(graph, edge.attributes, vertex.attributes, file) {
 	cat("\tdirected", as.integer(igraph::is.directed(graph)), "\n", file=file)
 	
 	## vertex attributes
-	for (i in seq_len(igraph::vcount(graph))) {
-	cat("\tnode\t[\n", file=file)
-	cat("\t\tid", i-1, "\n", file=file)
-	cat("\t\tlabel\t", igraph::V(graph)$name[i], "\n", file=file)
-	cat("\t\tgraphics\t[\n", file=file)
-	cat("\t\t\tfill\t\"", igraph::V(graph)$color[i], "\"\n", sep="", file=file)
-	cat("\t\t\ttype\t\"ellipse\"\n", file=file)
-	cat("\t\t\toutline\t\"#cccccc\"\n", file=file)
-	cat("\t\t\toutline_width\t1.0\n", file=file)
-	cat("\t\t]\n", file=file)
-	## special vertex attributes
-	if(!missing(vertex.attributes) && !is.null(vertex.attributes)) {
-		for(jj in 1:length(vertex.attributes)) {
-			aa <- igraph::get.vertex.attribute(graph, name=vertex.attributes[jj])
-			if(is.numeric(aa)) {
-				#cat("\t\t", edge.attributes[jj], "\t", sprintf("%.3f", aa[i]), "\n", file=file)
-				cat(sprintf("\t\t%s\t%.3f\n", vertex.attributes[jj], aa[i]), file=file)
-			} else { cat(sprintf("\t\t%s\t\"%s\"\n", vertex.attributes[jj], aa[i]), file=file) }
+	if(vcount(graph) > 0) {
+		for (i in seq_len(igraph::vcount(graph))) {
+			cat("\tnode\t[\n", file=file)
+			cat("\t\tid", i-1, "\n", file=file)
+			cat("\t\tlabel\t", igraph::V(graph)$name[i], "\n", file=file)
+			cat("\t\tgraphics\t[\n", file=file)
+			cat("\t\t\tfill\t\"", igraph::V(graph)$color[i], "\"\n", sep="", file=file)
+			cat("\t\t\ttype\t\"ellipse\"\n", file=file)
+			cat("\t\t\toutline\t\"#cccccc\"\n", file=file)
+			cat("\t\t\toutline_width\t1.0\n", file=file)
+			cat("\t\t]\n", file=file)
+			## special vertex attributes
+			if(!missing(vertex.attributes) && !is.null(vertex.attributes)) {
+				for(jj in 1:length(vertex.attributes)) {
+					aa <- igraph::get.vertex.attribute(graph, name=vertex.attributes[jj])
+					if(is.numeric(aa)) {
+						#cat("\t\t", edge.attributes[jj], "\t", sprintf("%.3f", aa[i]), "\n", file=file)
+						cat(sprintf("\t\t%s\t%.3f\n", vertex.attributes[jj], aa[i]), file=file)
+					} else { cat(sprintf("\t\t%s\t\"%s\"\n", vertex.attributes[jj], aa[i]), file=file) }
+				}
+			}
+			cat("\t]\n", file=file)
 		}
 	}
-	cat("\t]\n", file=file)
-	} 
 	
 	## edge attributes
-	el <- igraph::get.edgelist(graph, names=FALSE)
-	eln <- apply(igraph::get.edgelist(graph, names=TRUE), 1, paste, collapse="-")
-	for (i in seq_len(nrow(el))) {
-	cat("\tedge\t[\n", file=file)
-	#cat("\t\tlabel\t", eln[i], "\n", file=file)
-	cat("\t\tsource", el[i,1], "\n", file=file)
-	cat("\t\ttarget", el[i,2], "\n", file=file)
-	cat("\t\tgraphics\t[\n", file=file)
-	cat("\t\t\twidth\t1.0\n", file=file)
-	cat("\t\t\tfill\t\"", igraph::E(graph)$color[i], "\"\n", sep="", file=file)
-	cat("\t\t\ttype\t\"line\"\n", file=file)
-	cat("\t\t\tsource_arrow\t0\n", file=file)
-	cat("\t\t\ttarget_arrow\t3\n", file=file)
-	cat("\t\t]\n", file=file)
-	## special edge attributes
-	if(!missing(edge.attributes) && !is.null(edge.attributes)) {
-		for(jj in 1:length(edge.attributes)) {
-			aa <- igraph::get.edge.attribute(graph, name=edge.attributes[jj])
-			if(is.numeric(aa)) {
-				#cat("\t\t", edge.attributes[jj], "\t", sprintf("%.3f", aa[i]), "\n", file=file)
-				cat(sprintf("\t\t%s\t%.3f\n", edge.attributes[jj], aa[i]), file=file)
-			} else { cat(sprintf("\t\t%s\t\"%s\"\n", edge.attributes[jj], aa[i]), file=file) }
+	if(ecount(graph) > 0) {
+		el <- igraph::get.edgelist(graph, names=FALSE)
+		eln <- apply(igraph::get.edgelist(graph, names=TRUE), 1, paste, collapse="-")
+		for (i in seq_len(nrow(el))) {
+			cat("\tedge\t[\n", file=file)
+			#cat("\t\tlabel\t", eln[i], "\n", file=file)
+			cat("\t\tsource", el[i,1], "\n", file=file)
+			cat("\t\ttarget", el[i,2], "\n", file=file)
+			cat("\t\tgraphics\t[\n", file=file)
+			cat("\t\t\twidth\t1.0\n", file=file)
+			cat("\t\t\tfill\t\"", igraph::E(graph)$color[i], "\"\n", sep="", file=file)
+			cat("\t\t\ttype\t\"line\"\n", file=file)
+			cat("\t\t\tsource_arrow\t0\n", file=file)
+			cat("\t\t\ttarget_arrow\t3\n", file=file)
+			cat("\t\t]\n", file=file)
+			## special edge attributes
+			if(!missing(edge.attributes) && !is.null(edge.attributes)) {
+				for(jj in 1:length(edge.attributes)) {
+					aa <- igraph::get.edge.attribute(graph, name=edge.attributes[jj])
+					if(is.numeric(aa)) {
+						#cat("\t\t", edge.attributes[jj], "\t", sprintf("%.3f", aa[i]), "\n", file=file)
+						cat(sprintf("\t\t%s\t%.3f\n", edge.attributes[jj], aa[i]), file=file)
+					} else { cat(sprintf("\t\t%s\t\"%s\"\n", edge.attributes[jj], aa[i]), file=file) }
+				}
+			}
+			cat("\t]\n", file=file)
 		}
 	}
-	cat("\t]\n", file=file)
-	} 
 	cat("]\n", file=file) 
 	close(file) 
 }
@@ -1180,6 +1190,7 @@ function(object, edge.info, node.info, file="predictionet") {
 	require(igraph)
 	## adjacency matrix representing the topology; parents in rows, children in columns
 	net.topo <- object$topology
+	if(any(dim(net.topo) <= 0)) { stop("network should contain at least one node!") }
 	## matrix of coeffcients for regrnet
 	net.topo.coeff <- object$topology.coeff
 	if(all(c("prediction.score.cv", "edge.stability") %in% names(object))) {
@@ -1187,14 +1198,14 @@ function(object, edge.info, node.info, file="predictionet") {
 		edge.info <- list("stability"=object$edge.stability)
 		node.info <- lapply(object$prediction.score.cv, function(x) { return(apply(X=x, MARGIN=2, FUN=mean, na.rm=FALSE)) })
 	}
-	if(!missing(edge.info) && !is.list(edge.info)) {
-		edge.info <- list("statistic"=edge.info)
+	if(!missing(edge.info)) {
+		if(!is.list(edge.info)) { edge.info <- list("statistic"=edge.info) }
 		edge.info <- edge.info[sapply(edge.info, function(x) { return(!is.null(x) && !all(is.na(x))) })]
 		## check dimensions of edge.info
 		if(!all(sapply(edge.info, dim) == nrow(net.topo))) { stop("edge.info should be a matrix or a list of matrices with the same dimensions that the adjacency describing the network topology!") }
 	}
-	if(!missing(node.info) && !is.list(node.info)) {
-		node.info <- list("statistic"=node.info)
+	if(!missing(node.info)) {
+		if(!is.list(node.info)) { node.info <- list("statistic"=node.info) }
 		node.info <- node.info[sapply(node.info, function(x) { return(!is.null(x) && !all(is.na(x))) })]
 		## check dimensions of node.info
 		if(!all(sapply(node.info, length) == nrow(net.topo))) { stop("node.info should be a vector or a list of vectors of length equal to the number of rows/columns of the adjacency describing the network topology!") }
@@ -1210,7 +1221,7 @@ function(object, edge.info, node.info, file="predictionet") {
 	rr <- rep("#000000", length(ee))
 	net.igraph <- igraph::set.edge.attribute(graph=net.igraph, name="color", index=ee, value=rr)
 	## edge info
-	if(!missing(edge.info)) {
+	if(!missing(edge.info) && ecount(net.igraph) > 0) {
 		for(i in 1:length(edge.info)) {
 			if(!is.null(edge.info[[i]])) {
 				rr <- edge.info[[i]][igraph::get.edges(graph=net.igraph, es=ee)+1]
@@ -1225,7 +1236,7 @@ function(object, edge.info, node.info, file="predictionet") {
 	rr <- rep("#0099ff", length(vv))
 	net.igraph <- igraph::set.vertex.attribute(graph=net.igraph, name="color", index=vv, value=rr)
 	## node info
-	if(!missing(node.info)) {
+	if(!missing(node.info) && vcount(net.igraph) > 0) {
 		for(i in 1:length(node.info)) {
 			if(!is.null(node.info[[i]])) {
 				rr <- node.info[[i]][vv+1]
