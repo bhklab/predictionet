@@ -75,9 +75,9 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		bnet <- fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, seed=seed, ...)
 		
 		if(retoptions=="all") {
-		   return(list("method"=method, "net"=bnet))
+		   return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet))
 		} else {
-		   return(list("method"=method, "topology"=bayesnet2topo(net=bnet)))
+		   return(list("method"=method, "topology"=bayesnet2topo(net=bnet), "topology.coeff"=NULL, "net"=NULL))
 		}
 	}, 
 	"bayesnet.ensemble"={
@@ -102,9 +102,9 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		}
 		bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
 		if(retoptions=="all") {
-		   return(list("method"=method, "net"=bnet))
+		   return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=bnet))
 		} else {
-		   return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE)))
+		   return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=NULL))
 		}
 	}, 
 	"regrnet.ensemble"={
@@ -114,7 +114,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, maxnsol, -1000)
 		   net<-extract.adjacency.ensemble(data,vec_ensemble,predn)
 		   models.equiv<-extract.all.parents(data,vec_ensemble,maxparents,predn)
-		   return(list("method"=method, "net"=net, "models"=models.equiv))
+		   return(list("method"=method, "topology"=NULL, "topology.coeff"=NULL, "net"=net, "models"=models.equiv))
 	})
 }
 
@@ -938,7 +938,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 			mytopo2<-c(mytopo2, list(net2topo(net=mynets[[i]], coefficients=TRUE)))
 		}
 		names(mytopo2)<- paste("fold", 1:nfold, sep=".")
-		return(list("topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv.coeff"=mytopo2, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+		return(list("topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
 	}
 }
 
@@ -1098,6 +1098,142 @@ function(adjmat) {
 		adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat2, adjmat.mask=adjmat.mask, nodix.from=-1, nodix=nnix[i], nodest)
 		adjmat2[adjmat.mask] <- 0
 	}
-	
 	return(list("adjmat.acyclic"=adjmat2, "adjmat.removed"=adjmat.mask))
+}
+
+## inspire from Gábor Csárdi
+## source: http://tolstoy.newcastle.edu.au/R/e13/help/11/04/10607.html
+exportGML <- function(graph, edge.attributes, vertex.attributes, file) {
+	require(igraph)
+	if(!missing(edge.attributes) && !is.null(edge.attributes) && !all(edge.attributes %in% igraph::list.edge.attributes(graph))) { stop("edge attributes are not stored in the igraph object!") }
+	if(!missing(vertex.attributes) && !is.null(vertex.attributes) && !all(vertex.attributes %in% igraph::list.vertex.attributes(graph))) { stop("vertex attributes are not stored in the igraph object!") }
+	
+	file <- file(file, "w")
+	## graph attributes
+	cat("Creator \"igraph exportGML\"\n", file=file)
+	cat("Version 1.0\n", file=file)
+	cat("graph\t[\n", file=file)
+	cat("\tdirected", as.integer(igraph::is.directed(graph)), "\n", file=file)
+	
+	## vertex attributes
+	for (i in seq_len(igraph::vcount(graph))) {
+	cat("\tnode\t[\n", file=file)
+	cat("\t\tid", i-1, "\n", file=file)
+	cat("\t\tlabel\t", igraph::V(graph)$name[i], "\n", file=file)
+	cat("\t\tgraphics\t[\n", file=file)
+	cat("\t\t\tfill\t\"", igraph::V(graph)$color[i], "\"\n", sep="", file=file)
+	cat("\t\t\ttype\t\"ellipse\"\n", file=file)
+	cat("\t\t\toutline\t\"#cccccc\"\n", file=file)
+	cat("\t\t\toutline_width\t1.0\n", file=file)
+	cat("\t\t]\n", file=file)
+	## special vertex attributes
+	if(!missing(vertex.attributes) && !is.null(vertex.attributes)) {
+		for(jj in 1:length(vertex.attributes)) {
+			aa <- igraph::get.vertex.attribute(graph, name=vertex.attributes[jj])
+			if(is.numeric(aa)) {
+				#cat("\t\t", edge.attributes[jj], "\t", sprintf("%.3f", aa[i]), "\n", file=file)
+				cat(sprintf("\t\t%s\t%.3f\n", vertex.attributes[jj], aa[i]), file=file)
+			} else { cat(sprintf("\t\t%s\t\"%s\"\n", vertex.attributes[jj], aa[i]), file=file) }
+		}
+	}
+	cat("\t]\n", file=file)
+	} 
+	
+	## edge attributes
+	el <- igraph::get.edgelist(graph, names=FALSE)
+	eln <- apply(igraph::get.edgelist(graph, names=TRUE), 1, paste, collapse="-")
+	for (i in seq_len(nrow(el))) {
+	cat("\tedge\t[\n", file=file)
+	#cat("\t\tlabel\t", eln[i], "\n", file=file)
+	cat("\t\tsource", el[i,1], "\n", file=file)
+	cat("\t\ttarget", el[i,2], "\n", file=file)
+	cat("\t\tgraphics\t[\n", file=file)
+	cat("\t\t\twidth\t1.0\n", file=file)
+	cat("\t\t\tfill\t\"", igraph::E(graph)$color[i], "\"\n", sep="", file=file)
+	cat("\t\t\ttype\t\"line\"\n", file=file)
+	cat("\t\t\tsource_arrow\t0\n", file=file)
+	cat("\t\t\ttarget_arrow\t3\n", file=file)
+	cat("\t\t]\n", file=file)
+	## special edge attributes
+	if(!missing(edge.attributes) && !is.null(edge.attributes)) {
+		for(jj in 1:length(edge.attributes)) {
+			aa <- igraph::get.edge.attribute(graph, name=edge.attributes[jj])
+			if(is.numeric(aa)) {
+				#cat("\t\t", edge.attributes[jj], "\t", sprintf("%.3f", aa[i]), "\n", file=file)
+				cat(sprintf("\t\t%s\t%.3f\n", edge.attributes[jj], aa[i]), file=file)
+			} else { cat(sprintf("\t\t%s\t\"%s\"\n", edge.attributes[jj], aa[i]), file=file) }
+		}
+	}
+	cat("\t]\n", file=file)
+	} 
+	cat("]\n", file=file) 
+	close(file) 
+}
+
+## function to export a network fit with 'netinf' to Cytoscape, possibly with edge-specific and node-specific statistics
+## object: object returns by 'netinf' or 'netinf.cv'
+## edge.info: matrix of values representing the statistics for each edge; parents in rows, children in columns. A list of matrices could be provided, names of the list will then be used to describe the statisics in cytoscape
+## node.info: vector of values representing the statistics for each node; parents in rows, children in columns. A list of vectors could be provided, names of the list will then be used to describe the statisics in cytoscape
+## return a cytoscape object
+'netinf2gml' <- 
+function(object, edge.info, node.info, file="predictionet") {
+	require(igraph)
+	## adjacency matrix representing the topology; parents in rows, children in columns
+	net.topo <- object$topology
+	## matrix of coeffcients for regrnet
+	net.topo.coeff <- object$topology.coeff
+	if(all(c("prediction.score.cv", "edge.stability") %in% names(object))) {
+		# object previously compute by 'netinf.cv'
+		edge.info <- list("stability"=object$edge.stability)
+		node.info <- lapply(object$prediction.score.cv, function(x) { return(apply(X=x, MARGIN=2, FUN=mean, na.rm=FALSE)) })
+	}
+	if(!missing(edge.info) && !is.list(edge.info)) {
+		edge.info <- list("statistic"=edge.info)
+		edge.info <- edge.info[sapply(edge.info, function(x) { return(!is.null(x) && !all(is.na(x))) })]
+		## check dimensions of edge.info
+		if(!all(sapply(edge.info, dim) == nrow(net.topo))) { stop("edge.info should be a matrix or a list of matrices with the same dimensions that the adjacency describing the network topology!") }
+	}
+	if(!missing(node.info) && !is.list(node.info)) {
+		node.info <- list("statistic"=node.info)
+		node.info <- node.info[sapply(node.info, function(x) { return(!is.null(x) && !all(is.na(x))) })]
+		## check dimensions of node.info
+		if(!all(sapply(node.info, length) == nrow(net.topo))) { stop("node.info should be a vector or a list of vectors of length equal to the number of rows/columns of the adjacency describing the network topology!") }
+	}
+	
+	## create igraph object
+	net.igraph <- igraph::graph.adjacency(adjmatrix=net.topo, mode="directed")
+	## graph attributes
+	net.igraph <- igraph::set.graph.attribute(graph=net.igraph, name="Source", value=sprintf("predictionet (R) package version %s", sessionInfo(package="predictionet")$otherPkgs[[1]]$Version))
+	## edge attributes
+	ee <- igraph::E(graph=net.igraph)
+	## colors for the edges
+	rr <- rep("#000000", length(ee))
+	net.igraph <- igraph::set.edge.attribute(graph=net.igraph, name="color", index=ee, value=rr)
+	## edge info
+	if(!missing(edge.info)) {
+		for(i in 1:length(edge.info)) {
+			if(!is.null(edge.info[[i]])) {
+				rr <- edge.info[[i]][igraph::get.edges(graph=net.igraph, es=ee)+1]
+				net.igraph <- igraph::set.edge.attribute(graph=net.igraph, name=names(edge.info)[[i]], index=ee, value=rr)
+			}
+		}
+		ein <- names(edge.info)
+	} else { ein <- NULL }
+	## node attributes
+	vv <- igraph::V(graph=net.igraph)
+	## color
+	rr <- rep("#0099ff", length(vv))
+	net.igraph <- igraph::set.vertex.attribute(graph=net.igraph, name="color", index=vv, value=rr)
+	## node info
+	if(!missing(node.info)) {
+		for(i in 1:length(node.info)) {
+			if(!is.null(node.info[[i]])) {
+				rr <- node.info[[i]][vv+1]
+				net.igraph <- igraph::set.vertex.attribute(graph=net.igraph, name=names(node.info)[[i]], index=vv, value=rr)
+			}
+		}
+		nin <- names(node.info)
+	} else { nin <- NULL }
+	exportGML(graph=net.igraph, edge.attributes=ein, vertex.attributes=nin, file=sprintf("%s.gml", file))
+	invisible(net.igraph)
 }

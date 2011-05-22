@@ -78,6 +78,9 @@ res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=myprior
 ## MCC for predictions in cross-validation
 print(res$prediction.score.cv)
 
+## export network as a 'gml' file that you can import into Cytoscape
+\dontrun{rr <- netinf2gml(object=res, file="predictionet_regrnet")}
+
 ########################
 ## bayesian network inference
 ########################
@@ -87,6 +90,9 @@ res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=myprior
 
 ## MCC for predictions in cross-validation
 print(res$prediction.score.cv)
+
+## export network as a 'gml' file that you can import into Cytoscape
+\dontrun{rr <- netinf2gml(object=res, file="predictionet_bayesnet")}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

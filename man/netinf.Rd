@@ -32,7 +32,8 @@ netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, prio
 }
 \value{
 	\item{method }{name of the method used for network inference. }
-	\item{input }{name of the variables used as input for the network inference method. }
+	\item{topology }{ adjacency matrix representing the topology of the inferred network; parents in rows, children in columns. }
+	\item{topology.coeff }{ if method='regrnet' \code{topology.coeff} contains an adjacency matriix with the coefficients used in the local regression model; parents in rows, children in columns. }
 	\item{net }{ inferred network. }
 }
 %%\references{
@@ -76,6 +77,9 @@ library(network)
 xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
 plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
 
+## export network as a 'gml' file that you can import into Cytoscape
+\dontrun{rr <- netinf2gml(object=mynet, file="predictionet_regrnet")}
+
 ## predictions
 mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
 print(pred.score(data=mydata, pred=mypreds, categories=3, method="mcc"))
@@ -97,6 +101,9 @@ mytopo <- net2topo(net=mynet)
 library(network)
 xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
 plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
+
+## export network as a 'gml' file that you can import into Cytoscape
+\dontrun{rr <- netinf2gml(object=mynet, file="predictionet_bayesnet")}
 
 ## predictions
 mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
