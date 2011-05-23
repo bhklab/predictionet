@@ -14,7 +14,7 @@
 ## regrmodel: type of regression model to fit when 'regrnet' method is selected
 ## seed: seed to make the function fully deterministic
 `netinf` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.force=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
 	
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
 	maxparents <- ifelse(maxparents >= ncol(data), ncol(data)-1, maxparents)
@@ -72,7 +72,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		}
 		## data are discretized and nbcat is a list with the corresponding categories
 		
-		bnet <- fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, maxparents.force=maxparents.force, seed=seed, ...)
+		bnet <- fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, maxparents.push=maxparents.push, seed=seed, ...)
 		
 		if(retoptions=="all") {
 		   return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet))
@@ -101,7 +101,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 			## priors are probabilties that should be rescale in [-1, 1]
 			priors <- (priors - 0.5) * 2
 		}
-		bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.force=maxparents.force, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
+		bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
 		if(retoptions=="all") {
 		   return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=bnet))
 		} else {
@@ -145,7 +145,7 @@ function(net, data, categories, perturbations, subset, predn) {
 ## seed: seed to get deterministic results
 ### returns a bayesian network model
 'fit.catnet' <- 
-function(data, categories, perturbations, priors, priors.weight, maxparents=3, maxparents.force=FALSE, seed=54321, ...) {
+function(data, categories, perturbations, priors, priors.weight, maxparents=3, maxparents.push=FALSE, seed=54321, ...) {
 	## run catnet
 	require(catnet)
 	catnet::cnSetSeed(seed)
@@ -172,11 +172,11 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 			priors[] <- 0.5
 		}
 		## seed the network inference with the prior topology
-		#priororder <- catnet::cnOrder(priorparents)
-		#ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), ...)
-		ee.prior <- NULL
+		priororder <- catnet::cnOrder(priorparents)
+		ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), ...)
+		#ee.prior <- NULL
 		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), dirProb=t(priors), echo=FALSE, ...)
-		if(maxparents.force) { ee <- ee@nets[[order(ee@complexity, decreasing=TRUE)[1]]] } else { ee <- cnFindBIC(ee) }
+		if(maxparents.push) { ee <- ee@nets[[order(ee@complexity, decreasing=TRUE)[1]]] } else { ee <- cnFindBIC(ee) }
 		## WARNING: cnSearchSA does not look for a solution with the maximum complexity, it stops before!
 		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)
 		names(myparents) <- ee@nodes
@@ -191,10 +191,10 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 ## predn: indices or names of genes to fit during network inference. If missing, all the genes will be used for network inference
 ## priors.weight: real value in [0, 1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network). If 'priors.weight' is missing it will be optimized gene by hene in an automatic way.
 ## maxparents: maximum number of parents allowed for each gene
-## maxparents.force: if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. 
+## maxparents.push: if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. 
 ### returns a regression network 
 `fit.regrnet.causal` <- 
-function(data, perturbations, priors, predn, maxparents=3, maxparents.force=FALSE, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321) {
+function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321) {
 	
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
@@ -211,7 +211,7 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.force=FALS
 	########################
 	### find ranked parents for all genes
 	########################
-	mat.ranked.parents <- rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, maxparents.force, causal=causal)
+	mat.ranked.parents <- rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, maxparents.push, causal=causal)
 	myparents <- lapply(apply(mat.ranked.parents, 1, function(x) { x <- x[!is.na(x)]; if(length(x) == 0) { x <- NULL };  return(list(x)); }), function(x) { return(x[[1]]) })
 
 	########################
@@ -256,7 +256,7 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.force=FALS
 ## maxparents: maximum number of parents allowed for each gene
 ### returns matrix: each row corresponds to a target gene, columns contain the ranked genes (non NA values; gene names)
 `rank.genes.causal.perturbations` <- 
-function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.force=FALSE, causal=TRUE) {
+function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.push=FALSE, causal=TRUE) {
 
 	########################
 	### initialize variables
@@ -376,7 +376,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	diag(score[dimnames(score)[[2]], dimnames(score)[[2]]]) <- 0
 	for(j in 1:length(predn)){
 		tmp.s <- sort(score[,j],decreasing=TRUE,index.return=TRUE)
-		if(priors.weight != 1 && maxparents.force) {
+		if(priors.weight != 1 && maxparents.push) {
 			ttt <- tmp.s$ix[tmp.s$ix != j][1:maxparents] 
 			if(causal) { ttt <- ttt[tmp.s$x[tmp.s$ix != j][1:maxparents] > 0] }
 			ind.rm <- which(!is.element(tmp.s$ix, ttt))
@@ -520,7 +520,8 @@ function(net, coefficients=FALSE) {
 ## net: bayesian network
 ### returns adjacency matrix: parents in rows and children in columns (res[i,j]==1 means edge from i to j)
 `bayesnet2topo` <- 
-function(net) {
+function(net, coefficients=FALSE) {
+	if(coefficients) { return(NULL) }
 	require(catnet)
 	return(t(catnet::cnMatParents(net$model)))
 }
@@ -536,7 +537,7 @@ function(net, ...) {
 		res <- regrnet2topo(net=net$net, ...)
 	},
 	"bayesnet"={
-		res <- bayesnet2topo(net=net$net)
+		res <- bayesnet2topo(net=net$net, ...)
 	}, 
 	{
 		stop("method used to infer the network is unknown!")
@@ -845,7 +846,7 @@ function(dataset, estimator=c("pearson", "spearman", "kendall")) {
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
 `netinf.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.force=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
 		## create matrix of no perturbations
@@ -936,13 +937,12 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	## report stability of edges present in the global network
 	edgestab2[mytopoglobal == 1] <- edgestab[mytopoglobal == 1]
 	
+	mytopo2 <- NULL
+	for(i in 1:nfold) { mytopo2<-c(mytopo2, list(net2topo(net=mynets[[i]], coefficients=TRUE))) }
+	
 	if(retoptions=="all") {
-		return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+		return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
 	} else {
-		mytopo2<-NULL
-		for(i in 1:nfold){
-			mytopo2<-c(mytopo2, list(net2topo(net=mynets[[i]], coefficients=TRUE)))
-		}
 		names(mytopo2)<- paste("fold", 1:nfold, sep=".")
 		return(list("topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
 	}

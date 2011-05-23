@@ -6,7 +6,7 @@
 Main function of the \code{predictionet} package, \code{netinf} infers a gene network by combining priors and genomic data. The two main network inference methodologies implemented so far are the bayesian and regression-based inferences.
 }
 \usage{
-netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.force = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321, retoptions = "all", ...)
+netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321, retoptions = "all", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,7 +18,7 @@ netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, prio
 	\item{priors.count}{ \code{TRUE} if priors specified by the user are number of citations (count) for each interaction, \code{FALSE} if probabilities or any other weight in [0,1] are reported instead. }
   \item{priors.weight}{ real value in [0,1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network).}
   \item{maxparents}{ maximum number of parents allowed for each gene. }
- 	\item{maxparents.force}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. }
+ 	\item{maxparents.push}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. For now, this parameters has little effect when method='regrnet' and causal=TRUE. For method='bayesnet', this parameter has an effect the the maximum number of parents is not always chosen, we will fix that in a future release.}
  \item{subset}{ vector of indices to select only subset of the observations. }
   \item{method}{ \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package, \code{bayesnet.ensemble} for ensemble bayesian network inference with the \code{catnet} package. }
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }

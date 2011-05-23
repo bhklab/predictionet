@@ -8,12 +8,15 @@ function transforming a network model into an adjacency matrix: parents in rows,
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-net2topo(net, ...)
+net2topo(net, coefficients=FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{net}{
 %%     ~~Describe \code{net} here~~
+}
+  \item{coefficients}{
+%%     ~~Describe \code{coefficients} here~~
 }
   \item{...}{
 %%     ~~Describe \code{coefficients} here~~
