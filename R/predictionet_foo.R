@@ -175,7 +175,7 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 		priororder <- catnet::cnOrder(priorparents)
 		ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), ...)
 		#ee.prior <- NULL
-		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), dirProb=t(priors), echo=FALSE, ...)
+		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), echo=FALSE, ...)
 		if(maxparents.push) { ee <- ee@nets[[order(ee@complexity, decreasing=TRUE)[1]]] } else { ee <- cnFindBIC(ee) }
 		## WARNING: cnSearchSA does not look for a solution with the maximum complexity, it stops before!
 		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)
@@ -1246,5 +1246,7 @@ function(object, edge.info, node.info, file="predictionet") {
 		nin <- names(node.info)
 	} else { nin <- NULL }
 	exportGML(graph=net.igraph, edge.attributes=ein, vertex.attributes=nin, file=sprintf("%s.gml", file))
+	## copy Vizmap Propoerty file for cytoscape
+	system(sprintf("cp %s %s.props", system.file("extdata/preditionet_vizmap2.props", package="predictionet"), file))
 	invisible(net.igraph)
 }
