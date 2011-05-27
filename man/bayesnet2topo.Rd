@@ -8,7 +8,7 @@ function transforming a bayesian network model into an adjacency matrix: parents
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-bayesnet2topo(net)
+bayesnet2topo(net, coefficients = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
