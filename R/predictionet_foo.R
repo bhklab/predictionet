@@ -278,7 +278,6 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	}else{
 		local.maxparents<-maxparents
 	}
-	print(paste("final local maxparents",local.maxparents))
 
 	if(priors.weight != 1) {
 		## data will be used to rank the potential parent genes
