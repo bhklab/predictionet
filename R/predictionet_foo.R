@@ -13,8 +13,10 @@
 ## method: "bayesnet" for bayesian network inference with the catnet package, "regrnet" for regression-based network inference
 ## regrmodel: type of regression model to fit when 'regrnet' method is selected
 ## seed: seed to make the function fully deterministic
+## optimize.nparents.causal: to obtain a number of causal parents as close as possible to the maxparents, this option should be set to TRUE, otherwise the inferred network might be considerably more sparse
+
 `netinf` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", optimize.nparents.causal=TRUE, ...) {
 	
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
 	maxparents <- ifelse(maxparents >= ncol(data), ncol(data)-1, maxparents)
@@ -84,30 +86,31 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		stop("ensemble bayesian network inference is not implemented yet!")
 	}, 
 	"regrnet"={
-		## fit regression model
+			## fit regression model
 		if(priors.count) {
-			## scale the priors
-			## truncate the largest counts
-			pp <- quantile(x=abs(priors[priors != 0]), probs=0.95, na.rm=TRUE)
-			if(length(pp) > 0) {
-				## truncate the distribution
+		## scale the priors
+		## truncate the largest counts
+		   pp <- quantile(x=abs(priors[priors != 0]), probs=0.95, na.rm=TRUE)
+		   if(length(pp) > 0) {
+		## truncate the distribution
 				priors[priors > pp] <- pp
 				priors[priors < -pp] <- -pp
-			}
-			## rescale the priors to have values in [-1, 1]
-			priors <- priors / max(abs(priors), na.rm=TRUE)
-		} else {
-			if(max(priors, na.rm=TRUE) > 1 || min(priors, na.rm=TRUE) < 0) { stop("'priors' should contain probabilities of interactions if 'priors.count' is FALSE!") }
-			## priors are probabilties that should be rescale in [-1, 1]
-			priors <- (priors - 0.5) * 2
-		}
-		bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
-		if(retoptions=="all") {
-		   return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=bnet))
-		} else {
-		   return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=NULL))
-		}
-	}, 
+		   }
+		## rescale the priors to have values in [-1, 1]
+		   priors <- priors / max(abs(priors), na.rm=TRUE)
+		   } else {
+				if(max(priors, na.rm=TRUE) > 1 || min(priors, na.rm=TRUE) < 0) { stop("'priors' should contain probabilities of interactions if 'priors.count' is FALSE!") }
+		## priors are probabilties that should be rescale in [-1, 1]
+					priors <- (priors - 0.5) * 2
+				}
+				bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed, optimize.nparents.causal)
+				if(retoptions=="all") {
+					return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=bnet))
+				} else {
+					return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=NULL))
+				}
+		   }, 
+		   
 	"regrnet.ensemble"={
 		## fit an ensemble regression model
 		rep_boot<-200
@@ -194,7 +197,7 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 ## maxparents.push: if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. 
 ### returns a regression network 
 `fit.regrnet.causal` <- 
-function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321) {
+function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, optimize.nparents.causal) {
 	
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
@@ -211,7 +214,7 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE
 	########################
 	### find ranked parents for all genes
 	########################
-	mat.ranked.parents <- rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, maxparents.push, causal=causal)
+	mat.ranked.parents <- rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, maxparents.push, causal=causal,optimize.nparents.causal)
 	myparents <- lapply(apply(mat.ranked.parents, 1, function(x) { x <- x[!is.na(x)]; if(length(x) == 0) { x <- NULL };  return(list(x)); }), function(x) { return(x[[1]]) })
 
 	########################
@@ -256,7 +259,7 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE
 ## maxparents: maximum number of parents allowed for each gene
 ### returns matrix: each row corresponds to a target gene, columns contain the ranked genes (non NA values; gene names)
 `rank.genes.causal.perturbations` <- 
-function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.push=FALSE, causal=TRUE) {
+function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.push=FALSE, causal=TRUE,optimize.nparents.causal) {
 
 	########################
 	### initialize variables
@@ -266,6 +269,17 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	
 	data.original <- data.matrix(data)
 	
+	
+	### locally, we consider a higher number of maxparents to ensure to get the number of parents as close as possible to the actual maxparents requested by the user
+	### in general, we take 3*maxparents; in cases with a lot of variables and only a few maxparents, we increase this to 5 percent of the total number of variables
+	### for datasets with only few number of variables, we verify that we do not exceed 50 percent of total number of variables
+	if(optimize.nparents.causal){
+		local.maxparents<-min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data)))
+	}else{
+		local.maxparents<-maxparents
+	}
+	print(paste("final local maxparents",local.maxparents))
+
 	if(priors.weight != 1) {
 		## data will be used to rank the potential parent genes
 		mrmr.global <- NULL
@@ -273,7 +287,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 			## no perturbations
 			## compute mrmr score for the target genes
 			## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
-			mrmr.global <- .Call("mrnet_adapted", data.original, maxparents, ncol(data.original), nrow(data.original), predn, length(predn), -1000)
+			mrmr.global <- .Call("mrnet_adapted", data.original, local.maxparents, ncol(data.original), nrow(data.original), predn, length(predn), -1000)
 			mrmr.global <- matrix(mrmr.global, nrow=ncol(data.original), ncol=ncol(data.original), byrow=FALSE)
 			dimnames(mrmr.global) <- list(colnames(data.original), colnames(data.original))
 			mrmr.global[mrmr.global == -1000] <- NA
@@ -288,7 +302,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 				## since the target gene has been perturbed in some of the experiments we should recompute the mim and mrmr matrices
 				## compute mrmr score for the target genes
 				## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
-				mrmr <- .Call("mrnet_adapted", data, maxparents, ncol(data), nrow(data), predn, length(predn), -1000)
+				mrmr <- .Call("mrnet_adapted", data, local.maxparents, ncol(data), nrow(data), predn, length(predn), -1000)
 				mrmr <- matrix(mrmr, nrow=ncol(data), ncol=ncol(data), byrow=FALSE)
 				dimnames(mrmr) <- list(colnames(data),colnames(data))
 				mrmr[mrmr == -1000] <- NA
