@@ -274,7 +274,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	### in general, we take 3*maxparents; in cases with a lot of variables and only a few maxparents, we increase this to 5 percent of the total number of variables
 	### for datasets with only few number of variables, we verify that we do not exceed 50 percent of total number of variables
 	if(optimize.nparents.causal){
-		local.maxparents<-min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data)))
+		local.maxparents<-floor(min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
 	}else{
 		local.maxparents<-maxparents
 	}
