@@ -16,11 +16,13 @@
 ## optimize.nparents.causal: to obtain a number of causal parents as close as possible to the maxparents, this option should be set to TRUE, otherwise the inferred network might be considerably more sparse
 
 `netinf` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", optimize.nparents.causal=TRUE, ...) {
-	
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, retoptions="all", ...) {
+	## select more genes to find a number of cauqal variables close or more than maxparents
+	optimize.nparents.causal <- TRUE
+	if(ncol(data) < 2) { stop("Number of variables is too small to infer a network!") }
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
 	maxparents <- ifelse(maxparents >= ncol(data), ncol(data)-1, maxparents)
-	if(causal && maxparents > (ncol(data) * 0.5)) { warning("maximum number of parents may be too large, causal inference requires sparsity in the inferred network; please decrease maxparents parameter for better results!") }
+	maxparents <- ifelse(maxparents < 2, 2, maxparents)
 	method <- match.arg(method)
 	regrmodel <- match.arg(regrmodel)
 	if(missing(perturbations)) {
@@ -103,7 +105,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		## priors are probabilties that should be rescale in [-1, 1]
 					priors <- (priors - 0.5) * 2
 				}
-				bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed, optimize.nparents.causal)
+				bnet <- fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed, optimize.nparents.causal=optimize.nparents.causal)
 				if(retoptions=="all") {
 					return(list("method"=method, "topology"=regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=regrnet2topo(net=bnet,coefficients=TRUE), "net"=bnet))
 				} else {
@@ -197,8 +199,8 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 ## maxparents.push: if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. 
 ### returns a regression network 
 `fit.regrnet.causal` <- 
-function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, optimize.nparents.causal) {
-	
+function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE, priors.weight=0.5, regrmodel=c("linear", "linear.penalized"), causal=TRUE, seed=54321, optimize.nparents.causal=TRUE) {
+	if(causal && maxparents > (ncol(data) * 0.5)) { warning("maximum number of parents may be too large, causal inference requires sparsity in the inferred network; please decrease maxparents parameter for better results!") }
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
 	nn <- dimnames(data)[[2]][predn] ## variables (genes) to fit during network inference
@@ -259,7 +261,7 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE
 ## maxparents: maximum number of parents allowed for each gene
 ### returns matrix: each row corresponds to a target gene, columns contain the ranked genes (non NA values; gene names)
 `rank.genes.causal.perturbations` <- 
-function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.push=FALSE, causal=TRUE,optimize.nparents.causal) {
+function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.push=FALSE, causal=TRUE,optimize.nparents.causal=TRUE) {
 
 	########################
 	### initialize variables
@@ -274,7 +276,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	### in general, we take 3*maxparents; in cases with a lot of variables and only a few maxparents, we increase this to 5 percent of the total number of variables
 	### for datasets with only few number of variables, we verify that we do not exceed 50 percent of total number of variables
 	if(optimize.nparents.causal){
-		local.maxparents<-floor(min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
+		local.maxparents<-floor(min(max(2*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
 	}else{
 		local.maxparents<-maxparents
 	}

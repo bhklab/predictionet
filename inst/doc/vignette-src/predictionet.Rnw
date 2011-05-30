@@ -165,7 +165,7 @@ pn.priors <- pn.priors[myx, , drop=FALSE]
 \noindent The R object \Robject{pn.priors} is a matrix that contains the triples $gene_a \rightarrow gene_b$ that have been reported in the literature and the structured biological databases.
 
 <<priorsrandom,echo=FALSE,results=hide,eval=TRUE>>=
-pn.priors <- pn.priors[sample(1:ncol(pn.priors)), ]
+pn.priors <- pn.priors[sample(1:nrow(pn.priors)), ]
 @
 
 <<tablepriors,echo=TRUE,results=verbatim,eval=TRUE>>=
