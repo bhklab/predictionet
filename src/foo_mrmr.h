@@ -7,7 +7,7 @@ using namespace std;
 #include <cmath>
 #include <vector>
 #include <map>
-#include "tree.hh"
+#include "tree.h"
 #include <R.h>
 #include <Rdefines.h>
 #include <R_ext/Rdynload.h>

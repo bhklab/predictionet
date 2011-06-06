@@ -45,7 +45,7 @@ net2topo(net, coefficients=FALSE, ...)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\link{regrnet2topo}, \link{bayesnet2topo}
+\link{regrnet2topo}, \link{.bayesnet2topo}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
