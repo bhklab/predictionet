@@ -2,10 +2,10 @@
 \alias{net.stab}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-function evaluating the stability of the network given the data and method
+Function evaluating the stability of a network inferred from data with a specific method
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function evaluates the stability of a network inferred from data with a specific method.
 }
 \usage{
 net.stab(data, categories, perturbations, priors, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("bayesnet", "regrnet"))
@@ -40,39 +40,34 @@ net.stab(data, categories, perturbations, priors, priors.count = TRUE, priors.we
 %%     ~~Describe \code{method} here~~
 }
 }
-\details{
+%%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
-\value{
+%%}
+%%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%%}
+%%\references{
 %% ~put references to the literature/web site here ~
-}
+%%}
 \author{
-%%  ~~who you are~~
+Benjamin Haibe-Kains
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-
-}
+%%}
+%%\examples{
+%%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ univar }
+\keyword{ graphs }% __ONLY ONE__ keyword per line

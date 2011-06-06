@@ -2,10 +2,10 @@
 \alias{pred.score}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-function computing perfomance of prediction; methods include rnmse and mcc
+Function computing performance of prediction; methods include r2, nrmse and mcc
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function computes prediction performance; methods include r2, nrmse and mcc.
 }
 \usage{
 pred.score(data, pred, categories, method = c("r2", "nrmse", "mcc"))
@@ -23,38 +23,39 @@ pred.score(data, pred, categories, method = c("r2", "nrmse", "mcc"))
 %%     ~~Describe \code{method} here~~
 }
 }
-\details{
+%%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%%}
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+A vector of performance scores, one for each node
 }
-\references{
+%%\references{
 %% ~put references to the literature/web site here ~
-}
+%%}
 \author{
-%%  ~~who you are~~
+Benjamin Haibe-Kains, Catharina Olsen
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\link[predictionet]{netinf.predict}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
+set.seed(54321)
+xx <- runif(100)
+## R2
+pred.score(data=xx, pred=xx+rnorm(100)/10, method="r2")
+## NRMSE
+pred.score(data=xx, pred=xx+rnorm(100)/10, method="nrmse")
+## MCC
+pred.score(data=xx, pred=xx+rnorm(100)/10, categories=3, method="mcc")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ univar }
+\keyword{ classif }
+\keyword{ regression }

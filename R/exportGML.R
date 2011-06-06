@@ -18,13 +18,13 @@ function(graph, edge.attributes, vertex.attributes, file) {
 		for (i in seq_len(igraph::vcount(graph))) {
 			cat("\tnode\t[\n", file=file)
 			cat("\t\tid", i-1, "\n", file=file)
-			cat("\t\tlabel\t", igraph::V(graph)$name[i], "\n", file=file)
 			cat("\t\tgraphics\t[\n", file=file)
 			cat("\t\t\tfill\t\"", igraph::V(graph)$color[i], "\"\n", sep="", file=file)
 			cat("\t\t\ttype\t\"ellipse\"\n", file=file)
 			cat("\t\t\toutline\t\"#cccccc\"\n", file=file)
 			cat("\t\t\toutline_width\t1.0\n", file=file)
 			cat("\t\t]\n", file=file)
+			cat("\t\tlabel\t\"", igraph::V(graph)$name[i], "\"\n", file=file)
 ## special vertex attributes
 			if(!missing(vertex.attributes) && !is.null(vertex.attributes)) {
 				for(jj in 1:length(vertex.attributes)) {

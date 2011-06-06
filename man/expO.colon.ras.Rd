@@ -32,7 +32,7 @@ The microarray platform used in the expO project is the Affymetrix HG-U133PLUS2 
 \references{
 \url{http://www.intgen.org/expo/}
 
-Bild AH, Yao G, Chang JT, Wang Q, Potti A, Chasse D, Joshi MB, Harpole D, Lancaster JM, Berchuck A, Olson JA Jr, Marks JR, Dressman HK, West M, Nevins JR. (2006) "Oncogenic pathway signatures in human cancers as a guide to targeted therapies", \emph{Nature}, \bold{439}(7074):274-5.
+Bild AH, Yao G, Chang JT, Wang Q, Potti A, Chasse D, Joshi MB, Harpole D, Lancaster JM, Berchuck A, Olson JA Jr, Marks JR, Dressman HK, West M, Nevins JR. (2006) "Oncogenic pathway signatures in human cancers as a guide to targeted therapies", \emph{Nature}, \bold{439}(7074):274-275.
 }
 \examples{
 data(expO.colon.ras)

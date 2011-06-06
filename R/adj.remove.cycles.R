@@ -4,23 +4,23 @@
 'adj.remove.cycles' <- 
 function(adjmat) {
 	
-####################
-## internal functions
-####################
-## adjmat: adjacency matrix
-## nodest: status of nodes (vector); 0 if not visited, 1 otherwise
-## nodix.from: index of the previous node
-## nodix: index of the current node
+	####################
+	## internal functions
+	####################
+	## adjmat: adjacency matrix
+	## nodest: status of nodes (vector); 0 if not visited, 1 otherwise
+	## nodix.from: index of the previous node
+	## nodix: index of the current node
 	'.adj.remove.cycles.DFS' <- 
 	function(adjmat, adjmat.mask, nodix.from, nodix, nodest) {
 		
 		if(nodix.from %in% (1:length(nodest)) && nodest[nodix] == 1) { ## the current node has already been visited
-## remove edge
+			## remove edge
 			adjmat.mask[nodix.from, nodix] <- TRUE
 			return(adjmat.mask)
 		} else {
-## the current node has never been visited
-## remove the edges previously identified as responsible for a cycle
+			## the current node has never been visited
+			## remove the edges previously identified as responsible for a cycle
 			adjmat2 <- adjmat
 			adjmat2[adjmat.mask] <- 0
 			ee <- which(adjmat2[nodix, ] > 0) ## all children of nodix
@@ -35,29 +35,30 @@ function(adjmat) {
 			} else { return(adjmat.mask) }
 		}
 	}
-####################
-	if(class(adjmat) != "matrix" && nrow(adjmat) != ncol(adjmat)) { stop("the adjacency matrix should be square!") }
-	nNames <- dimnames(adjmat)[[1]]
+	####################
+	if(!is.matrix(adjmat) && nrow(adjmat) != ncol(adjmat)) { stop("the adjacency matrix should be square!") }
+	if(is.null(rownames(adjmat))) { rownames(adjmat) <- colnames(adjmat) <- paste("X", 1:nrow(adjmat), sep="") }
+	nNames <- rownames(adjmat)
 	adjmat <- adjmat[nNames, nNames, drop=FALSE]
 	adjmat2 <- adjmat
 	adjmat.mask <- matrix(FALSE, nrow=nrow(adjmat), ncol=ncol(adjmat), dimnames=dimnames(adjmat))
 	
-## remove bidirectional edges wrt the number of interactions
-## on the diagonal
+	## remove bidirectional edges wrt the number of interactions
+	## on the diagonal
 	iix <- which(diag(adjmat2) != 0)
 	if(length(iix) > 0) {
-## some entries in the diagonal should be removed
+		## some entries in the diagonal should be removed
 		adjmat.mask[cbind(iix, iix)] <- TRUE
 	}
 	adjmat2[adjmat.mask] <- 0
-## bidirectional edges
+	## bidirectional edges
 	iix <- which(upper.tri(adjmat2), arr.ind=TRUE)
 	iix2 <- t(apply(iix, 1, function(x, y) { if(y[x[1], x[2]] <= y[x[2], x[1]]) { return(x) } else { return(rev(x)) } }, y=adjmat2))
 	iix2 <- iix2[which(adjmat2[iix2] != 0), ]
 	adjmat.mask[iix2] <- TRUE
 	adjmat2[adjmat.mask] <- 0
 	
-## order nodes with the maximum prior
+	## order nodes with the maximum prior
 	nnix <- order(apply(adjmat2, 1, max), decreasing=FALSE)
 	for(i in 1:length(nnix)) {
 		nodest <- rep(0, ncol(adjmat2))

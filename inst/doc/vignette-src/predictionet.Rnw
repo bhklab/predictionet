@@ -139,6 +139,8 @@ One can use the \textit{Predictive Networks} web application (Figure~\ref{fig:pn
 \label{fig:pnwebappscreen}
 \end{figure}
 
+Thanks to PN a directed graph can be efficiently constructed from known gene interactions which is represented by the matrix $P_{m \times m}$ where $m$ is the number of genes in the network and $P_{ij}$ contains the number of times the interaction $X_i \rightarrow X_j$ between the two genes $X_i$ and $X_j$ has been reported in the biomedical literature and structured biological databases. The prior counts in $P$ are then rescaled into $\{-1,1\}$ where $P_{ij}=0$ represents no prior information about interaction $ij$, $P_{ij}=1$ represents strong evidence for interaction $ij$ and $P_{ij}=-1$ represents strong evidence for the absence of interaction between genes $i$ and $j$. Such a directed graph constructed from priors will be later combined with a directed graph inferred from genomic data (Figure~\ref{fig:regrnetdesign}; see Section~\ref{sec:datanet}).
+
 Let's read the newly generated priors, \texttt{priors\_ras\_bild2006\_pnwebapp.csv}, into a R session.
 
 <<preparepriors,echo=TRUE,results=hide,eval=TRUE>>=
@@ -222,8 +224,8 @@ help(jorissen.colon.ras)
 
 Although the objects \Robject{data*.ras}, and \Robject{demo*.ras} are specific to each dataset, the objects \Robject{data*.ras}  and \Robject{data*.ras} are common in the two datasets under study because the same microarray technology has been used to generate them and we extracted the same genes, and subsequently the same known gene interactions (priors). In this tutorial, we will not used the object \Robject{priors.ras} but we will use \Robject{pn.priors.counts} instead.
 
-\clearpage
-\section{Network inference from priors and gene expression data}
+
+\section{Network inference from priors and gene expression data\label{sec:datanet})}
 
 Many methods have been developed for network inference: Bayesian networks, nested $q$-partial graphs, information-theoretic networks, regression-based networks,\dots These methods differ greatly in their way of dealing with the potentially high dimensionality of the problem, handling missing values, learning from observations and/or interventions, combining genomic data and prior knowledge, assessing the quality of fitted networks, and their ability to make predictions.
 
@@ -250,55 +252,68 @@ The design of our regression-based approach for network inference is illustrated
 
 \subsubsection*{MRMR}
 
-To infer an undirected graph from gene expression data we use the maximum relevance minimum redundancy (MRMR) feature selection technique \citep{ding2005minimum,meyer2007information}.  For this iterative forward selection technique, at each step a different gene is used as the target gene. The algorithm selects then the genes that exhibit the highest difference between mutual information with the target gene and redundancy with the previously selected genes. This difference acts as a score for the possible interactions. The interactions which are represented by a score lower than a given threshold will be deleted in order to infer the undirected graph. The idea is that direct interactions should receive a high score whereas indirect interactions a low one.
+To infer an undirected graph from gene expression data, we use the maximum relevance minimum redundancy (MRMR) feature selection technique \citep{ding2005minimum,meyer2007information}.  For this iterative forward selection technique, at each step a different gene is used as the target gene $X_T$. The algorithm then selects the genes that exhibit the highest difference between mutual information with the target gene $X_T$ and redundancy with the previously selected genes (referred to as $\mathbf{X}_\mathcal{S}$). This difference acts as a score for the possible interactions. 
 
-In the first step, the gene $X_i$ which has the highest mutual information to the target gene $Y$ is selected. The second selected variable $X_j$ will be the one with a high information $I(X_j,Y)$ to the target and at the same time a low information $I(X_j,X_i)$ to the previously selected variable $X_i$.
 
-In the next steps, given a set $X_\mathcal{S}$ of selected variables, the criterion updates $X_\mathcal{S}$ by choosing the next gene $X_q$ that maximizes the score
-$$ s_q = I(X_q,Y) - \frac{1}{| \mathcal{S} |} \sum_{X_k \in X_\mathcal{S}}{I(X_q,X_k)} $$
-which can be described as a relevance term minus a redundancy term. 
-%For each pair {Xi,Xj} the algorithm returns two scores si and sj and computes the maximum of the two. All edges with a score below a given threshold are then deleted.
+In the first step of the feature selection procedure, the gene $X_j$ which has the highest mutual information with the target gene $X_T$ is selected, so at this stage $\mathbf{X}_\mathcal{S} = \{X_j\}$. In the next steps, given a set $\mathbf{X}_\mathcal{S}$ of selected variables, the criterion updates $\mathbf{X}_\mathcal{S}$ by adding the gene $X_k$ that maximizes the score
 
-The feature selection stops when the number of genes connected to the target is the maximum number of parents allowed by the user. The resulting undirected graph is locally acyclic since the target gene cannot be selected.
+$$ s_k = I(X_k,X_T) - \frac{1}{| \mathbf{X}_\mathcal{S} |} \sum_{X_i \in \mathbf{X}_\mathcal{S}}{I(X_k,X_i)} $$
+where $| \mathbf{X}_\mathcal{S} |$ is the number of variables previously selected in set $\mathbf{X}_\mathcal{S}$. The feature selection procedure stops when the size of $\mathbf{X}_\mathcal{S}$, the number of genes connected to the target $X_T$, is equal to the maximum number of parents allowed by the user. 
+
+%The second selected variable $X_j$ will be the one with a high information $I(X_j,X_T)$ to the target and at the same time a low information $I(X_j,X_i)$ to the previously selected variable $X_i$ thus trying to find the gene $X_j$ maximizing the score $I(X_j,X_T)-I(X_j,X_i)$, so at this stage $\mathbf{X}_\mathcal{S} = \{X_i, X_j\}$. 
+
+Note that the resulting undirected graph is locally acyclic since the target gene cannot be selected.
 
 \subsubsection*{Causality inference}
 
-Once the undirected graph is built, we have to perform the arc orientation. Based on previous works on causality (see \citep{neopalitan2003learning} for a review), we can actually infer causality by using the "explaining away effect" which states that a given common effect creates a dependency between two variables (this can be graphically represented by the $v$-structure, where the value of the collider is given). In  \citep{ding2005minimum, meyer2008information} this effects has been related to the property
+Once the undirected graph is built with the genes included in $\mathbf{X}_\mathcal{S}$, we have to perform the arc orientation. Based on previous works on causality (see \citep{neopalitan2003learning} for a review), we can actually infer causality by using the "explaining away effect" which states that a common effect creates a dependency between two variables (this can be graphically represented by the $v$-structure, where the value of the collider is conditioned upon). In  \citep{ding2005minimum,meyer2008information} this effect has been related to the property
 
-$$ I(X,Z|Y) > I(X,Z) \Leftrightarrow C(X,Y,Z) < 0 $$
-
-where $I(X,Z)$ is the mutual information of $X$ and $Z$, $I(X,Z|Y)$ is the mutual information of $X$ and $Z$ given $Y$, and $C(X,Y,Z)$ is the interaction information of $X$, $Y$ and $Z$ such that
+\begin{equation}
+I(X_i,X_k|X_j) > I(X_i,X_k) \Leftrightarrow C(X_i,X_j,X_k) < 0 \label{eq:cneg}
+\end{equation}
+where $X_i$ and $X_k$ are potential causes of $X_j$, $I(X_i,X_k)$ is the mutual information of $X_i$ and $X_k$, $I(X_i,X_k|X_j)$ is the mutual information of $X_i$ and $X_k$ given $X_j$, and $C(X_i,X_j,X_k)$ is the interaction information of $X_i$, $X_j$ and $X_k$ such that
 \begin{eqnarray}
-C(X,Y,Z) & = & I(x,Y) - I(X,Y|Z) \nonumber \\
- & = & I(X,Z) - I(X,Z|Y) \nonumber \\
- & = & I(Y,Z) - I(Y,Z|X) \nonumber
+C(X_i,X_j,X_k) & = & I(X_i,X_k) - I(X_i,X_k|X_j) \nonumber
 \end{eqnarray}
+The interaction information has been introduced in \citep{mcgill1954multivariate} as an extension of mutual information taking into account sets of variables instead of only pairwise relations.
 
+If the undirected (acyclic) graph is given, then for every triple of variables $X_i \relbar X_j \relbar X_k$ the property (\ref{eq:cneg}) corresponds to a v-structure $X_i \rightarrow X_j \leftarrow X_k$. On the contrary, knowing only that the interaction information is less than zero does not help when inferring the network because the three possible colliders exhibit all the same interaction information, that is the difference between mutual information and conditional mutual information. Thus, it is not evident which variable should be the collider.
 
-If the undirected (acyclic) graph is given, then for every triple of variables $X \relbar Y \relbar Z$ the property (5.6) corresponds to a v-structure $X \rightarrow Y \leftarrow Z$. On the contrary, knowing only that the interaction information is less than zero does not help with inferring the network because the three possible differences between mutual information and conditional mutual are equivalent. Thus, it is not evident which variable should be the collider.
+%Therefore, the only possibility for orienting the arcs using the interaction information is to use the following property:
+%\begin{quote}
+%Given three variables $X$, $Y$ and $Z$ and a structure $X \relbar Y \relbar Z$, then if $I(X,Z|Y) > I(X,Z)$, that is $C(X,Y,Z) < 0$, then $X \rightarrow Y \leftarrow Z$
+%\end{quote}
 
-Therefore, the only possibility for orienting the arcs using the interaction information is to use the following property:
+In this work we use property (\ref{eq:cneg}) to rank the genes selected in $\mathbf{X}_\mathcal{S}$ based on their degree of causality for the target gene $X_T$. More specifically the genes selected in $\mathbf{X}_\mathcal{S}$ are ranked by a causality score
 
-\begin{quote}
-Given three variables $X$, $Y$ and $Z$ and a structure $X \relbar Y \relbar Z$, then if $I(X,Z|Y) > I(X,Z)$, i.e., $C(X,Y,Z) < 0$, then $X \rightarrow Y \leftarrow Z$
-
-%If the structure is given by $X \rightarrow Y \relbar Z$ and if $I(X,Z|Y) \leq I(X,Z)$, i.e., $C(X,Y,Z) \geq 0$, then 
-%$$ X \rightarrow Y \rightarrow Z$$
-\end{quote}
-
+$$q_k = \max_{X_i\in \mathbf{X}_\mathcal{S}}{\{-C(X_i,X_T,X_k)\}},$$
+where for each gene $X_k$, the score $q_k$ is determined by the maximal negative interaction information between the target gene $X_T$, $X_k$ and any other variable $X_i\in \mathbf{X}_\mathcal{S}$ forming a possible v-structure $X_i \rightarrow X_T \leftarrow X_k$. The causality score $q_k \mathrm{\ for\ } X_k \in \mathbf{X}_\mathcal{S}$ lays in $\{-1,1\}$.
+ 
+For each target gene $X_T$, the selected genes $X_k \in \mathbf{X}_\mathcal{S}$ are ranked by their causality score $q_k$ while the genes which are not selected, $X_j \notin \mathbf{X}_\mathcal{S}$, are assigned the minimum causality score of $-1$. The matrix $Q_{m \times m}$ is then populated such that $Q_{ij}$ is the causality score of the interaction between genes $X_i \rightarrow X_j$.
 \noindent Depending on the data, we can now identify some of the genes as parents.
 
 \subsubsection*{Combination with priors}
 
-To infer the final network topology, we combine, for each interaction between $gene_i$ and $gene_j$, the score based on priors ($P_{ij}$) and MRMR+causality~inference ($M_{ij}$). We let users control the weight put on the priors, i.e., their confidence on the prior knowledge gathered on internet:
-$$ w P_{ij} + (1-w) M_{ij} $$
-where $w \in [0,1]$.
+To infer the final network topology, we combine for each interaction between gene $X_i$ and gene $X_j$, the score based on priors ($P_{ij}$) and MRMR+causality~inference ($Q_{ij}$). We let users control the weight put on the priors, which represents their confidence on their prior knowledge (either gathered with the PN web application or another source), using the following combination schema
+\begin{equation}
+g_{ij} = w P_{ij} + (1-w) Q_{ij} \label{eq:combiscore}
+\end{equation}
+where $g_{ij}$ is the combined topological score for the interaction $X_i \rightarrow X_j$ and  $w \in [0,1]$. To ensure sparsity of the inferred network only the $n$ interactions with the largest $g_{ij} > 0$ are considered in the network topology. In this case $n$ is less or equal to the maximum number of parents allowed by the user. The choice of $0$ as cutoff for the interaction score enables to focus on the genes for which causality is supported by the data and/or the priors.
 
-Users can then easily infer networks using prior knowledge only ($w = 1$) or using gene expression data only ($w = 0$). However, we will see in our real case study that a combination of priors and gene expression data usually yields inference of better networks.
+Note that our schema for combining scores computed from priors and genomic data (Equation~(\ref{eq:combiscore})) allows users to easily infer networks using prior knowledge only ($w = 1$) or using genomic data only ($w = 0$), or a combination of priors and genomic data.
 
-\subsubsection*{Predictive ability of the network model}
+\section{Predictive ability of the network model\label{sec:predabmodel}}
 
-The last step of our network inference approach is the fitting of local regression models to enable prediction of gene expressions. To do so, we fit a linear regression model for each gene in networks using its parents as predictors.
+In the last step of our network inference approach we use the network topology to build a predictive model. Such a predictive network model should be able to make one- and multi-step predictions. One-step prediction refers (i) to prediction the  expression of a gene of interest from the expression of its parents only or (ii) to prediction of the effect of a gene perturbation on its direct children. Multi-step prediction refers to prediction of the state of some missing genes in the network or the direct and indirect effect of a perturbation.
+
+With the inferred topology and genomic data in hands we can use different methods to make our network model predictive. If the data can be discretized in a biological meaningful way, we can compute conditional probability tables for all genes and use then to make one-step prediction, and subsequently compute the marginal probabilities to make multi-step predictions. If the data are continuous, we can fit local (linear) regression models for all genes, using parent genes as predictors, and then use these models to make one- and multi-step predictions.
+
+In this work we fitted traditional linear regression model for each gene (target gene $X_T$) in the network by using only the parent genes ($\mathbf{X}_\mathcal{P}$) as predictors
+\begin{equation}
+X_T = \beta_0 + \sum_{X_i \in \mathbf{X}_\mathcal{P}}{\beta_i X_i}
+\end{equation}
+where $\beta$ are the coefficients estimated via the ordinary least squares method.
+
 
 \bigskip
 This novel approach is implemented in the \Rpackage{predictionet} package and is also integrated in the \textit{Predictive Networks} web application (see "Analysis" panel). Even if the package is not yet available from Bioconductor\footnote{\url{http://www.bioconductor.org}}, a public Git repository is accessible from \url{https://github.com/bhaibeka/predictionet}; any non-violent and constructive feedback is welcome. \smiley
@@ -337,7 +352,7 @@ To reduce the computational time, we will focus on the top 15 genes which are th
 
 <<firstnetinf,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
 ## number of genes to select for the analysis
-genen <- 25
+genen <- 30
 ## select only the top genes
 goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
 @
@@ -345,7 +360,7 @@ goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), dec
 Now run the network inference on the reduced \Robject{expO.colon.ras} dataset:
 
 <<firstnetinf,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
-mynet <- netinf(data=data.ras[ ,goi], priors=pn.priors.counts[goi,goi], priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
+mynet <- netinf(data=data.ras[ ,goi], priors=pn.priors.counts[goi,goi], priors.count=TRUE, priors.weight=0.5, maxparents=4, method="regrnet", seed=54321)
 @
 
 \medskip
@@ -424,7 +439,7 @@ plot.network(x=xnet2, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FAL
 \noindent The idea is to use a cross-validation procedure\footnote{\url{http://en.wikipedia.org/wiki/Cross-validation_(statistics)}} to infer multiple networks from different training datasets to assess both the stability of the inference and its predictive ability. The function \Rfunction{netinf.cv}, although computationally intensive, is doing all the work for us. The vast majority of the parameters are the same than for the \Rfunction{netinf} function, with some additions such as \Robject{nfold} that is the number of folds for the cross-validation procedure.
 
 <<regrnetinfcv,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
-myres.cv <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=3, priors.weight=0.5, method="regrnet", nfold=10, seed=54321)
+myres.cv <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=4, priors.weight=0.5, method="regrnet", nfold=10, seed=54321)
 @
 
 \noindent The object \Robject{myres.cv} contains a lot of information related to the network inference process:
@@ -679,7 +694,7 @@ par(def.par)
 
 When large network are inferred ($>50$ variables), any plot will be extremely busy and complicated to interpret, This is the reason why the function \Rfunction{netinf2gml} has been implemented in the \Rpackage{predictionet} package in order to allow to export any networks inferred from the \Rfunction{netinf} or \Rfunction{netinf.cv} functions in a file that is readable in many third-party software. Let's export a \texttt{gml} file containing all the information about the network model we just inferred from the \Rfunction{netinf.cv} function.
 
-<<regnetcvpriorsweight,echo=TRUE,results=hide,cache=TRUE,eval=FALSE>>=
+<<regnetcvexport,echo=TRUE,results=hide,cache=TRUE,eval=FALSE>>=
 netinf2gml(object=myres.cv, file="regrnet_expO_cv")
 @
 
@@ -692,7 +707,6 @@ A CML file called \texttt{regrnet\_expO\_cv.gml} and a Vizmap Property file \tex
 \label{fig:cytoscapescreen}
 \end{figure}
 
-\clearpage
 \section{Comparison of network inference with respect to the priors}
 
 Based on our approach to quantify the stability and predictive ability of a gene interaction network, we are now able to statistically compare the performance of two or more networks. This network model selection could help us optimize a parameter such as the weight of the priors during the network inference (\Robject{priors.weight}) or identify the best method of network inference (Bayesian vs regression-based network inference for instance).
@@ -702,15 +716,15 @@ Based on our approach to quantify the stability and predictive ability of a gene
 
 <<regnetcvpriorsweight,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
 ## priors.weight 0
-myres.cv.pw0 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=3, priors.weight=0, method="regrnet", nfold=10, seed=54321)
+myres.cv.pw0 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=4, priors.weight=0, method="regrnet", nfold=10, seed=54321)
 ## priors.weight 0.25
-myres.cv.pw025 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=3, priors.weight=0.25, method="regrnet", nfold=10, seed=54321)
+myres.cv.pw025 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=4, priors.weight=0.25, method="regrnet", nfold=10, seed=54321)
 ## priors.weight 0.5
 myres.cv.pw050 <- myres.cv
 ## priors.weight 0.75
-myres.cv.pw075 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=3, priors.weight=0.75, method="regrnet", nfold=10, seed=54321)
+myres.cv.pw075 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=4, priors.weight=0.75, method="regrnet", nfold=10, seed=54321)
 ## priors.weight 0
-myres.cv.pw1 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=3, priors.weight=1, method="regrnet", nfold=10, seed=54321)
+myres.cv.pw1 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.counts[goi,goi], maxparents=4, priors.weight=1, method="regrnet", nfold=10, seed=54321)
 @
 
 %\medskip
@@ -832,7 +846,6 @@ print(pairwise.wilcox.test(x=as.vector(myr2.cv.pw), g=gg, paired=TRUE, exact=FAL
 \noindent Similar conclusions can be drawn by computing the $MCC$.
 
 
-\clearpage
 \section{Comparison of network inference with respect to the training data}
 
 To identify the parts of the networks where interactions are well supported by the data we estimated in cross-validation edge-specific stabilities and gene-specific prediction scores of a given network model. Ultimately these statistics should help us identify the parts of the network that are generalizable, whose inference does not strongly depend on the dataset used as training set.
@@ -845,10 +858,10 @@ First infer a network from \Robject{expO.colon.ras} and \Robject{jerissen.colon.
 
 <<netinfcv12,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
 ## expO
-myres21.cv <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=priors2.ras[goi,goi], maxparents=3, priors.weight=0, method="regrnet", nfold=10, seed=54321)
+myres21.cv <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=priors2.ras[goi,goi], maxparents=4, priors.weight=0, method="regrnet", nfold=10, seed=54321)
 
 ## jorissen
-myres22.cv <- netinf.cv(data=data2.ras[ ,goi], categories=3, priors=priors2.ras[goi,goi], maxparents=3, priors.weight=0, method="regrnet", nfold=10, seed=54321)
+myres22.cv <- netinf.cv(data=data2.ras[ ,goi], categories=3, priors=priors2.ras[goi,goi], maxparents=4, priors.weight=0, method="regrnet", nfold=10, seed=54321)
 @
 
 Let's display the topologies of the networks inferred from these two datasets. As can be seen in Figure~\ref{fig:topo1topo2}, approximately half of the interactions are inferred in both datasets.

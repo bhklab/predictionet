@@ -6,7 +6,7 @@
 Main function of the \code{predictionet} package, \code{netinf} infers a gene network by combining priors and genomic data. The two main network inference methodologies implemented so far are the bayesian and regression-based inferences.
 }
 \usage{
-netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), causal = TRUE, seed = 54321, retoptions = "all", ...)
+netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), ensemble.model = c("full","best"), ensemble.maxnsol = 3, causal = TRUE, seed = 54321, retoptions = "all", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,6 +22,8 @@ netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, prio
  \item{subset}{ vector of indices to select only subset of the observations. }
   \item{method}{ \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package, \code{bayesnet.ensemble} for ensemble bayesian network inference with the \code{catnet} package. }
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
+	\item{ensemble.model}{ Could be either \code{full} or \code{best} depending how the equivalent networks are selected to be included in the ensemble network: for \code{full} bootstrapping is used to identify all the statistically equivalent networks, it \code{best} only the top \code{ensemble.maxnsol} are considered at each step of the feature selection.}
+	\item{ensemble.maxnsol}{ maximum number of solutions to consider at each step of the feature selection for the method=\code{ensemble.regrnet}, default is 3.}
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the network inference deterministic. }
 	\item{retoptions}{ if retoptions="all" al the information about the inferred network will be returned. This may require a lot of memory for networks of hundreds of genes. }
@@ -111,5 +113,5 @@ print(pred.score(data=mydata, pred=mypreds, method="mcc"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-%\keyword{ ~kwd1 }
+\keyword{ graphs }
 %\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

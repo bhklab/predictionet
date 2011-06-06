@@ -9,69 +9,64 @@
 `.rank.genes.causal.perturbations` <- 
 function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.push=FALSE, causal=TRUE) {
 	
-########################
-### initialize variables
-########################
+	########################
+	### initialize variables
+	########################
 	res <- matrix(NA, nrow=length(predn), ncol=ncol(data) - 1, dimnames=list(dimnames(data)[[2]][predn], seq(1, ncol(data) - 1)))
 	res.netw <- matrix(0, nrow=ncol(data), ncol=length(predn), dimnames=list(dimnames(data)[[2]], dimnames(data)[[2]][predn]))
-	
 	data.original <- data.matrix(data)
-	
-	
+	score.causal <- matrix(Inf, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
 	if(priors.weight != 1) {
-## data will be used to rank the potential parent genes
+		## data will be used to rank the potential parent genes
 		mrmr.global <- NULL
 		if(all(apply(perturbations, 2, sum, na.rm=TRUE) == 0) & sum(is.na(perturbations)) == 0) {
-## no perturbations
-## compute mrmr score for the target genes
-## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
+			## no perturbations
+			## compute mrmr score for the target genes
+			## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
 			mrmr.global <- .Call("mrnet_adapted", data.original, maxparents, ncol(data.original), nrow(data.original), predn, length(predn), -1000)
 			mrmr.global <- matrix(mrmr.global, nrow=ncol(data.original), ncol=ncol(data.original), byrow=FALSE)
 			dimnames(mrmr.global) <- list(colnames(data.original), colnames(data.original))
 			mrmr.global[mrmr.global == -1000] <- NA
 		}
-		
-		score.causal <- matrix(Inf, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
-		
 		for(i in 1:length(predn)) {
 			data <- data.original
-## remove observation where the target variable was perturbed (no link between observation and target variable)
+			## remove observation where the target variable was perturbed (no link between observation and target variable)
 			ind <- which(is.na(perturbations[, predn[i]]) | perturbations[, predn[i]] == 1)
 			if(length(ind)>0) {
 				data <- data[-ind,]
-## since the target gene has been perturbed in some of the experiments we should recompute the mim and mrmr matrices
-## compute mrmr score for the target genes
-## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
+				## since the target gene has been perturbed in some of the experiments we should recompute the mim and mrmr matrices
+				## compute mrmr score for the target genes
+				## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
 				mrmr <- .Call("mrnet_adapted", data, maxparents, ncol(data), nrow(data), predn, length(predn), -1000)
 				mrmr <- matrix(mrmr, nrow=ncol(data), ncol=ncol(data), byrow=FALSE)
 				dimnames(mrmr) <- list(colnames(data),colnames(data))
 				mrmr[mrmr == -1000] <- NA
 			} else { mrmr <- mrmr.global }
-## mrmr scores on the diagonal should be NA
+			## mrmr scores on the diagonal should be NA
 			diag(mrmr) <- NA
-## select only the variables specified by the user (predn)
+			## select only the variables specified by the user (predn)
 			mrmr <- mrmr[ , predn, drop=FALSE]
 			
-########################
-### compute mrmr score matrix
-########################
-## normalization of mrmr scores
+			########################
+			### compute mrmr score matrix
+			########################
+			## normalization of mrmr scores
 			mrmr <- mrmr/max(abs(mrmr), na.rm=TRUE)
-## avoid mrmr score of exactly 0
+			## avoid mrmr score of exactly 0
 			mrmr[!is.na(mrmr) & mrmr == 0] <- 1e-16
 			score <- matrix(0, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
 			score[ , predn][!is.na(mrmr)] <- mrmr[!is.na(mrmr)]
 			
 			if(causal) {
-########################
-## find all adjacencies of node to predict in score
-########################
+				########################
+				## find all adjacencies of node to predict in score
+				########################
 				tmp.adj <- matrix(0,ncol=ncol(data),nrow=ncol(data), dimnames=list(colnames(data), colnames(data)))
 				tmp.adj[predn[i],] <- tmp.adj[ ,predn[i]] <- score[ ,predn[i]]
 				
-########################
-## determine all triplets X.k-X.j-X.l from these adjecencies
-########################
+				########################
+				## determine all triplets X.k-X.j-X.l from these adjecencies
+				########################
 				trip <- (.network2triplets(tmp.adj))
 				parents <- NULL
 				score.parents <- NULL
@@ -79,14 +74,14 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 					if(length(trip)==3){
 						trip <- (t(as.matrix(trip)))
 					}
-########################
-## compute I(X.k,X.l)-I(X.k,X.l|X.j)
-########################
+					########################
+					## compute I(X.k,X.l)-I(X.k,X.l|X.j)
+					########################
 					
 					trip <- as.data.frame(cbind(trip,(.get.ii4triplets.gaussian(data,trip))))
-########################
-## remove those triplets for which the outer nodes are connected
-########################
+					########################
+					## remove those triplets for which the outer nodes are connected
+					########################
 					ind.rm <- NULL
 					for(j in 1:nrow(trip)){
 						if(score[trip[j,1],trip[j,3]] !=0 || score[trip[j,3],trip[j,1]] !=0) {
@@ -94,9 +89,9 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 						}
 					}
 					if(!is.null(ind.rm)) { trip <- (trip[-ind.rm, , drop=FALSE]) }
-########################
-## if there are triplets for which I(X,Z)-I(X,Z|Y)<0, add these to the list of parents
-########################
+					########################
+					## if there are triplets for which I(X,Z)-I(X,Z|Y)<0, add these to the list of parents
+					########################
 					if(nrow(trip)>0){
 						for(j in 1:nrow(trip)){
 							if(!is.nan(trip[j,4]) && trip[j,4] < score.causal[trip[j,1],trip[j,2]]){
@@ -109,31 +104,30 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 					}
 				}
 			} else {
-## no causality inference, all connected are parents
+				## no causality inference, all connected are parents
 				parents <- which(score[ , predn[i]] != 0)
 				if(length(parents) == 0) { parents <- NULL }
-## parents into network matrix
+				## parents into network matrix
 				if(!is.null(parents)) {
-## take the minimum between the mrmr scores and 0 for the genes for which we were not able to infer causality
+				## take the minimum between the mrmr scores and 0 for the genes for which we were not able to infer causality
 					tt <- score[ ,predn[i]]
-					parix <- which(score[ ,predn[i]] != 0)					  
+					parix <- which(score[ ,predn[i]] != 0)
 					tt[setdiff(parix, parents)] <- ifelse(tt[setdiff(parix, parents)] < 0, tt[setdiff(parix, parents)], 0)
-## it is not smooth but it penalized the genes with positive mrmr score but for which we do not evidence for causality
 					res.netw[ ,i] <- tt
 				}
 			}
 		}
 	}
-	if(causal){
-		score.causal <- score.causal/(-max(abs(score.causal[!is.infinite(score.causal)])))
-		score.causal[is.infinite(score.causal)] <-  -1
+	if(causal) {
+		if(!all(is.infinite(score.causal))) { score.causal <- score.causal/(-max(abs(score.causal[!is.infinite(score.causal)]))) }
+		score.causal[is.na(score.causal) | is.infinite(score.causal)] <- -1
 		res.netw <- score.causal[,predn]
 	}
-########################
-## (1-w)*M+w*P weighted score from prior knowledge and data
-########################
+	########################
+	## (1-w)*M+w*P weighted score from prior knowledge and data
+	########################
 	score <- (1-priors.weight)*res.netw+priors.weight*priors[ , predn, drop=FALSE]
-## no self-loops
+	## no self-loops
 	diag(score[dimnames(score)[[2]], dimnames(score)[[2]]]) <- 0
 	for(j in 1:length(predn)){
 		tmp.s <- sort(score[,j],decreasing=TRUE,index.return=TRUE)

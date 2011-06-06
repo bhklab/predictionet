@@ -15,21 +15,21 @@
 function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
-## create matrix of no perturbations
+		## create matrix of no perturbations
 		perturbations <- matrix(0, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
 	}	
 	if(!missing(subset)) {
-## select subset of the data (observations)
+		## select subset of the data (observations)
 		data <- data[subset, , drop=FALSE]
 		perturbations <- perturbations[subset, , drop=FALSE]
 	}
 	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
 	nn <- dimnames(data)[[2]][predn] ## variables (genes) to fit during network inference
 	if(!missing(categories)) {
-## discretize gene expression data
+		## discretize gene expression data
 		if(is.numeric(categories)) {
 			if(length(categories) == 1) {
-## use the same number of categories for each variable
+				## use the same number of categories for each variable
 				categories <- rep(categories, ncol(data))
 				names(categories) <- dimnames(data)[[2]]
 			}
@@ -40,7 +40,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		categories <- cuts.discr
 	} else { mydata.discr <- data }
 	
-## infer network from the whole dataset
+	## infer network from the whole dataset
 	mynetglobal <- netinf(data=data, categories=categories, perturbations=perturbations, priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method, regrmodel=regrmodel, causal=causal)
 ## and the global topology
 	mytopoglobal <- net2topo(net=mynetglobal)
@@ -69,24 +69,27 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		
 		resnull <- rep(NA, ncol(data))
 		names(resnull) <- colnames(data)
-## performance estimation: R2
+		## performance estimation: R2
 		mynet.r2 <- resnull
 		if(method %in% c("regrnet")) { mynet.r2 <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="r2")[nn] }
-## performance estimation: NRMSE
+		## performance estimation: NRMSE
 		mynet.nrmse <- resnull
 		if(method %in% c("regrnet")) { mynet.nrmse <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="nrmse")[nn] }
-## performance estimation: MCC
+		## performance estimation: MCC
 		pred.discr <- mynet.pred
-		if(method %in% c("regrnet")) {
-## discretize predicted gene expression data 
+		if(method %in% c("regrnet") && !missing(categories)) {
+			## discretize predicted gene expression data 
 			pred.discr <- data.discretize(data=mynet.pred, cuts=cuts.discr[dimnames(mynet.pred)[[2]]])	
 		}
-		mynet.mcc <- pred.score(data=mydata.discr[s.ix, dimnames(mynet.pred)[[2]], drop=FALSE], pred=pred.discr, method="mcc")[nn]
+		if((method %in% c("regrnet") && !missing(categories)) || method %in% c("bayesnet")) { mynet.mcc <- pred.score(data=mydata.discr[s.ix, dimnames(mynet.pred)[[2]], drop=FALSE], pred=pred.discr, method="mcc")[nn] } else { 
+			mynet.mcc <- rep(NA, length(nn))
+			names(mynet.mcc) <- nn
+		}
 		
-## adjacency matrix
+		## adjacency matrix
 		topol <- net2topo(net=mynet)
 		
-## save results
+		## save results
 		myr2 <- rbind(myr2, mynet.r2)
 		mynrmse <- rbind(mynrmse, mynet.nrmse)
 		mymcc <- rbind(mymcc, mynet.mcc)

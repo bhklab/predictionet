@@ -14,7 +14,7 @@
 ## optimize.nparents.causal: to obtain a number of causal parents as close as possible to the maxparents, this option should be set to TRUE, otherwise the inferred network might be considerably more sparse
 
 `netinf` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"),ensemble.model=c("full","best"), causal=TRUE, seed=54321, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), ensemble.model=c("full","best"), ensemble.maxnsol=3, causal=TRUE, seed=54321, retoptions="all", ...) {
 ## select more genes to find a number of cauqal variables close or more than maxparents
 	if(ncol(data) < 2) { stop("Number of variables is too small to infer a network!") }
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
@@ -22,6 +22,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	maxparents <- ifelse(maxparents < 2, 2, maxparents)
 	method <- match.arg(method)
 	regrmodel <- match.arg(regrmodel)
+	ensemble.model <- match.arg(ensemble.model)
 	if(missing(perturbations)) {
 ## create matrix of no perturbations
 		perturbations <- matrix(0, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
@@ -113,11 +114,10 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		   "regrnet.ensemble"={
 ## fit an ensemble regression model
 		   rep_boot <- 200
-		   maxnsol <- maxparents
 		   if(ensemble.model=="best"){
-		   vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, maxnsol, -1000)
+		   vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 		   }else if (ensemble.model=="full"){
-		   vec_ensemble <- .Call("mrmr_ensemble_fixsize", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, maxnsol, -1000)
+		   vec_ensemble <- .Call("mrmr_ensemble_fixsize", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 		   }
 		   net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
 		   models.equiv <- .extract.all.parents(data,vec_ensemble,maxparents,predn)

@@ -2,13 +2,13 @@
 \alias{net2topo}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-function transforming a network model into an adjacency matrix: parents in rows, children in columns.
+Function transforming a network model into an adjacency matrix: parents in rows, children in columns
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function transforms a network model into an adjacency matrix: parents in rows, children in columns.
 }
 \usage{
-net2topo(net, coefficients=FALSE, ...)
+net2topo(net, coefficients=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,42 +18,47 @@ net2topo(net, coefficients=FALSE, ...)
   \item{coefficients}{
 %%     ~~Describe \code{coefficients} here~~
 }
-  \item{...}{
-%%     ~~Describe \code{coefficients} here~~
 }
-}
-\details{
+%%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%%}
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Matrix of binary values (0=absence of an edge and 1=presence of an edge) or regression coefficients as estimated in the local regression models (input=parents nodes, output=target/child node)
 }
-\references{
+%%\references{
 %% ~put references to the literature/web site here ~
-}
+%%}
 \author{
-%%  ~~who you are~~
+Benjamin Haibe-Kains, Catharina Olsen
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-\link{regrnet2topo}, \link{.bayesnet2topo}
-}
+%%\seealso{
+%%}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+## load gene expression data for colon cancer data, list of genes related to RAS signaling pathway and the corresponding priors
+data(expO.colon.ras)
+## number of genes to select for the analysis
+genen <- 10
+## select only the top genes
+goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
+mydata <- data.ras[ , goi, drop=FALSE]
+myannot <- annot.ras[goi, , drop=FALSE]
+mypriors <- priors.ras[goi, goi, drop=FALSE]
+mydemo <- demo.ras
+## regression-based network inference
+res <- netinf(data=mydata, categories=3, priors=mypriors, priors.weight=0.5, method="regrnet", seed=54321)
 
+## extract adjacency matrix from inferred network
+net2topo(net=res)
+## with coefficients
+net2topo(net=res, coefficients=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ graphs }
+%%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

@@ -2,10 +2,10 @@
 \alias{data.discretize}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-function to discretize data based on user specified cutoffs
+Function to discretize data based on user specified cutoffs
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function enable  discretization of data based on cutoffs specified by the users
 }
 \usage{
 data.discretize(data, cuts)

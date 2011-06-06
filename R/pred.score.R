@@ -6,6 +6,8 @@
 ## method: scoring metric: nrmse, mcc,...
 `pred.score` <- 
 function(data, pred, categories, method=c("r2", "nrmse", "mcc")) {
+	if(is.vector(data)) { data <- as.matrix(data, ncol=1, dimnames=list(names(data), "X")) }
+	if(is.vector(pred)) { pred <- as.matrix(pred, ncol=1, dimnames=list(names(pred), "X")) }
 	method <- match.arg(method)
 	if(method %in% c("mcc")) {
 ## need to discretize the data to compute this performance criterion
