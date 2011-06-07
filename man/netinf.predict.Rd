@@ -33,11 +33,7 @@ netinf.predict(net, data, categories, perturbations, subset, predn)
 %%  ~~ If necessary, more details than the description above ~~
 %%}
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+matrix of predicted values
 }
 %%\references{
 %% ~put references to the literature/web site here ~

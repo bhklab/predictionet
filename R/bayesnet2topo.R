@@ -4,6 +4,6 @@
 `.bayesnet2topo` <- 
 function(net, coefficients=FALSE) {
 	if(coefficients) { return(NULL) }
-	require(catnet)
+	#require(catnet)
 	return(t(catnet::cnMatParents(net$model)))
 }

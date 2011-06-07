@@ -6,7 +6,7 @@
 ### return caterigorical predictions for each gene
 `.pred.onegene.bayesnet.fs` <- 
 function(net, data, categories, perturbations, subset, predn) {
-	require(catnet)
+	#require(catnet)
 	if(missing(perturbations) || is.null(perturbations)) {
 		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
 	} else {

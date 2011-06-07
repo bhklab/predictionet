@@ -45,9 +45,9 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE
 				   mm.reg <- lm(formula=ff, data=dd)
 				   },
 				   "linear.penalized"={
-				   require(penalized)
-				   optlambda1 <- optL1(response=ff, data=dd, model="linear", lambda2=0, minlambda1=1, maxlambda1=10, trace=FALSE, fold=10)
-				   mm.reg <- penalized(response=ff, data=dd, model="linear", lambda1=optlambda1$lambda, lambda2=0, trace=FALSE)
+				   #require(penalized)
+				   optlambda1 <- penalized::optL1(response=ff, data=dd, model="linear", lambda2=0, minlambda1=1, maxlambda1=10, trace=FALSE, fold=10)
+				   mm.reg <- penalized::penalized(response=ff, data=dd, model="linear", lambda1=optlambda1$lambda, lambda2=0, trace=FALSE)
 					## cor(data[ , nn[i]], predict(object=mm.reg, data=dd)[ , 1])
 					## compare with lm
 					## mm <- lm(formula=ff, data=dd)

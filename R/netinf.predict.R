@@ -10,7 +10,7 @@ function(net, data, categories, perturbations, subset, predn) {
 		   res <- .pred.onegene.regrnet.fs(net=net$net, data=data, perturbations=perturbations, subset=subset, predn=predn)
 		   }, 
 		   "regrnet.ensemble"={
-			## nsemble network model
+			## ensemble network model
 		   stop("Ensemble regression-based network inference is not implemented yet!")
 		   })
 	return(res)

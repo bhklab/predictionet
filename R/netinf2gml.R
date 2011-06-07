@@ -5,7 +5,7 @@
 ## return a igraph object and create a GML file
 'netinf2gml' <- 
 function(object, edge.info, node.info, file="predictionet") {
-	require(igraph)
+	#require(igraph)
 	## adjacency matrix representing the topology; parents in rows, children in columns
 	net.topo <- object$topology
 	if(any(dim(net.topo) <= 0)) { stop("network should contain at least one node!") }

@@ -35,8 +35,8 @@ function(net, data, perturbations, subset, predn) {
 				   },
 				   "penfit"= {
 					## penalized linear model
-				   require(penalized)
-				   preds[ , nnix[i]] <- predict(object=model.i, data=data.frame(data))[ , 1]
+					#require(penalized)
+					preds[ , nnix[i]] <- penalized::predict(object=model.i, data=data.frame(data))[ , 1]
 				   })
 		} else { preds[ , nnix[i]] <- model.i }
 	}
