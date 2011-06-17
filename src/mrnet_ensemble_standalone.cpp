@@ -93,6 +93,152 @@ void remove_equiv_subtrees(tree<int>& res, tree<double>& res_mean){
 		depth_old=res.depth(it);
 	}
 }
+int power(int a, int b)
+{
+	int c=a;
+	for (int n=b; n>1; n--) c*=a;
+	return c;
+}
+
+int verify_equivalentset (tree<int>& tr, tree<int>::pre_order_iterator it, tree<int>::pre_order_iterator end, int maxnsol, int order_addition[], int res_vec[]){
+	if(!tr.is_valid(it)) return 0;
+	
+	bool found=false;
+	int number_elements_to_remove=0, cnt=1, index=0;
+	tree<int>::leaf_iterator li=tr.begin_leaf(it);
+	int depth=tr.depth(li);
+	tree<int>::pre_order_iterator it2;
+	int vec_old[depth+1];
+	int mat_res [power(maxnsol,(depth))][depth+2];
+	int number_leafs=power(maxnsol,(depth));
+	int to_remove[number_leafs];
+	
+	for (int k=0; k< number_leafs ; k++) {
+		to_remove[k]=0;
+	}
+	
+	while( li!=tr.end_leaf(it) ){
+		
+		vec_old[0]=*(li);
+		it2=li;
+		while(it2!=tr.begin()){
+			it2=tr.parent(it2);
+			vec_old[cnt]=*(it2);
+			cnt++;
+		}
+		sort(vec_old,vec_old+depth+1);
+		
+		mat_res[index][depth+1]=0;
+		for(int k=0;k<=depth;k++){
+			mat_res[index][k]=vec_old[k];
+			mat_res[index][depth+1]+=vec_old[k]+power(2,k);
+		}
+		index++;
+		cnt=1;
+		li++;
+		
+	}
+	
+	index=0;
+	bool found1=false,found2;
+	for(int k=0;k<(power(maxnsol,(depth))-1) && !found1;k++){
+		for(int j=k+1;j<(power(maxnsol,(depth)));j++){
+			found2=false;
+			if(mat_res[k][depth+1]==mat_res[j][depth+1]){
+				for(int i=0;i<=depth && !found2;i++){
+					if(mat_res[j][i]!=mat_res[k][i]){
+						found2=true;
+					}
+				}
+			}else{
+				found2=true;
+			}
+			if(!found2){
+				if(order_addition[k]!= -1 || order_addition[j]!=-1){
+					number_elements_to_remove++;
+					found=true;
+					if(order_addition[j]< order_addition[k]){
+						order_addition[k]=-1;
+						found=true;
+					}else {
+						order_addition[j]=-1;
+						found=true;
+					}
+				}
+				
+			}
+		}
+	}
+	
+	cnt=0;
+	int rootdepth=tr.depth(it);
+	
+	li=tr.begin_leaf(tr.begin());
+	cnt=0;
+	if(found){
+		while (li!=tr.end_leaf(tr.begin())) {
+			it2=li;		
+			li++;
+			if (order_addition[cnt]== -1) {
+				res_vec[cnt]=-1;
+			}
+			tr.erase(it2);
+			cnt++;
+		}
+	}
+	return number_elements_to_remove;
+}
+void build_tree_int( tree<int>& tr, tree<int>::pre_order_iterator it, tree<int>::pre_order_iterator end, int list_elements[],int maxnsol,int tmp_nsel)
+{
+	int cnt=0;
+	if(!tr.is_valid(it)) return;
+	int rootdepth=tr.depth(it);
+	tree<int>::iterator it_old=it;
+	it++;
+	while(it!=end && cnt < tmp_nsel) {
+		it_old=it;
+		++it;	
+		for(int i=0; i<maxnsol;i++){
+			tr.append_child(it_old,list_elements[cnt]);
+			cnt++;
+		}
+	}
+}
+void bootstrap_mrmr_fix(double &mean, double &sd, double data[],int size, int rep_boot, int size_boot,int nsamples, int var_target, int var_interest, int nprev_sel,int* var_ind)
+{
+	//mean
+	//sd
+	//data
+	//size
+	//rep_boot
+	//size_boot
+	//nsamples
+	//var_target
+	//var_interest
+	//nprev_sel
+	//var_ind
+	
+	int *ind;
+	double *mim, *boot_val;
+	
+	ind=new int[size_boot];	
+	mim = new double [size*size];
+	
+	double val_mrmr;
+	
+	for(unsigned int i=1;i<= nsamples;++i){
+		ind[i-1]=i-1;
+	}
+	build_mim_subset(mim, data, size, nsamples, ind, size_boot);
+	val_mrmr=mrnet_onegene( mim, size, nprev_sel, var_ind, var_target, var_interest);	
+	
+	mean=val_mrmr;
+	sd=0;
+	
+	delete [] ind;
+	delete [] mim;
+	//delete [] boot_val;
+}	
 
 void remove_nonequiv_horiz ( tree<int>& res, tree<double>&res_mean, double vec_local_max_mean[], double vec_local_max_sd[] ){
 	//remove horizontally the non-equivalent nodes
@@ -494,6 +640,388 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEX
 	}
 	
 	
+	UNPROTECT(10);
+	
+	return Rres;
+}
+
+
+void mrmr_ensemble_one_gene_nparents (tree<int>& res, tree<int>::pre_order_iterator one, double data[], int nsamples,int n , int max_elements, int predn , int rep_boot, int maxnsol, double threshold){
+	//n					number of variables
+	//predn:			index of target node
+	
+	// nsub: the variables which have been previously selected + target; prev_sel=nsub-target
+	// number of samples to use for bootstrapping is equal to total number of samples
+	int  *nsub, *prev_sel,nsamples_boot=nsamples, nprev_sel=0,tmp_val_max_ind,tmp_nsel, *prev_sel_tmp,*nsub_tmp, *tmp_mrmr_used; 
+	double *res_vec, *vec_mean, *vec_sort, *vec_sd,  *vec_local_max_mean, *vec_local_max_sd,*tmp_mrmr,*tmp_mrmr_back,tmp_val_max;
+	
+	double max_mrmr;
+	int rootdepth, max_mrmr_ind,cnt=0, max_elements_tmp=1,new_child; //current depth in the tree
+	bool notincremented;
+	int local_maxnsol=maxnsol+1;
+	res_vec=new double [n];
+	vec_mean=new double [n];
+	vec_sd=new double [n];
+	vec_sort=new double [n];
+	
+	vec_local_max_mean=new double [max_elements];
+	vec_local_max_sd=new double [max_elements];
+	
+	for(unsigned int k=0;k< max_elements ;++k){
+		vec_local_max_mean[k]=-1000;
+	}
+	
+	prev_sel=new int[max_elements];
+	prev_sel_tmp=new int[max_elements];
+	nsub = new int [max_elements];
+	nsub_tmp = new int [max_elements];
+	int index_mrmr=0;
+	tree<int> res_tmp=res;
+	tree<int>::iterator it_tmp=res_tmp.begin();
+	tree<int>::iterator it_tmp_old=it_tmp;
+	
+	
+	
+	//mrmr score should not be predicted for the target node
+	vec_mean[predn-1]=-1000; vec_sd[predn-1]=-1000; max_mrmr=-1000.0; max_mrmr_ind=-1;notincremented=true;
+	prev_sel[0]=0; nsub[0]=predn;nsub_tmp[0]=predn;
+	tmp_mrmr=new double [n]; tmp_mrmr_back=new double [n]; tmp_mrmr_used=new int [n];
+	
+	tree<int>::pre_order_iterator it;
+	tree<int>::leaf_iterator li,li_old;
+	
+	int entries_left, len_tmp_mrmr= n, target_depth=max_elements, ind_new;
+	bool index_found, exit_condition=false;
+	
+	while (res_tmp.depth(it_tmp)<target_depth && !exit_condition) {
+		it=res_tmp.begin();
+		rootdepth=res_tmp.depth(it);		
+		
+		while(it!=res_tmp.end()) {
+			//initialize mrmr vectors
+			if(!notincremented ){	
+				notincremented=true;
+				cnt++;
+				len_tmp_mrmr=power(maxnsol,(res_tmp.depth(it_tmp)))  * n;
+				
+				tmp_mrmr=new double [len_tmp_mrmr];
+				tmp_mrmr_back=new double [len_tmp_mrmr];
+				tmp_mrmr_used=new int [len_tmp_mrmr];
+				
+				index_mrmr=0;
+				for(unsigned int k=0;k<len_tmp_mrmr;k++){
+					tmp_mrmr_used[k]=0;
+					tmp_mrmr_back[k]=0.0;
+				}
+				li_old=res_tmp.begin_leaf(it_tmp);
+				entries_left=power(maxnsol,(res_tmp.depth(it_tmp)+1));
+			}
+			
+			//compute mrmr values and store all in tmp_mrmr
+			if(res_tmp.depth(it)-rootdepth==max_elements_tmp-1){
+				if(cnt!=0){
+					nsub[res_tmp.depth(it)-1]=*res_tmp.parent(it);		//previous node did not have any children, should be replaced by actual parent; same parent is the same for all siblings
+					nsub[res_tmp.depth(it)]=(*it) ;
+					
+					nsub_tmp[res_tmp.depth(it)-1]=*res_tmp.parent(it);  //previous node did not have any children, should be replaced by actual parent; same parent is the same for all siblings
+					nsub_tmp[res_tmp.depth(it)]=(*it) ;					//add all previously selected variables to prev_sel -> needed in bootstrapping function
+					for (unsigned int i=0;i<max_elements_tmp-1;++i){	
+						prev_sel[i]=nsub[i+1];		
+						prev_sel_tmp[i]=nsub_tmp[i+1];
+					}
+				}
+				////////////
+				// initialize vec_mean and vec_sd for bootstrapping to -1000 if variable is not supposed to be tested (target or prev selected) otherwise 0
+				////////////
+				for(unsigned int k=0;k< n;++k){
+					vec_mean[k]=0;vec_sd[k]=0;
+				}
+				for(unsigned int k=0;k<max_elements_tmp;++k){
+					vec_mean[nsub[k]-1]=-1000;	vec_sd[nsub[k]-1]=-1000;
+				}
+				for(unsigned int k=0;k< n;++k){
+					if(vec_mean[k]!= (-1000)){
+						bootstrap_mrmr_fix(vec_mean[k],vec_sd[k], data,n, rep_boot,nsamples_boot,nsamples,nsub_tmp[0],(k+1), max_elements_tmp-1,prev_sel_tmp);		
+					}	
+					tmp_mrmr[index_mrmr]=vec_mean[k];
+					index_mrmr++;
+				}
+			}else{
+				nsub[res_tmp.depth(it)]=(*it) ;
+			}
+			++it;				
+			
+		}
+		
+		cnt++; max_elements_tmp++; notincremented=false;		
+		tmp_nsel=power(maxnsol,(res_tmp.depth(it_tmp)+1));
+		int added=0, cnt_loop=0, res_vec[tmp_nsel], res_vec_order[tmp_nsel];
+		for(int k=0;k<tmp_nsel;k++){
+			res_vec[k]=-1;
+		}
+		
+		while(added < tmp_nsel && cnt_loop<len_tmp_mrmr && tmp_val_max!= -1000) {
+			tmp_val_max=-1000;
+			tmp_val_max_ind=-1;
+			
+			for(unsigned int k=0;k<len_tmp_mrmr;k++){
+				if(tmp_mrmr[k] > tmp_val_max){
+					tmp_val_max=tmp_mrmr[k];
+					tmp_val_max_ind=k;
+				}
+			}
+			
+			if(tmp_val_max!= -1000){	
+				if(*(it_tmp_old)==*(it_tmp)){
+					res_tmp.append_child(it_tmp,(tmp_val_max_ind+1));
+					added++;
+				}
+				li=li_old;
+				if(res_tmp.depth(it_tmp)>0){
+					ind_new=tmp_val_max_ind/n*maxnsol;
+					int max_index=ind_new+maxnsol;
+					index_found=false;
+					while(!index_found && ind_new<max_index){
+						if(res_vec[ind_new]!= -1){
+							ind_new++;
+						}else {
+							index_found=true;
+						}
+					}
+					if(index_found){
+						res_vec[ind_new]= (tmp_val_max_ind%n +1);
+						res_vec_order[ind_new]=tmp_nsel-entries_left;
+						entries_left--;
+						added++;
+					}else{
+						tmp_mrmr_used[tmp_val_max_ind]=1;
+						tmp_mrmr_back[tmp_val_max_ind]=tmp_mrmr[tmp_val_max_ind];
+					}
+					
+					if(entries_left==0){
+						if (res_tmp.depth(it_tmp)==1) {
+							build_tree_int(res_tmp,res_tmp.begin(),res_tmp.end(),res_vec,maxnsol,tmp_nsel);
+						}else{
+							li=res_tmp.begin_leaf(res_tmp.begin()	);
+							cnt=0;
+							while(cnt<((tmp_nsel/maxnsol)-1)){
+								li++;
+								cnt++;
+							}
+							ind_new=tmp_nsel-1;
+							cnt=0;
+							
+							while(res_tmp.is_valid(li)&& cnt<tmp_nsel){
+								for(int	q=0;q<maxnsol;q++){
+									res_tmp.append_child(li,res_vec[ind_new]);
+									ind_new--;
+									cnt++;
+								}	
+								--li;
+							}
+						}
+						
+						
+						entries_left=verify_equivalentset(res_tmp,res_tmp.begin(),res_tmp.end(),maxnsol,res_vec_order, res_vec);
+						added-=entries_left;
+						
+						for(unsigned int k=0;k<len_tmp_mrmr;k++){
+							if(tmp_mrmr_used[k]==1){
+								tmp_mrmr[k]=tmp_mrmr_back[k];
+								tmp_mrmr_used[k]=0;
+								tmp_mrmr_back[k]=0.0;
+								cnt_loop--;
+							}
+						}
+					}	
+				}else{
+					if(*(it_tmp_old)!=*(it_tmp) && res_tmp.number_of_children(res_tmp.child(it_tmp_old,tmp_val_max_ind/n )) < maxnsol){
+						res_tmp.append_child(res_tmp.child(it_tmp_old,tmp_val_max_ind/n ), tmp_val_max_ind%n +1);
+						added++;
+					}
+				}
+				
+				tmp_mrmr[tmp_val_max_ind]=-1000;
+				cnt_loop++;	
+			}else{
+				
+				
+				li=res_tmp.begin_leaf(res_tmp.begin()	);
+				cnt=0;
+				while(cnt<((tmp_nsel/maxnsol)-1)){
+					li++;
+					cnt++;
+				}
+				
+				ind_new=tmp_nsel-1;
+				cnt=0;
+				
+				while(res_tmp.is_valid(li)&& cnt<tmp_nsel){
+					for(int	q=0;q<maxnsol;q++){
+						
+						if(res_vec[ind_new]!=-1 ){
+							res_tmp.append_child(li,res_vec[ind_new]);
+						}
+						ind_new--;
+						cnt++;
+					}
+					
+					--li;
+				}
+				
+				
+				
+				exit_condition=true;
+			}
+		}
+		it_tmp_old=it_tmp;
+		it_tmp++;
+		
+		it=it_tmp;
+		res=res_tmp;
+		delete[] tmp_mrmr;
+		delete[] tmp_mrmr_used;
+		delete[] tmp_mrmr_back;
+		
+	}
+	
+	res=res_tmp;
+	
+	delete[] res_vec;
+	delete[] vec_mean;
+	delete[] vec_sd;
+	delete[] vec_sort;
+	delete[] vec_local_max_mean;
+	delete[] vec_local_max_sd;
+	delete[] prev_sel;
+	delete[] prev_sel_tmp;
+	delete[] nsub;
+	delete[] nsub_tmp;
+}
+
+
+
+SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rrep_boot, SEXP Rmaxnsol, SEXP Rthreshold){
+	// Rdata:		data should be passed as vector, variable-wise appended
+	// Rmaxparents:	number of maximum number of parents
+	// Rnvar:		number of variables in the dataset
+	// Rnsample:	number of samples in the dataset
+	// Rpredn:		vector of target genes to consider
+	// Rnpredn:		number of target genes (number of elements in Rpredn)
+	// Rrep_boot:	how many bootstrap iterations
+	// Rmaxnsol:	maximum number of children for each node at each step
+	
+	double *data, *threshold;
+	const int* maxparents, * nvar, *nsample, *maxnsol;
+	
+	int *predn, *rep_boot,*res,*res_all,*res_all2;
+	int vec_tmp;
+	const int *npredn;
+	
+	SEXP Rres;
+	
+	srand (time(NULL));
+	PROTECT(Rdata = AS_NUMERIC(Rdata));
+	PROTECT(Rmaxparents= AS_INTEGER(Rmaxparents));
+	PROTECT(Rnvar= AS_INTEGER(Rnvar));	
+	PROTECT(Rnsample= AS_INTEGER(Rnsample));
+	PROTECT(Rpredn = AS_INTEGER(Rpredn));
+	PROTECT(Rnpredn = AS_INTEGER(Rnpredn));
+	PROTECT(Rrep_boot = AS_INTEGER(Rrep_boot));
+	PROTECT(Rmaxnsol= AS_INTEGER(Rmaxnsol));
+	PROTECT(Rthreshold= AS_NUMERIC(Rthreshold));
+	
+	data=NUMERIC_POINTER(Rdata);
+	maxparents = INTEGER_POINTER(Rmaxparents);
+	nvar= INTEGER_POINTER(Rnvar);
+	nsample= INTEGER_POINTER(Rnsample);
+	predn= INTEGER_POINTER(Rpredn);
+	npredn= INTEGER_POINTER(Rnpredn);
+	rep_boot= INTEGER_POINTER(Rrep_boot);	
+	maxnsol= INTEGER_POINTER(Rmaxnsol);
+	threshold = NUMERIC_POINTER(Rthreshold);
+	
+	tree<int> res_tree;
+	tree<int>::iterator top,one;
+	tree<int>::breadth_first_queued_iterator it_final;
+	
+	top=res_tree.begin();
+	
+	int length_res=0;
+	int length_res_old;
+	std::cout << "fixed number of children at each level of the tree"<<std::endl;
+	for(unsigned int i=0;i< *npredn;++i){
+		//initialize tree
+		std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
+		one=res_tree.insert(top, predn[i]);
+		
+		//build ensemble tree
+		mrmr_ensemble_one_gene_nparents(res_tree, one, data,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
+		
+		////////////////////////
+		//convert tree to vector
+		////////////////////////
+		int *tmp_nchildren,*res_tmp;
+		res_tmp=new int [2*(res_tree.size())+1];
+		tmp_nchildren= new int [(res_tree.size())];
+		
+		it_final=res_tree.begin_breadth_first();
+		int cnt=1,cnt2=0;
+		
+		res_tmp[0]=res_tree.size();
+		int rootdepth=res_tree.depth(it_final);
+		while(it_final!=res_tree.end_breadth_first()) {
+			res_tmp[cnt]=*it_final;
+			tmp_nchildren[cnt-1]=(res_tree.number_of_children(it_final));
+			cnt++;
+			++it_final;		
+		}
+		
+		////////////////
+		//save in final result vector
+		////////////////
+		length_res_old=length_res;
+		length_res+=2*(res_tree.size())+1;
+		int *res_all, *res_old;
+		int ind=0;
+		res_all=new int[length_res];
+		if(length_res_old>0){
+			for(unsigned int k=0;k<length_res_old;k++){
+				res_all[k]=res_old[k];
+			}
+		}
+		
+		for(unsigned int k=0;k<=res_tree.size();k++){
+			res_all[length_res_old+k]=res_tmp[k];
+		}
+		for(unsigned int k=0;k<res_tree.size();k++){
+			res_all[length_res_old+k+res_tree.size()+1]=tmp_nchildren[k];
+		}
+		
+		delete [] res_old;
+		res_old=new int[length_res];
+		for(unsigned int k=0;k<length_res;k++){
+			res_old[k]=res_all[k];
+		}
+		
+		delete [] res_all;
+		if(i==(*npredn-1)){
+			PROTECT(Rres = NEW_INTEGER(length_res));
+			res = INTEGER_POINTER(Rres);
+			for(unsigned int k=0;k<length_res;k++){
+				res[k]=res_old[k];
+			}
+			delete [] res_old;
+		}
+		
+		////////////////
+		//erase old tree
+		////////////////
+		
+		delete [] tmp_nchildren;
+		delete [] res_tmp;
+		res_tree.erase(res_tree.begin());
+	}
 	UNPROTECT(10);
 	
 	return Rres;

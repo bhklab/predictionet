@@ -17,9 +17,10 @@ extern "C"
 {
 	SEXP mrnet_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
 	SEXP mrmr_ensemble(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP rep_boot, SEXP maxnsol, SEXP threshold);
-
+	SEXP mrmr_ensemble_nparents(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP rep_boot, SEXP maxnsol, SEXP threshold);
 }
 
 double get_correlation(double data [],int ind_x, int ind_y, int size);
 void build_mim_subset(double mim[],double data[],int nvar,int nsample, int subset [],int size_subset);
-
+int verify_equivalentset (tree<int>& tr, tree<int>::pre_order_iterator it, tree<int>::pre_order_iterator end, int maxnsol, int order_addition[], int res_vec[]);
+double mrnet_onegene(double mim [], int size, int nbvar,int *var_ind,int var_target, int var_interest);
