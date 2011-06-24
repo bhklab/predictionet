@@ -63,7 +63,7 @@ function(adjmat) {
 	for(i in 1:length(nnix)) {
 		nodest <- rep(0, ncol(adjmat2))
 		names(nodest) <- colnames(adjmat2)
-		adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat2, adjmat.mask=adjmat.mask, nodix.from=-1, nodix=nnix[i], nodest)
+		adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat2, adjmat.mask=adjmat.mask, nodix.from=-1, nodix=nnix[i], nodest=nodest)
 		adjmat2[adjmat.mask] <- 0
 	}
 	return(list("adjmat.acyclic"=adjmat2, "adjmat.removed"=adjmat.mask))

@@ -132,7 +132,7 @@ In order to extract previously published gene interactions, Prof John Quackenbus
 
 One can use the \textit{Predictive Networks} web application (Figure~\ref{fig:pnwebappscreen}) to retrieve a list of interactions involving at least one gene included in our list of RAS-related genes. To do so, one has to first create an account to login to the webapp. Then go to "My Page" and create a new gene list by cutting-and-pasting the gene symbols\footnote{Be extremely careful if you use Microsoft Excel since it will automatically interpret SEPT6, that is gene "SEPTIN 6", as the 6th of September!} included in \texttt{files/bild2006\_ras\_signature\_348.csv}. Lastly, we have to export all the resulting triples (e.g., "$gene_a$ regulates $gene_b$ "represented by the interaction $gene_a \rightarrow gene_b$) in a CSV file, \texttt{priors\_ras\_bild2006\_pnwebapp.csv}, by clicking on "View Triples" and then "Download w/ Sentences As". One can use R to read this file and count how many times a gene interaction has been observed in the biomedical literature and reported structured biological databases. %Actually the results of such manipulations have been incorporated into the \Rpackage{predictionet} package as described below.
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 \includegraphics[width=1\textwidth]{predictionet-pn_webapp_ras}
 \caption{Screenshot of the \textit{Predictive Networks} web application where one searches known interactions for HRAS. }
@@ -374,7 +374,7 @@ xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FA
 mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<regrnetopofig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 ## network topology
@@ -415,7 +415,7 @@ xnet2 <- network(x=mytopoglobal2, matrix.type="adjacency", directed=TRUE, loops=
 plot.network(x=xnet2, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col=myedgecols, coord=mynetlayout)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<edgecoldiffig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 mytopoglobal2 <- (myedgecols != "white") + 0
@@ -495,7 +495,7 @@ text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
 par(def.par)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<edgestabfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -554,7 +554,7 @@ text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
 par(def.par)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<genepredabr2fig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -588,7 +588,7 @@ myvertexcols <- mycols[match(mymcc, names(mycols))]
 names(myvertexcols) <- names(mymcc)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<genepredabmccfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -638,7 +638,7 @@ myvertexcols <- mycols[match(mynet.test.r2, names(mycols))]
 names(myvertexcols) <- names(mynet.test.r2)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<genepredabr2testfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -669,7 +669,7 @@ myvertexcols <- mycols[match(mynet.test.mcc, names(mycols))]
 names(myvertexcols) <- names(mynet.test.mcc)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<genepredabmcctestfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -700,7 +700,7 @@ netinf2gml(object=myres.cv, file="regrnet_expO_cv")
 
 A CML file called \texttt{regrnet\_expO\_cv.gml} and a Vizmap Property file \texttt{egrnet\_expO\_cv.props} are then created in the working directory, You can import the GML into Cytoscape and  load the corresponding Vizmap property file. You can move vertices, filter them based on prediction scores, color the edges based on stability, and so on.
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 \includegraphics[width=1\textwidth]{predictionet-cytoscape}
 \caption{Screenshot of a network inferred by \Rpackage{predictionet} and imported into Cytoscape with the Vizmap Property file \textit{predictionet\_vizmap2}. Size of each vertex (gene) is proportional to their prediction score; color of the edges report the edge-specific stability where gray $\rightarrow$ green $\rightarrow$ orange $\rightarrow$ red colors represent edges with low to high stability.}
@@ -752,7 +752,7 @@ plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FA
 par(def.par)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<regnetcvpriorsweightfig2,echo=FALSE,fig=TRUE,height=7,width=7,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -793,7 +793,7 @@ boxplot(mystab.cv.pw, xlab="priors.weight", ylim=c(0, 1), ylab="Edge stability",
 points(x=jitter(x=rep(1:length(mystab.cv.pw), times=sapply(mystab.cv.pw, length)), amount=0.15), y=unlist(mystab.cv.pw), cex=0.55, pch=16, col="royalblue")
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<boxplotstabpwcvfig2,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 gg <- c("0", "0.25", "0.50", "0.75", "1")
@@ -819,7 +819,7 @@ boxplot(myr2.cv.pw, xlab="priors.weight", ylim=c(0, 1), ylab="$R^2$", border="gr
 points(x=jitter(x=rep(1:ncol(myr2.cv.pw), times=nrow(myr2.cv.pw)), amount=0.15), y=as.vector(t(myr2.cv.pw)), cex=0.55, pch=16, col="royalblue")
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<boxplotr2pwcvfig2,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 gg <- c("0", "0.25", "0.50", "0.75", "1")
@@ -889,7 +889,7 @@ plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FA
 par(def.par)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<regnetcvtopo1topo2fig2,echo=FALSE,fig=TRUE,height=5,width=7,results=hide,eval=TRUE>>=
 topo1 <- net2topo(net=myres21.cv$net)
@@ -935,7 +935,7 @@ points(x=jitter(x=rep(1:length(stab2), times=sapply(stab2, length)), amount=0.15
 par(def.par)
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<regnetcvtopo1topo2stabfig2,echo=FALSE,fig=TRUE,height=4,width=7,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -964,7 +964,7 @@ plot(x=pred2$expO, y=pred2$jorissen, xlim=c(0, 0.6), ylim=c(0, 0.6), pch=16, col
 legend(x="bottomright", legend=sprintf("cor = %.2g", cor(pred2$expO, pred2$jorissen, method="spearman", use="complete.obs")), bty="n")
 @
 
-\begin{figure}[h!]
+\begin{figure}[!hb]
 \centering
 <<regnetcvtopo1topo2predfig2,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 pred2 <- list("expO"=apply(myres21.cv$prediction.score.cv$r2, 2, mean, na.rm=TRUE), "jorissen"=apply(myres22.cv$prediction.score.cv$r2, 2, mean, na.rm=TRUE))
