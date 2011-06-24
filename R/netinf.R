@@ -115,7 +115,8 @@
 							if(ensemble.model=="best"){
 								vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 							}else if (ensemble.model=="full"){
-								vec_ensemble <- .Call("mrmr_ensemble_nparents", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
+							#	vec_ensemble <- .Call("mrmr_ensemble_nparents", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
+								vec_ensemble <- .Call("mrmr_ensemble_remove", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 							}
 							net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
 							models.equiv <- .extract.all.parents(data,vec_ensemble,maxparents,predn)
