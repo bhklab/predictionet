@@ -5,7 +5,7 @@
 Function to identify all children of a parent
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function uses a depth-first search algorithm to identify all the children (and their corresponding depth) of a node.
 }
 \usage{
 adj.descent(adjmat, from, depth)
