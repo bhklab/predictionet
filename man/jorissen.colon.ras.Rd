@@ -1,5 +1,5 @@
 \name{jorissen.colon.ras}
-\alias{jorissen.colon2.ras}
+\alias{jorissen.colon.ras}
 \alias{demo2.ras}
 \alias{data2.ras}
 \alias{annot2.ras}
