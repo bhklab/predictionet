@@ -11,9 +11,10 @@
 ## method: "bayesnet" for bayesian network inference with the catnet package, "regrnet" for regression-based network inference
 ## regrmodel: type of regression model to fit when 'regrnet' method is selected
 ## seed: seed to make the function fully deterministic
-## optimize.nparents.causal: to obtain a number of causal parents as close as possible to the maxparents, this option should be set to TRUE, otherwise the inferred network might be considerably more sparse
+## bayesnet.maxcomplexity: maximum complexity for bayesian network inference
+## bayesnet.maxiter: maximum number of iterations for bayesian network inference
 
-`netinf` <-  function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), ensemble.model=c("full","best"), ensemble.maxnsol=3, causal=TRUE, seed=54321, retoptions="all", ...) {
+`netinf` <-  function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), ensemble.model=c("full","best"), ensemble.maxnsol=3, causal=TRUE, seed=54321, retoptions="all", bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
 ## select more genes to find a number of cauqal variables close or more than maxparents
 	if(ncol(data) < 2) { stop("Number of variables is too small to infer a network!") }
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
@@ -48,6 +49,8 @@
 						pp <- (abs(priors) / ma)
 						pp[pp >= 1] <- 0.9
 						priors <- 0.5 + sign(priors) %*% (apply(X=pp, MARGIN=c(1, 2), FUN=function(x, y) { if(y < 0.5) { x <- ((1-y^x)) + x * (y) } else { x <- ((1-y^x)) + x * (1-y) }; return(x); }, y=1-priors.weight)) / 2
+						## FORMULA IS WRONG, NEED TO UPDATE IT
+						priors[priors >= 1] <- 0.99
 					}
 				} else { if(!all(priors >= 0 & priors <= 1)) { stop("if 'priors.count' is FALSE method 'bayesnet' requires priors to be specified as probabilities!") } }
 					## categories
@@ -73,7 +76,7 @@
 						}
 						## data are discretized and nbcat is a list with the corresponding categories
 		   
-						bnet <- .fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, maxparents.push=maxparents.push, seed=seed, ...)
+						bnet <- .fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, maxparents.push=maxparents.push, seed=seed, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
 		   
 						if(retoptions=="all") {
 							return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet))

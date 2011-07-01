@@ -6,7 +6,7 @@
 ## seed: seed to get deterministic results
 ### returns a bayesian network model
 '.fit.catnet' <- 
-function(data, categories, perturbations, priors, priors.weight, maxparents=3, maxparents.push=FALSE, seed=54321, ...) {
+function(data, categories, perturbations, priors, priors.weight, maxparents=3, maxparents.push=FALSE, seed=54321, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
 	#require(catnet)
 	catnet::cnSetSeed(seed)
 	## be aware that catnet package consider any adjacency matrix to have parents in COLUMNS and children in ROWS, that is the inverse of the predictionet package
@@ -33,9 +33,9 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 		}
 		## seed the network inference with the prior topology
 		priororder <- catnet::cnOrder(priorparents)
-		ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), ...)
+		ee.prior <- catnet::cnSearchOrder(data=t(data), perturbations=t(perturbations), maxParentSet=maxparents, nodeOrder=priororder, edgeProb=t(priors), maxComplexity=bayesnet.maxcomplexity)
 		#ee.prior <- NULL
-		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), echo=FALSE, ...)
+		ee <- catnet::cnSearchSA(data=t(data), nodeCats=categories, perturbations=t(perturbations), selectMode="BIC", maxParentSet=maxparents, priorSearch=ee.prior, edgeProb=t(priors), echo=FALSE, maxComplexity=bayesnet.maxcomplexity, maxIter=bayesnet.maxiter)
 		if(maxparents.push) { ee <- ee@nets[[order(ee@complexity, decreasing=TRUE)[1]]] } else { ee <- catnet::cnFindBIC(ee) }
 		## WARNING: cnSearchSA does not look for a solution with the maximum complexity, it stops before!
 		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)

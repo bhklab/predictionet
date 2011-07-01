@@ -6,7 +6,7 @@
 Main function of the \code{predictionet} package, \code{netinf} infers a gene network by combining priors and genomic data. The two main network inference methodologies implemented so far are the bayesian and regression-based inferences.
 }
 \usage{
-netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), ensemble.model = c("full","best"), ensemble.maxnsol = 3, causal = TRUE, seed = 54321, retoptions = "all", ...)
+netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), ensemble.model = c("full","best"), ensemble.maxnsol = 3, causal = TRUE, seed = 54321, retoptions = "all", bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -26,11 +26,12 @@ netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, prio
 	\item{ensemble.maxnsol}{ maximum number of solutions to consider at each step of the feature selection for the method=\code{ensemble.regrnet}, default is 3.}
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the network inference deterministic. }
-	\item{retoptions}{ if retoptions="all" al the information about the inferred network will be returned. This may require a lot of memory for networks of hundreds of genes. }
-	\item{...}{ additional parameters to be passed to the network inference function, see Details.}
+	\item{retoptions}{ if retoptions="all" all the information about the inferred network will be returned. This may require a lot of memory for networks of hundreds of genes. }
+	\item{bayesnet.maxcomplexity}{ maximum complexity for bayesian network inference, see Details. }
+	\item{bayesnet.maxiter}{ maximum number of iterations for bayesian network inference, see Details. }
 }
 \details{
-\code{...} are the additional parameters to be passed to the network inference method. If method='bayesnet' the \link[catnet]{cnSearchSA} from the \code{catnet} package is used for inferring the bayesian network. The most important parameters are \code{maxIter} to specify the maximum number of iterations, \code{stopTime} (positive) to specify the maximal computational time, \code{stopDiff} to specify the minimal improvement in likelihood between each iteration, \code{numThreads} (integer) is the number of parallel threads,  \code{maxComplexity} to specify the maximal network complexity for the search, \code{orderShuffles} is the number of shuffles for generating new candidate orders from the last accepted; see ?\link[catnet]{cnSearchSA} for more details.
+\code{bayesnet.maxcomplexity} and \code{bayesnet.maxiter} are parameters to be passed to the network inference method (see \link[catnet]{cnSearchOrder} and \link[catnet]{cnSearchSA} from the \code{catnet} package for more details).
 }
 \value{
 	\item{method }{name of the method used for network inference. }

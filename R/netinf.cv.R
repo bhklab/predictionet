@@ -12,7 +12,7 @@
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
 `netinf.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", ...) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
 		## create matrix of no perturbations
@@ -61,7 +61,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 ## s.ix contains the indices of the test set
 		
 ## infer network from training data and priors
-		mynet <- netinf(data=data[-s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[-s.ix, , drop=FALSE], priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method, regrmodel=regrmodel, causal=causal)
+		mynet <- netinf(data=data[-s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[-s.ix, , drop=FALSE], priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method, regrmodel=regrmodel, causal=causal, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
 		mynets <- c(mynets, list(mynet))
 		
 ## compute predictions
