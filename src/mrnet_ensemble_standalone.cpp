@@ -166,7 +166,7 @@ int verify_equivalentset_nparents (tree<int>& tr, tree<int>::pre_order_iterator 
 					tmp--;
 				}
 				
-				if(*(li_mrmr)> *(li_mrmr2)){
+				if(*(li_mrmr)< *(li_mrmr2)){
 					to_remove[cnt2]=j;
 				}else {
 					to_remove[cnt2]=k;
