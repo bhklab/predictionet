@@ -77,11 +77,13 @@
 						## data are discretized and nbcat is a list with the corresponding categories
 		   
 						bnet <- .fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, maxparents.push=maxparents.push, seed=seed, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
-		   
+		   				edgerel <- bnet$edge.relevance
+						## remove edge relevance from the network object to avoid redunddancy
+						bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
 						if(retoptions=="all") {
-							return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet))
+							return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet, "edge.relevance"=edgerel))
 						} else {
-							return(list("method"=method, "topology"=.bayesnet2topo(net=bnet), "topology.coeff"=NULL, "net"=NULL))
+							return(list("method"=method, "topology"=.bayesnet2topo(net=bnet), "topology.coeff"=NULL, "net"=NULL, "edge.relevance"=edgerel))
 						}
 					}, 
 					"bayesnet.ensemble"={
@@ -106,10 +108,14 @@
 								priors <- (priors - 0.5) * 2
 							}
 							bnet <- .fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
+							## rescqle score for eqch edge to [0, 1]
+							edgerel <- (bnet$edge.relevance + 1) / 2
+							## remove edge relevance from the network object to avoid redunddancy
+							bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
 							if(retoptions=="all") {
-								return(list("method"=method, "topology"=.regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet,coefficients=TRUE), "net"=bnet))
+								return(list("method"=method, "topology"=.regrnet2topo(net=bnet, coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "net"=bnet, "edge.relevance"=edgerel))
 							} else {
-								return(list("method"=method, "topology"=.regrnet2topo(net=bnet,coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet,coefficients=TRUE), "net"=NULL))
+								return(list("method"=method, "topology"=.regrnet2topo(net=bnet, coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "net"=NULL, "edge.relevance"=edgerel))
 							}
 						}, 
 						"regrnet.ensemble"={

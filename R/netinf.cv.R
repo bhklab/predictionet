@@ -35,36 +35,40 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 			}
 			cuts.discr <- lapply(apply(rbind("nbcat"=categories, data), 2, function(x) { y <- x[1]; x <- x[-1]; return(list(quantile(x=x, probs=seq(0, 1, length.out=y+1), na.rm=TRUE)[-c(1, y+1)])) }), function(x) { return(x[[1]]) })
 		} else { cuts.discr <- categories }
-## discretize the actual gene expression data
+		## discretize the actual gene expression data
 		mydata.discr <- data.discretize(data=data, cuts=cuts.discr)
 		categories <- cuts.discr
 	} else { mydata.discr <- data }
 	
 	## infer network from the whole dataset
 	mynetglobal <- netinf(data=data, categories=categories, perturbations=perturbations, priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method, regrmodel=regrmodel, causal=causal)
-## and the global topology
+	## and the global topology
 	mytopoglobal <- net2topo(net=mynetglobal)
 	
-## compute folds for cross-validation
+	## compute folds for cross-validation
 	if (nfold == 1) {
 		k <- 1
 		nfold <- nrow(data)
 	} else { k <- floor(nrow(data) / nfold) }
-## randomize observations to prevent potential bias in the cross-validation
+	## randomize observations to prevent potential bias in the cross-validation
 	smpl <- sample(nrow(data))
 	
-## perform cross-validation
+	## perform cross-validation
 	mymcc <- mynrmse <- myr2 <- mytopo <- mynets <- NULL
+	edgerel.cv <- array(NA, dim=c(ncol(data), ncol(data), nfold), dimnames=list(colnames(data), colnames(data), paste("fold", 1:nfold, sep=".")))
 	for (i in 1:nfold) {
-## fold of cross-validation
+		## fold of cross-validation
 		if (i == nfold) { s.ix <- smpl[c(((i - 1) * k + 1):nrow(data))] }	else { s.ix <- smpl[c(((i - 1) * k + 1):(i * k))] }
-## s.ix contains the indices of the test set
+		## s.ix contains the indices of the test set
 		
-## infer network from training data and priors
+		## infer network from training data and priors
 		mynet <- netinf(data=data[-s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[-s.ix, , drop=FALSE], priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method, regrmodel=regrmodel, causal=causal, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
 		mynets <- c(mynets, list(mynet))
 		
-## compute predictions
+		## edge relevance score
+		edgerel.cv[  , , i] <- mynet$edge.relevance
+		
+		## compute predictions
 		mynet.pred <- netinf.predict(net=mynet, data=data[s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[s.ix, , drop=FALSE], predn=predn)
 		
 		resnull <- rep(NA, ncol(data))
@@ -79,7 +83,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		pred.discr <- mynet.pred
 		if(method %in% c("regrnet") && !missing(categories)) {
 			## discretize predicted gene expression data 
-			pred.discr <- data.discretize(data=mynet.pred, cuts=cuts.discr[dimnames(mynet.pred)[[2]]])	
+			pred.discr <- data.discretize(data=mynet.pred, cuts=cuts.discr[dimnames(mynet.pred)[[2]]])
 		}
 		if((method %in% c("regrnet") && !missing(categories)) || method %in% c("bayesnet")) { mynet.mcc <- pred.score(data=mydata.discr[s.ix, dimnames(mynet.pred)[[2]], drop=FALSE], pred=pred.discr, method="mcc")[nn] } else { 
 			mynet.mcc <- rep(NA, length(nn))
@@ -97,22 +101,25 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	}
 	dimnames(myr2)[[1]] <- dimnames(mynrmse)[[1]] <- dimnames(mymcc)[[1]] <- names(mytopo) <- names(mynets) <- paste("fold", 1:nfold, sep=".")
 	
-## compute stability for each edge
+	## mean edge relevance score across cv folds
+	#edgerel <- apply(X=edgerel.cv, MARGIN=c(1, 2), mean, na.rm=TRUE)
+	
+	## compute stability for each edge
 	edgestab <- edgestab2 <- matrix(0, nrow=nrow(mytopo[[1]]), ncol=ncol(mytopo[[1]]), dimnames=dimnames(mytopo[[1]]))
 	for(i in 1:length(mytopo)) {
 		edgestab <- edgestab + mytopo[[i]]
 	}
 	edgestab <- edgestab / length(mytopo)
-## report stability of edges present in the global network
+	## report stability of edges present in the global network
 	edgestab2[mytopoglobal == 1] <- edgestab[mytopoglobal == 1]
 	
 	mytopo2 <- NULL
 	for(i in 1:nfold) { mytopo2 <- c(mytopo2, list(net2topo(net=mynets[[i]], coefficients=TRUE))) }
 	
 	if(retoptions=="all") {
-		return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+		return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edgerel.cv))
 	} else {
 		names(mytopo2) <-  paste("fold", 1:nfold, sep=".")
-		return(list("topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
+		return(list("topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edgerel.cv))
 	}
 }

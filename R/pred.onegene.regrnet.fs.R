@@ -9,7 +9,9 @@ function(net, data, perturbations, subset, predn) {
 	if(missing(perturbations) || is.null(perturbations)) {
 		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
 	} else {
-		perturbations <- apply(perturbations, 2, as.logical)
+		if(nrow(perturbations) == 1) {
+			perturbations[1, ] <- as.logical(perturbations[1, ])
+		} else { perturbations <- apply(perturbations, 2, as.logical) }
 		dimnames(perturbations) <- dimnames(data)
 	}
 	if(!missing(subset)) {

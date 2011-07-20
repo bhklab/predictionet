@@ -40,6 +40,8 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
 	\item{prediction.score.cv }{ list of prediction scores (R2, NRMSE, MCC) computed at each fold of the cross-validation. }
 	\item{edge.stability }{ stability of the edges inferred during cross-validation; only the stability of the edges present in the network inferred using the entire dataset is reported. }
 	\item{edge.stability.cv }{stability of the edges inferred during cross-validation. }
+	\item{edge.relevance }{ mean relevance score for each across folds in cross-validation. }
+	\item{edge.relevance.cv }{ relevance score for each across computed during cross-validation. }
 }
 %%\references{
 %% ~put references to the literature/web site here ~

@@ -16,16 +16,17 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE
 	regrmodel <- match.arg(regrmodel)
 	regrnet <- NULL
 	
-########################
-### data preparation
-########################
+	########################
+	### data preparation
+	########################
 	dd <- data.frame(data)
 	diag(priors) <- 0 ## no self-loops
 	
-########################
-### find ranked parents for all genes
-########################
-	mat.ranked.parents <- .rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, maxparents.push)
+	########################
+	### find ranked parents for all genes
+	########################
+	rrnetw <- .rank.genes.causal.perturbations(priors=priors, data=dd, perturbations=perturbations, predn=predn, priors.weight=priors.weight, maxparents=maxparents, causal=causal, maxparents.push=maxparents.push)
+	mat.ranked.parents <- rrnetw$parents
 	myparents <- lapply(apply(mat.ranked.parents, 1, function(x) { x <- x[!is.na(x)]; if(length(x) == 0) { x <- NULL };  return(list(x)); }), function(x) { return(x[[1]]) })
 	
 	########################
@@ -58,5 +59,5 @@ function(data, perturbations, priors, predn, maxparents=3, maxparents.push=FALSE
 	}
 	names(regrnet) <- nn
 	
-	return(list("varnames"=colnames(data), "input"=myparents, "model"=regrnet))
+	return(list("varnames"=colnames(data), "input"=myparents, "model"=regrnet, "edge.relevance"=rrnetw$score))
 }

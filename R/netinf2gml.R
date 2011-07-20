@@ -11,9 +11,9 @@ function(object, edge.info, node.info, file="predictionet") {
 	if(any(dim(net.topo) <= 0)) { stop("network should contain at least one node!") }
 	## matrix of coeffcients for regrnet
 	net.topo.coeff <- object$topology.coeff
-	if(all(c("prediction.score.cv", "edge.stability") %in% names(object))) {
-		## object previously compute by 'netinf.cv'
-		edge.info <- list("stability"=object$edge.stability)
+	if(all(c("prediction.score.cv", "edge.stability", "edge.relevance") %in% names(object))) {
+		## object previously computed by 'netinf.cv'
+		edge.info <- list("relevance"=object$edge.relevance, "stability"=object$edge.stability)
 		node.info <- lapply(object$prediction.score.cv, function(x) { return(apply(X=x, MARGIN=2, FUN=mean, na.rm=FALSE)) })
 	}
 	if(!missing(edge.info)) {

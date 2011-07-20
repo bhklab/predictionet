@@ -13,7 +13,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	### initialize variables
 	########################
 	res <- matrix(NA, nrow=length(predn), ncol=ncol(data) - 1, dimnames=list(dimnames(data)[[2]][predn], seq(1, ncol(data) - 1)))
-	res.netw <- matrix(0, nrow=ncol(data), ncol=length(predn), dimnames=list(dimnames(data)[[2]], dimnames(data)[[2]][predn]))
+	res.netw <- matrix(-1, nrow=ncol(data), ncol=length(predn), dimnames=list(dimnames(data)[[2]], dimnames(data)[[2]][predn]))
 	data.original <- data.matrix(data)
 	score.causal <- matrix(Inf, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
 	if(priors.weight != 1) {
@@ -104,17 +104,9 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 					}
 				}
 			} else {
-				## no causality inference, all connected are parents
-				parents <- which(score[ , predn[i]] != 0)
-				if(length(parents) == 0) { parents <- NULL }
-				## parents into network matrix
-				if(!is.null(parents)) {
-				## take the minimum between the mrmr scores and 0 for the genes for which we were not able to infer causality
-					tt <- score[ ,predn[i]]
-					parix <- which(score[ ,predn[i]] != 0)
-					tt[setdiff(parix, parents)] <- ifelse(tt[setdiff(parix, parents)] < 0, tt[setdiff(parix, parents)], 0)
-					res.netw[ ,i] <- tt
-				}
+			## no causality inference, all connected nodes are parents
+				res.netw[ ,i] <- mrmr[ , predn[i]]
+				res.netw[is.na(res.netw[ ,i]),i] <- -1
 			}
 		}
 	}
@@ -128,7 +120,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	########################
 	score <- (1-priors.weight)*res.netw+priors.weight*priors[ , predn, drop=FALSE]
 	## no self-loops
-	diag(score[dimnames(score)[[2]], dimnames(score)[[2]]]) <- 0
+	diag(score[dimnames(score)[[2]], dimnames(score)[[2]]]) <- -1
 	for(j in 1:length(predn)){
 		tmp.s <- sort(score[,j],decreasing=TRUE,index.return=TRUE)
 		if(priors.weight != 1 && maxparents.push) {
@@ -143,5 +135,5 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 			}
 		}
 	}
-	return(res)
+	return(list("parents"=res, "score"=score))
 }

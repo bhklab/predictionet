@@ -32,12 +32,15 @@ netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, prio
 }
 \details{
 \code{bayesnet.maxcomplexity} and \code{bayesnet.maxiter} are parameters to be passed to the network inference method (see \link[catnet]{cnSearchOrder} and \link[catnet]{cnSearchSA} from the \code{catnet} package for more details).
+
+Relevance score is either MRMR scores if causal=FALSE or causality score if causal=FALSE.
 }
 \value{
 	\item{method }{name of the method used for network inference. }
 	\item{topology }{ adjacency matrix representing the topology of the inferred network; parents in rows, children in columns. }
 	\item{topology.coeff }{ if method='regrnet' \code{topology.coeff} contains an adjacency matriix with the coefficients used in the local regression model; parents in rows, children in columns. }
 	\item{net }{ inferred network. }
+	\item{edge.relevance }{ relevance score for each edge (see Details). }
 }
 %%\references{
 %% ~put references to the literature/web site here ~

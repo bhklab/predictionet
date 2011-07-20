@@ -698,7 +698,7 @@ When large network are inferred ($>50$ variables), any plot will be extremely bu
 netinf2gml(object=myres.cv, file="regrnet_expO_cv")
 @
 
-A CML file called \texttt{regrnet\_expO\_cv.gml} and a Vizmap Property file \texttt{egrnet\_expO\_cv.props} are then created in the working directory, You can import the GML into Cytoscape and  load the corresponding Vizmap property file. You can move vertices, filter them based on prediction scores, color the edges based on stability, and so on.
+A GML file called \texttt{regrnet\_expO\_cv.gml} and a Vizmap Property file \texttt{egrnet\_expO\_cv.props} are then created in the working directory, You can import the GML into Cytoscape and  load the corresponding Vizmap property file. You can move vertices, filter them based on prediction scores, color the edges based on stability, and so on.
 
 \begin{figure}[!hb]
 \centering
