@@ -1,7 +1,7 @@
 Package: predictionet
 Type: Package
 Title: Inference for predictive networks designed for (but not limited to) genomic data
-Version: 0.9.5
+Version: 0.9.6
 Date: 2011-07-19
 Author: Benjamin Haibe-Kains, Catharina Olsen, Gianluca Bontempi, John Quackenbush
 Maintainer: Benjamin Haibe-Kains <bhaibeka@jimmy.harvard.edu>, Catharina Olsen <colsen@ulb.ac.be>
