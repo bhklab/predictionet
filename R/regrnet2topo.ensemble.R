@@ -17,7 +17,7 @@ function(net, coefficients=FALSE) {
 				res[beta[-1], geneid[i]] <- 1 
 			}
 		}
-		res.ensemble<-c(res.ensemble,list(res))
+		res.ensemble<-c(res.ensemble,list(res[,geneid[i]]))
 	}
 	return(res.ensemble)
 }

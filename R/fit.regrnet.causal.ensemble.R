@@ -18,8 +18,9 @@ function(res.causal,models, data, perturbations, priors, predn, maxparents=3, ma
 	res.causal.local<-res.causal$score.local
 	nn<-models[1,]
 	
+	edge.relevance<-NULL
+
 	for(i in 1:ncol(res.causal.local)){
-#	for(i in c(311:320)){
 		tmp.causal<-(1-priors.weight)*res.causal.local[,i]
 		names(tmp.causal)<-models[,i]
 		if(priors.weight>0 && priors.weight<1){
@@ -47,13 +48,18 @@ function(res.causal,models, data, perturbations, priors, predn, maxparents=3, ma
 		}
 		
 		tmp.causal<-tmp.causal[tmp.causal>0]
+		tmp.relevance<-rep(0,ncol(data))
+		names(tmp.relevance)<-colnames(data)
 		
 		if(!is.null(tmp.causal) && length(tmp.causal)>1){
 			tmp.causal<-tmp.causal[-1]
 			tmp.causal<-(sort(tmp.causal,decreasing=TRUE))
+			
 			if(length(tmp.causal)>0){
 				modelv<-sort(names(tmp.causal[1:min(maxparents,length(tmp.causal))]))
 				ff <- formula(sprintf("%s ~ 1 + %s", nn[i], paste(modelv, collapse=" + ")))
+				
+				tmp.relevance[names(tmp.causal[1:min(maxparents,length(tmp.causal))])]<-tmp.causal[1:min(maxparents,length(tmp.causal))]
 			}else{
 				ff <- formula(sprintf("%s ~ 1", nn[i]))
 			}
@@ -62,9 +68,11 @@ function(res.causal,models, data, perturbations, priors, predn, maxparents=3, ma
 		}
 		mm.reg <- lm(formula=ff, data=dd)
 		regrnet <- c(regrnet, list(mm.reg))
+		edge.relevance<-c(edge.relevance,list(tmp.relevance))
+
 	}
-	names(regrnet)<-nn[c(1:10)]
+	names(regrnet)<-nn
 	
-	return(list("input"=models[1,],"varnames"=colnames(data), "model"=regrnet, "edge.relevance"=res.causal$score.local))
+	return(list("input"=models[1,],"varnames"=colnames(data), "model"=regrnet, "edge.relevance"=edge.relevance))
 	
 }

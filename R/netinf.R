@@ -129,10 +129,14 @@
 							}
 							net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
 							models.equiv <- .extract.all.parents(data,vec_ensemble,maxparents,predn)
-							res.causal<- .rank.genes.causal.ensemble(models.equiv,data)
+							if(causal){
+								res.causal<- .rank.genes.causal.ensemble(models.equiv,data)
+							}else{
+								res.causal<- .rank.genes.ensemble(models.equiv,data)
+							}
 							res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight)
-
-							return(list("method"=method, "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "net"=net, "models"=models.equiv))
+							
+							return(list("method"=method, "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "net"=net, "edge.relevance"=res.regrnet.ensemble$edge.relevance))
 						}
 		   )
 }
