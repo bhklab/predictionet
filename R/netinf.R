@@ -14,7 +14,7 @@
 ## bayesnet.maxcomplexity: maximum complexity for bayesian network inference
 ## bayesnet.maxiter: maximum number of iterations for bayesian network inference
 
-`netinf` <-  function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, regrmodel=c("linear", "linear.penalized"), ensemble.model=c("full","best"), ensemble.maxnsol=3, causal=TRUE, seed=54321, retoptions="all", bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
+`netinf` <-  function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, regrmodel=c("linear", "linear.penalized"), ensemble.model=c("full","best"), ensemble.maxnsol=3, causal=TRUE, seed=54321, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
 ## select more genes to find a number of cauqal variables close or more than maxparents
 	if(ncol(data) < 2) { stop("Number of variables is too small to infer a network!") }
 	if(!missing(predn) && !is.null(predn) && (length(predn) < 2 && method!="regrnet.ensemble")) { stop("length of parameter 'predn' should be >= 2!") }
@@ -83,64 +83,64 @@
 		   				edgerel <- bnet$edge.relevance
 						## remove edge relevance from the network object to avoid redunddancy
 						bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
-						if(retoptions=="all") {
-							return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet, "edge.relevance"=edgerel))
-						} else {
+#		if(retoptions=="all") {
+#			return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet, "edge.relevance"=edgerel))
+#						} else {
 							return(list("method"=method, "topology"=.bayesnet2topo(net=bnet), "topology.coeff"=NULL, "net"=NULL, "edge.relevance"=edgerel))
-						}
+#						}
 		   }
 					}, 
 					
 					"regrnet"={
-		   if(ensemble){
+						if(ensemble){
 ## fit an ensemble regression model
-		   rep_boot <- 200
-		   if(ensemble.model=="best"){
-		   vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
-		   }else if (ensemble.model=="full"){
+							rep_boot <- 200
+							if(ensemble.model=="best"){
+								vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
+							}else if (ensemble.model=="full"){
 #	vec_ensemble <- .Call("mrmr_ensemble_nparents", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
-		   vec_ensemble <- .Call("mrmr_ensemble_remove", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
-		   }
-		   net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
-		   models.equiv <- .extract.all.parents(data,vec_ensemble,maxparents,predn)
-		   if(causal){
-		   res.causal<- .rank.genes.causal.ensemble(models.equiv,data)
-		   }else{
-		   res.causal<- .rank.genes.ensemble(models.equiv,data)
-		   }
-		   res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight)
-		   
-		   return(list("method"=method, "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "net"=net, "edge.relevance"=res.regrnet.ensemble$edge.relevance))
-		   
-		   }else{
-						## fit regression model
-						if(priors.count) {
-							## scale the priors
-							## truncate the largest counts
-							pp <- quantile(x=abs(priors[priors != 0]), probs=0.95, na.rm=TRUE)
-							if(length(pp) > 0) {
-								## truncate the distribution
-								priors[priors > pp] <- pp
-								priors[priors < -pp] <- -pp
+								vec_ensemble <- .Call("mrmr_ensemble_remove", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 							}
-							## rescale the priors to have values in [-1, 1]
-							priors <- priors / max(abs(priors), na.rm=TRUE)
-						} else {
-							if(max(priors, na.rm=TRUE) > 1 || min(priors, na.rm=TRUE) < 0) { stop("'priors' should contain probabilities of interactions if 'priors.count' is FALSE!") }
-								## priors are probabilties that should be rescaled in [-1, 1]
-								priors <- (priors - 0.5) * 2
+							net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
+							models.equiv <- .extract.all.parents(data,vec_ensemble,maxparents,predn)
+							if(causal){
+								res.causal<- .rank.genes.causal.ensemble(models.equiv,data)
+							}else{
+								res.causal<- .rank.genes.ensemble(models.equiv,data)
 							}
-							bnet <- .fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
-							## rescale score for each edge to [0, 1]
-							edgerel <- (bnet$edge.relevance + 1) / 2
-							## remove edge relevance from the network object to avoid redundancy
-							bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
-							if(retoptions=="all") {
-								return(list("method"=method, "topology"=.regrnet2topo(net=bnet, coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "net"=bnet, "edge.relevance"=edgerel))
+							res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight)
+		   
+							return(list("method"=method, "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "net"=net, "edge.relevance"=res.regrnet.ensemble$edge.relevance))
+		   
+						}else{
+							## fit regression model
+							if(priors.count) {
+								## scale the priors
+								## truncate the largest counts
+								pp <- quantile(x=abs(priors[priors != 0]), probs=0.95, na.rm=TRUE)
+								if(length(pp) > 0) {
+									## truncate the distribution
+									priors[priors > pp] <- pp
+									priors[priors < -pp] <- -pp
+								}
+								## rescale the priors to have values in [-1, 1]
+								priors <- priors / max(abs(priors), na.rm=TRUE)
 							} else {
+								if(max(priors, na.rm=TRUE) > 1 || min(priors, na.rm=TRUE) < 0) { stop("'priors' should contain probabilities of interactions if 'priors.count' is FALSE!") }
+									## priors are probabilties that should be rescaled in [-1, 1]
+									priors <- (priors - 0.5) * 2
+								}
+								bnet <- .fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
+								## rescale score for each edge to [0, 1]
+								edgerel <- (bnet$edge.relevance + 1) / 2
+								## remove edge relevance from the network object to avoid redundancy
+								bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
+#			if(retoptions=="all") {
+#								return(list("method"=method, "topology"=.regrnet2topo(net=bnet, coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "net"=bnet, "edge.relevance"=edgerel))
+#							} else {
 								return(list("method"=method, "topology"=.regrnet2topo(net=bnet, coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "net"=NULL, "edge.relevance"=edgerel))
+#							}
 							}
-		   }
-				}
+					}
 		   )
 }

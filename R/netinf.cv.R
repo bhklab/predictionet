@@ -12,7 +12,7 @@
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
 `netinf.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, retoptions="all", bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
 		## create matrix of no perturbations
@@ -116,10 +116,10 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	mytopo2 <- NULL
 	for(i in 1:nfold) { mytopo2 <- c(mytopo2, list(net2topo(net=mynets[[i]], coefficients=TRUE))) }
 	
-	if(retoptions=="all") {
-		return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edgerel.cv))
-	} else {
+#if(retoptions=="all") {
+#		return(list("net"=mynetglobal, "net.cv"=mynets, "topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edgerel.cv))
+#	} else {
 		names(mytopo2) <-  paste("fold", 1:nfold, sep=".")
 		return(list("topology"=mytopoglobal, "topology.coeff"=net2topo(net=mynetglobal, coefficients=TRUE), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=myr2, "nrmse"=mynrmse, "mcc"=mymcc), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edgerel.cv))
-	}
+#	}
 }
