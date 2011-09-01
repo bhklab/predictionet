@@ -1,17 +1,18 @@
 #include "foo_mrmr.h"
 
 
-SEXP mrnet_adapted(SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rthreshold){     
+SEXP mrnet_adapted(SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rthreshold){     
 	double *data;
 	double *rel, *red, *res, *mim, score=1,*threshold, *tmp, *res_final;
 	
 	const int *maxparents, *nvar, *nsample, *npredn;
-	int *predn, *ind;
+	int *predn, *ind,*namat;
 	
 	
 	unsigned int n, jmax=0;
 	
 	PROTECT(Rdata = AS_NUMERIC(Rdata));
+	PROTECT(Rnamat = AS_INTEGER(Rnamat));
 	PROTECT(Rmaxparents= AS_INTEGER(Rmaxparents));
 	PROTECT(Rnvar= AS_INTEGER(Rnvar));
 	PROTECT(Rnsample= AS_INTEGER(Rnsample));
@@ -21,6 +22,7 @@ SEXP mrnet_adapted(SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP
 	
 	
 	data = NUMERIC_POINTER(Rdata);
+	namat=INTEGER_POINTER(Rnamat);
 	nvar = INTEGER_POINTER(Rnvar);
 	nsample = INTEGER_POINTER(Rnsample);
 	predn = INTEGER_POINTER(Rpredn);
@@ -56,7 +58,7 @@ SEXP mrnet_adapted(SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP
 		ind[i]=i;
 	}
 		
-	build_mim_subset(mim, data, n, *nsample, ind, *nsample);
+	build_mim_subset(mim, data, namat, n, *nsample, ind, *nsample);
 
 	for( unsigned int i=0; i< n; ++i ){
 		for( unsigned int j=0; j<n; ++j ){ 
@@ -138,7 +140,7 @@ SEXP mrnet_adapted(SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP
 		}
 	}
 
-	UNPROTECT(14);
+	UNPROTECT(15);
 
 	return Rres_final;
 }

@@ -438,7 +438,7 @@ void remove_childless_nodes( tree<int>& res, tree<double>&res_mean, int max_elem
 	}	
 }
 
-void bootstrap_mrmr_fix(double &mean, double &sd, double data[],int size, int rep_boot, int size_boot,int nsamples, int var_target, int var_interest, int nprev_sel,int* var_ind)
+void bootstrap_mrmr_fix(double &mean, double &sd, double data[],int namat[],int size, int rep_boot, int size_boot,int nsamples, int var_target, int var_interest, int nprev_sel,int* var_ind)
 {
 	//mean
 	//sd
@@ -463,7 +463,7 @@ void bootstrap_mrmr_fix(double &mean, double &sd, double data[],int size, int re
 	for(unsigned int i=1;i<= nsamples;++i){
 		ind[i-1]=i-1;
 	}
-	build_mim_subset(mim, data, size, nsamples, ind, size_boot);
+	build_mim_subset(mim, data, namat, size, nsamples, ind, size_boot);
 	val_mrmr=mrnet_onegene( mim, size, nprev_sel, var_ind, var_target, var_interest);	
 	
 	mean=val_mrmr;
@@ -473,7 +473,7 @@ void bootstrap_mrmr_fix(double &mean, double &sd, double data[],int size, int re
 	delete [] mim;
 	//delete [] boot_val;
 }
-void bootstrap_mrmr(double &mean, double &sd, double data[],int size, int rep_boot, int size_boot,int nsamples, int var_target, int var_interest, int nprev_sel,int* var_ind)
+void bootstrap_mrmr(double &mean, double &sd, double data[],int namat[],int size, int rep_boot, int size_boot,int nsamples, int var_target, int var_interest, int nprev_sel,int* var_ind)
 {
 	//mean
 	//sd
@@ -502,7 +502,7 @@ void bootstrap_mrmr(double &mean, double &sd, double data[],int size, int rep_bo
 			ind[i-1]=rand () %nsamples;
 		}
 		// compute mi matrix for the subset
-		build_mim_subset(mim, data, size, nsamples, ind, size_boot);
+		build_mim_subset(mim, data, namat, size, nsamples, ind, size_boot);
 		boot_val[k]=mrnet_onegene( mim, size, nprev_sel, var_ind, var_target, var_interest);	
 	}
 	
@@ -525,7 +525,7 @@ void bootstrap_mrmr(double &mean, double &sd, double data[],int size, int rep_bo
 	delete [] mim;
 	delete [] boot_val;
 }	
-void bootstrap_tree(tree<int>& res,tree<double>& res_mrmr, double data[], int nsamples,int n, int rep_boot){
+void bootstrap_tree(tree<int>& res,tree<double>& res_mrmr, double data[],int namat[], int nsamples,int n, int rep_boot){
 	int  nsub, *prev_sel,nsamples_boot=nsamples,*to_remove;
 	tree<int>::iterator li=res.begin_leaf(),li2;
 	tree<double>::iterator li_mrmr=res_mrmr.begin_leaf(),li2_mrmr;
@@ -564,7 +564,7 @@ void bootstrap_tree(tree<int>& res,tree<double>& res_mrmr, double data[], int ns
 				index--;
 				li2=res.parent(li2);
 			}
-			bootstrap_mrmr(mean[k], sd[k], data,n, rep_boot,nsamples_boot,nsamples, target, prev_sel[max_depth-1], max_depth-1,prev_sel);
+			bootstrap_mrmr(mean[k], sd[k], data,namat,n, rep_boot,nsamples_boot,nsamples, target, prev_sel[max_depth-1], max_depth-1,prev_sel);
 			k++;
 		}
 		li++;
@@ -662,7 +662,7 @@ double mrnet_onegene(double mim [], int size, int nbvar,int *var_ind,int var_tar
 }
 
 
-void mrmr_ensemble_one_gene (tree<int>& res, tree<int>::pre_order_iterator one, double data[], int nsamples,int n , int max_elements, int predn , int rep_boot, int maxnsol, double threshold){
+void mrmr_ensemble_one_gene (tree<int>& res, tree<int>::pre_order_iterator one, double data[],int namat[], int nsamples,int n , int max_elements, int predn , int rep_boot, int maxnsol, double threshold){
 	//n					number of variables
 	//predn:			index of target node
 	
@@ -756,7 +756,7 @@ void mrmr_ensemble_one_gene (tree<int>& res, tree<int>::pre_order_iterator one, 
 				max_mrmr=-1000.0;max_mrmr_ind=-1;
 				for(unsigned int k=0;k< n;++k){
 					if(vec_mean[k]!= (-1000)){
-						bootstrap_mrmr(vec_mean[k],vec_sd[k], data,n, rep_boot,nsamples_boot,nsamples,nsub[0],(k+1), max_elements_tmp-1,prev_sel);				
+						bootstrap_mrmr(vec_mean[k],vec_sd[k], data,namat,n, rep_boot,nsamples_boot,nsamples,nsub[0],(k+1), max_elements_tmp-1,prev_sel);				
 					}	
 					vec_sort[k]=vec_mean[k];
 					if(k!=(nsub[0]-1) && vec_mean[k]>max_mrmr){
@@ -791,7 +791,7 @@ void mrmr_ensemble_one_gene (tree<int>& res, tree<int>::pre_order_iterator one, 
 	
 }
 
-SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rrep_boot, SEXP Rmaxnsol, SEXP Rthreshold){
+SEXP mrmr_ensemble( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rrep_boot, SEXP Rmaxnsol, SEXP Rthreshold){
 	// Rdata:		data should be passed as vector, variable-wise appended
 	// Rmaxparents:	number of maximum number of parents
 	// Rnvar:		number of variables in the dataset
@@ -804,7 +804,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEX
 	double *data, *threshold;
 	const int* maxparents, * nvar, *nsample, *maxnsol;
 	
-	int *predn, *rep_boot,*res,*res_all,*res_all2;
+	int *predn, *rep_boot,*res,*res_all,*res_all2,*namat;
 	int vec_tmp;
 	const int *npredn;
 	
@@ -812,6 +812,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEX
 	
 	srand (time(NULL));
 	PROTECT(Rdata = AS_NUMERIC(Rdata));
+	PROTECT(Rnamat = AS_INTEGER(Rnamat));
 	PROTECT(Rmaxparents= AS_INTEGER(Rmaxparents));
 	PROTECT(Rnvar= AS_INTEGER(Rnvar));	
 	PROTECT(Rnsample= AS_INTEGER(Rnsample));
@@ -822,6 +823,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEX
 	PROTECT(Rthreshold= AS_NUMERIC(Rthreshold));
 	
 	data=NUMERIC_POINTER(Rdata);
+	namat=INTEGER_POINTER(Rnamat);
 	maxparents = INTEGER_POINTER(Rmaxparents);
 	nvar= INTEGER_POINTER(Rnvar);
 	nsample= INTEGER_POINTER(Rnsample);
@@ -846,7 +848,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEX
 		one=res_tree.insert(top, predn[i]);
 		
 		//build ensemble tree
-		mrmr_ensemble_one_gene(res_tree, one, data,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
+		mrmr_ensemble_one_gene(res_tree, one, data, namat ,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
 		
 		////////////////////////
 		//convert tree to vector
@@ -914,11 +916,11 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEX
 	}
 	
 	
-	UNPROTECT(10);
+	UNPROTECT(11);
 	
 	return Rres;
 }
-void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterator one, double data[], int nsamples,int n , int max_elements, int predn , int rep_boot, int maxnsol, double threshold){
+void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterator one, double data[], int namat[], int nsamples,int n , int max_elements, int predn , int rep_boot, int maxnsol, double threshold){
 	//n					number of variables
 	//predn:			index of target node
 	
@@ -992,7 +994,7 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 			}
 			for(unsigned int k=0;k< n;++k){
 				if(vec_mean[k]!= (-1000)){
-					bootstrap_mrmr_fix(vec_mean[k],vec_sd[k], data,n, rep_boot,nsamples_boot,nsamples,nsub[0],(k+1), min(cnt,max_elements_tmp),prev_sel);		
+					bootstrap_mrmr_fix(vec_mean[k],vec_sd[k], data,namat,n, rep_boot,nsamples_boot,nsamples,nsub[0],(k+1), min(cnt,max_elements_tmp),prev_sel);		
 				}	
 				mrmr_vec_sort[k]=vec_mean[k];
 			}
@@ -1044,7 +1046,7 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 	}
 	res=res_tmp_new;
 	
-	bootstrap_tree(res,res_mrmr, data,  nsamples, n, rep_boot);
+	bootstrap_tree(res,res_mrmr, data, namat,  nsamples, n, rep_boot);
 	//print_tree_int(res,res.begin(),res.end());
 	
 	delete[] vec_mean;
@@ -1056,7 +1058,7 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 }
 
 
-void mrmr_ensemble_one_gene_nparents (tree<int>& res, tree<int>::pre_order_iterator one, double data[], int nsamples,int n , int max_elements, int predn , int rep_boot, int maxnsol, double threshold){
+void mrmr_ensemble_one_gene_nparents (tree<int>& res, tree<int>::pre_order_iterator one, double data[], int namat[], int nsamples,int n , int max_elements, int predn , int rep_boot, int maxnsol, double threshold){
 	//n					number of variables
 	//predn:			index of target node
 	
@@ -1151,7 +1153,7 @@ void mrmr_ensemble_one_gene_nparents (tree<int>& res, tree<int>::pre_order_itera
 				}
 				for(unsigned int k=0;k< n;++k){
 					if(vec_mean[k]!= (-1000)){
-						bootstrap_mrmr_fix(vec_mean[k],vec_sd[k], data,n, rep_boot,nsamples_boot,nsamples,nsub_tmp[0],(k+1), max_elements_tmp-1,prev_sel_tmp);		
+						bootstrap_mrmr_fix(vec_mean[k],vec_sd[k], data,namat,n, rep_boot,nsamples_boot,nsamples,nsub_tmp[0],(k+1), max_elements_tmp-1,prev_sel_tmp);		
 					}	
 					tmp_mrmr[index_mrmr]=vec_mean[k];
 					index_mrmr++;
@@ -1311,7 +1313,7 @@ void mrmr_ensemble_one_gene_nparents (tree<int>& res, tree<int>::pre_order_itera
 
 
 
-SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rrep_boot, SEXP Rmaxnsol, SEXP Rthreshold){
+SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rrep_boot, SEXP Rmaxnsol, SEXP Rthreshold){
 	// Rdata:		data should be passed as vector, variable-wise appended
 	// Rmaxparents:	number of maximum number of parents
 	// Rnvar:		number of variables in the dataset
@@ -1324,7 +1326,7 @@ SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsa
 	double *data, *threshold;
 	const int* maxparents, * nvar, *nsample, *maxnsol;
 	
-	int *predn, *rep_boot,*res,*res_all,*res_all2;
+	int *predn, *rep_boot,*res,*res_all,*res_all2,*namat;
 	int vec_tmp;
 	const int *npredn;
 	
@@ -1332,6 +1334,7 @@ SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsa
 	
 	srand (time(NULL));
 	PROTECT(Rdata = AS_NUMERIC(Rdata));
+	PROTECT(Rnamat = AS_INTEGER(Rnamat));
 	PROTECT(Rmaxparents= AS_INTEGER(Rmaxparents));
 	PROTECT(Rnvar= AS_INTEGER(Rnvar));	
 	PROTECT(Rnsample= AS_INTEGER(Rnsample));
@@ -1342,6 +1345,7 @@ SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsa
 	PROTECT(Rthreshold= AS_NUMERIC(Rthreshold));
 	
 	data=NUMERIC_POINTER(Rdata);
+	namat=INTEGER_POINTER(Rnamat);
 	maxparents = INTEGER_POINTER(Rmaxparents);
 	nvar= INTEGER_POINTER(Rnvar);
 	nsample= INTEGER_POINTER(Rnsample);
@@ -1366,7 +1370,7 @@ SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsa
 		one=res_tree.insert(top, predn[i]);
 		
 		//build ensemble tree
-		mrmr_ensemble_one_gene_nparents(res_tree, one, data,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
+		mrmr_ensemble_one_gene_nparents(res_tree, one, data,namat,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
 		
 		////////////////////////
 		//convert tree to vector
@@ -1432,11 +1436,11 @@ SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsa
 		delete [] res_tmp;
 		res_tree.erase(res_tree.begin());
 	}
-	UNPROTECT(10);
+	UNPROTECT(11);
 	
 	return Rres;
 }
-SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rrep_boot, SEXP Rmaxnsol, SEXP Rthreshold){
+SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsample, SEXP Rpredn, SEXP Rnpredn, SEXP Rrep_boot, SEXP Rmaxnsol, SEXP Rthreshold){
 	// Rdata:		data should be passed as vector, variable-wise appended
 	// Rmaxparents:	number of maximum number of parents
 	// Rnvar:		number of variables in the dataset
@@ -1449,7 +1453,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsamp
 	double *data, *threshold;
 	const int* maxparents, * nvar, *nsample, *maxnsol;
 	
-	int *predn, *rep_boot,*res,*res_all,*res_all2;
+	int *predn, *rep_boot,*res,*res_all,*res_all2, *namat;
 	int vec_tmp;
 	const int *npredn;
 	
@@ -1457,6 +1461,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsamp
 	
 	srand (time(NULL));
 	PROTECT(Rdata = AS_NUMERIC(Rdata));
+	PROTECT(Rnamat = AS_INTEGER(Rnamat));
 	PROTECT(Rmaxparents= AS_INTEGER(Rmaxparents));
 	PROTECT(Rnvar= AS_INTEGER(Rnvar));	
 	PROTECT(Rnsample= AS_INTEGER(Rnsample));
@@ -1467,6 +1472,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsamp
 	PROTECT(Rthreshold= AS_NUMERIC(Rthreshold));
 	
 	data=NUMERIC_POINTER(Rdata);
+	namat=INTEGER_POINTER(Rnamat);
 	maxparents = INTEGER_POINTER(Rmaxparents);
 	nvar= INTEGER_POINTER(Rnvar);
 	nsample= INTEGER_POINTER(Rnsample);
@@ -1491,7 +1497,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsamp
 		one=res_tree.insert(top, predn[i]);
 		
 		//build ensemble tree
-		mrmr_ensemble_one_gene_remove(res_tree, one, data,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
+		mrmr_ensemble_one_gene_remove(res_tree, one, data,namat,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
 		//	print_tree_int(res_tree,res_tree.begin(),res_tree.end());
 		////////////////////////
 		//convert tree to vector
@@ -1557,7 +1563,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rmaxparents, SEXP Rnvar, SEXP Rnsamp
 		delete [] res_tmp;
 		res_tree.erase(res_tree.begin());
 	}
-	UNPROTECT(10);
+	UNPROTECT(11);
 	
 	return Rres;
 }
