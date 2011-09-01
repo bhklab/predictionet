@@ -191,7 +191,7 @@ for(i in 1:nrow(pn.priors)) {
 ## negative count represent evidence for ABSENCE of an interaction, positive otherwise
 @
 
-As can be seen, few interactions have been previously reported; this maybe die to the fact that the genes reported in \citep{bild2006oncogenic} have been poorly characterized so far.
+As can be seen, few interactions have been previously reported; this maybe due to the fact that the genes reported in \citep{bild2006oncogenic} have been poorly characterized so far.
 
 <<priorscounttab,echo=TRUE,results=verbatim,eval=TRUE>>=
 print(table(pn.priors.counts))
