@@ -18,7 +18,9 @@ function(net, coefficients=FALSE) {
 				res[names(beta)[-1], geneid[i]] <- beta[-1]
 			} else { res[net$input[[i]], geneid[i]] <- 1 }
 		}else{
-			beta_0 <- c(beta_0,model.i)
+			if(coefficients) {
+				beta_0 <- c(beta_0,model.i)
+			}
 		}
 	}
 	

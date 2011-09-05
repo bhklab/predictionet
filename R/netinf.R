@@ -101,7 +101,7 @@
 #	vec_ensemble <- .Call("mrmr_ensemble_nparents", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 		   vec_ensemble <- .Call("mrmr_ensemble_remove", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 		   }
-		   net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
+#net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
 		   models.equiv <- .extract.all.parents(data,vec_ensemble,maxparents,predn)
 		   if(causal){
 		   res.causal<- .rank.genes.causal.ensemble(models.equiv,data)
@@ -110,7 +110,7 @@
 		   }
 		   res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight)
 		   
-		   return(list("method"=method, "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "net"=net, "edge.relevance"=res.regrnet.ensemble$edge.relevance))
+		   return(list("method"="regrnet.ensemble", "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "edge.relevance"=res.regrnet.ensemble$edge.relevance))
 		   
 		   }else{
 ## fit regression model

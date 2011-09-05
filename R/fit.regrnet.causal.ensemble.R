@@ -72,7 +72,7 @@ function(res.causal,models, data, perturbations, priors, predn, maxparents=3, ma
 
 	}
 	names(regrnet)<-nn
-	
+	names(edge.relevance)<-nn
 	return(list("input"=models[1,],"varnames"=colnames(data), "model"=regrnet, "edge.relevance"=edge.relevance))
 	
 }
