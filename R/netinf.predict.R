@@ -7,10 +7,10 @@ function(net, data, categories, perturbations, subset, predn) {
 		   res <- .pred.onegene.bayesnet.fs(net=net$net, data=data, categories=categories, perturbations=perturbations, subset=subset, predn=predn)
 		   }, 
 		   "regrnet"={
-		   res <- .pred.onegene.regrnet.fs(net=net$net, data=data, perturbations=perturbations, subset=subset, predn=predn)
+		   res <- .pred.onegene.regrnet.fs(net=net$topology.coeff, data=data, perturbations=perturbations, subset=subset, predn=predn)
 		   }, 
 		   "regrnet.ensemble"={
-			## ensemble network model
+## ensemble network model
 		   stop("Ensemble regression-based network inference is not implemented yet!")
 		   })
 	return(res)

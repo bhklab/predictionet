@@ -368,7 +368,8 @@ mynet <- netinf(data=data.ras[ ,goi], priors=pn.priors.counts[goi,goi], priors.c
 
 <<regrnetopofig,echo=TRUE,results=hide,eval=FALSE>>=
 ## network topology
-mytopoglobal <- net2topo(net=mynet)
+#mytopoglobal <- net2topo(net=mynet)
+mytopoglobal <- mynet$topology
 library(network)
 xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
 mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5)
@@ -378,7 +379,8 @@ mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, bo
 \centering
 <<regrnetopofig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 ## network topology
-mytopoglobal <- net2topo(net=mynet)
+#mytopoglobal <- net2topo(net=mynet)
+mytopoglobal <- mynet$topology
 library(network)
 xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
 mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.6)
@@ -734,19 +736,19 @@ myres.cv.pw1 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.c
 def.par <- par(no.readonly=TRUE)
 layout(mat=matrix(1:4, nrow=2, ncol=2, byrow=TRUE))
 ## priors.weight 0
-mytopot <- net2topo(net=myres.cv.pw0$net)
+mytopot <- myres.cv.pw0$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0 (data only)")
 ## priors.weight 0.25
-mytopot <- net2topo(net=myres.cv.pw025$net)
+mytopot <- myres.cv.pw025$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0.25")
 ## priors.weight 0.75
-mytopot <- net2topo(net=myres.cv.pw075$net)
+mytopot <- myres.cv.pw075$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0.75")
 ## priors.weight 1
-mytopot <- net2topo(net=myres.cv.pw1$net)
+mytopot <- myres.cv.pw1$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 1 (priors only)")
 par(def.par)
@@ -758,19 +760,19 @@ par(def.par)
 def.par <- par(no.readonly=TRUE)
 layout(mat=matrix(1:4, nrow=2, ncol=2, byrow=TRUE))
 ## priors.weight 0
-mytopot <- net2topo(net=myres.cv.pw0$net)
+mytopot <- myres.cv.pw0$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0 (data only)")
 ## priors.weight 0.25
-mytopot <- net2topo(net=myres.cv.pw025$net)
+mytopot <- myres.cv.pw025$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0.25")
 ## priors.weight 0.75
-mytopot <- net2topo(net=myres.cv.pw075$net)
+mytopot <- myres.cv.pw075$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0.75")
 ## priors.weight 1
-mytopot <- net2topo(net=myres.cv.pw1$net)
+mytopot <-  myres.cv.pw1$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 1 (priors only)")
 par(def.par)
@@ -867,8 +869,8 @@ myres22.cv <- netinf.cv(data=data2.ras[ ,goi], categories=3, priors=priors2.ras[
 Let's display the topologies of the networks inferred from these two datasets. As can be seen in Figure~\ref{fig:topo1topo2}, approximately half of the interactions are inferred in both datasets.
 
 <<regnetcvtopo1topo2fig,echo=TRUE,results=hide,eval=FALSE>>=
-topo1 <- net2topo(net=myres21.cv$net)
-topo2 <- net2topo(net=myres22.cv$net)
+topo1 <- myres21.cv$topology
+topo2 <- myres22.cv$topology
 ## preparing colors
 myedgecols <- matrix("white", nrow=nrow(topo1), ncol=ncol(topo1), dimnames=dimnames(topo1))
 myedgecols[topo1== 1 & topo2 == 1 & pn.priors.counts[rownames(topo1), colnames(topo1)] > 0] <- "orange"
@@ -892,8 +894,8 @@ par(def.par)
 \begin{figure}[!hb]
 \centering
 <<regnetcvtopo1topo2fig2,echo=FALSE,fig=TRUE,height=5,width=7,results=hide,eval=TRUE>>=
-topo1 <- net2topo(net=myres21.cv$net)
-topo2 <- net2topo(net=myres22.cv$net)
+topo1 <- myres21.cv$topology
+topo2 <- myres22.cv$topology
 ## preparing colors
 myedgecols <- matrix("white", nrow=nrow(topo1), ncol=ncol(topo1), dimnames=dimnames(topo1))
 myedgecols[topo1== 1 & topo2 == 1 & pn.priors.counts[rownames(topo1), colnames(topo1)] > 0] <- "orange"
