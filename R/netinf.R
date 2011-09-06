@@ -84,9 +84,9 @@
 ## remove edge relevance from the network object to avoid redunddancy
 		   bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
 #		if(retoptions=="all") {
-#			return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet, "edge.relevance"=edgerel))
+			return(list("method"=method, "topology"=t(cnMatParents(bnet$model)), "topology.coeff"=NULL, "net"=bnet, "edge.relevance"=edgerel))
 #						} else {
-		   return(list("method"=method, "topology"=.bayesnet2topo(net=bnet), "topology.coeff"=NULL, "edge.relevance"=edgerel))
+#		   return(list("method"=method, "topology"=.bayesnet2topo(net=bnet), "topology.coeff"=NULL, "edge.relevance"=edgerel))
 #						}
 		   }
 		   }, 

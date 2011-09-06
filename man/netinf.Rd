@@ -102,18 +102,18 @@ mydata <- data.discretize(data=mydata, cuts=cuts.discr)
 mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="bayesnet", seed=54321)
 
 ## plot network topology
-#mytopo <- net2topo(net=mynet)
-#library(network)
-#xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
-#plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
+mytopo <- net2topo(net=mynet)
+library(network)
+xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
+plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
 
 ## export network as a 'gml' file that you can import into Cytoscape
 \dontrun{rr <- netinf2gml(object=mynet, file="predictionet_bayesnet")}
 
 ## predictions
-#mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
-#print(pred.score(data=mydata, pred=mypreds, method="mcc"))
-#}
+mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
+print(pred.score(data=mydata, pred=mypreds, method="mcc"))
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ graphs }
