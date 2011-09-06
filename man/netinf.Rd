@@ -6,7 +6,7 @@
 Main function of the \code{predictionet} package, \code{netinf} infers a gene network by combining priors and genomic data. The two main network inference methodologies implemented so far are the bayesian and regression-based inferences.
 }
 \usage{
-netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), ensemble.model = c("full","best"), ensemble.maxnsol = 3, causal = TRUE, seed = 54321, retoptions = "all", bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100)
+netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, regrmodel = c("linear", "linear.penalized"), ensemble.model = c("full","best"), ensemble.maxnsol = 3, causal=TRUE, seed=54321, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,13 +20,13 @@ netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, prio
   \item{maxparents}{ maximum number of parents allowed for each gene. }
  	\item{maxparents.push}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. For now, this parameters has little effect when method='regrnet' and causal=TRUE. For method='bayesnet', this parameter has an effect the the maximum number of parents is not always chosen, we will fix that in a future release.}
  \item{subset}{ vector of indices to select only subset of the observations. }
-  \item{method}{ \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package, \code{bayesnet.ensemble} for ensemble bayesian network inference with the \code{catnet} package. }
+  \item{method}{ \code{regrnet} for regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package.}
+  \item{ensemble}{ \code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
 	\item{ensemble.model}{ Could be either \code{full} or \code{best} depending how the equivalent networks are selected to be included in the ensemble network: for \code{full} bootstrapping is used to identify all the statistically equivalent networks, it \code{best} only the top \code{ensemble.maxnsol} are considered at each step of the feature selection.}
 	\item{ensemble.maxnsol}{ maximum number of solutions to consider at each step of the feature selection for the method=\code{ensemble.regrnet}, default is 3.}
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the network inference deterministic. }
-	\item{retoptions}{ if retoptions="all" all the information about the inferred network will be returned. This may require a lot of memory for networks of hundreds of genes. }
 	\item{bayesnet.maxcomplexity}{ maximum complexity for bayesian network inference, see Details. }
 	\item{bayesnet.maxiter}{ maximum number of iterations for bayesian network inference, see Details. }
 }
@@ -38,8 +38,7 @@ Relevance score is either MRMR scores if causal=FALSE or causality score if caus
 \value{
 	\item{method }{name of the method used for network inference. }
 	\item{topology }{ adjacency matrix representing the topology of the inferred network; parents in rows, children in columns. }
-	\item{topology.coeff }{ if method='regrnet' \code{topology.coeff} contains an adjacency matriix with the coefficients used in the local regression model; parents in rows, children in columns. }
-	\item{net }{ inferred network. }
+	\item{topology.coeff }{ if method='regrnet' \code{topology.coeff} contains an adjacency matrix with the coefficients used in the local regression model; parents in rows, children in columns. Additionally the beta_0 values for each model in the first row of the matrix}
 	\item{edge.relevance }{ relevance score for each edge (see Details). }
 }
 %%\references{
@@ -78,7 +77,7 @@ mypert <- pert[ , goi, drop=FALSE]
 mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
 
 ## plot network topology
-mytopo <- net2topo(net=mynet, coefficients=FALSE)
+mytopo <- mynet$topology
 library(network)
 xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
 plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
@@ -103,18 +102,18 @@ mydata <- data.discretize(data=mydata, cuts=cuts.discr)
 mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="bayesnet", seed=54321)
 
 ## plot network topology
-mytopo <- net2topo(net=mynet)
-library(network)
-xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
-plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
+#mytopo <- net2topo(net=mynet)
+#library(network)
+#xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopo)[[1]])
+#plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
 
 ## export network as a 'gml' file that you can import into Cytoscape
 \dontrun{rr <- netinf2gml(object=mynet, file="predictionet_bayesnet")}
 
 ## predictions
-mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
-print(pred.score(data=mydata, pred=mypreds, method="mcc"))
-}
+#mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
+#print(pred.score(data=mydata, pred=mypreds, method="mcc"))
+#}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ graphs }

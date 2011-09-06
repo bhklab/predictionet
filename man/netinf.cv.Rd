@@ -6,7 +6,7 @@
 The function \code{netinf.cv} perform a cross-validation loop and infers a gene network by combining priors and genomic data in each fold. This allows to estimate the predictive ability of the inferred network as well as edge stability.
 }
 \usage{
-netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "regrnet.ensemble", "bayesnet", "bayesnet.ensemble"), regrmodel = c("linear", "linear.penalized"), nfold=10, causal = TRUE, seed, retoptions="all", bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100)
+netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, regrmodel = c("linear", "linear.penalized"), nfold = 10, causal = TRUE, seed, bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,12 +20,12 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
   \item{maxparents}{ maximum number of parents allowed for each gene. }
  	\item{maxparents.push}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. For now, this parameters has little effect when method='regrnet' and causal=TRUE. For method='bayesnet', this parameter has an effect the the maximum number of parents is not always chosen, we will fix that in a future release.}
   \item{subset}{ vector of indices to select only subset of the observations. }
-  \item{method}{ \code{regrnet} for regression-based network inference, \code{regrnet.ensemble} for ensemble regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package, \code{bayesnet.ensemble} for ensemble bayesian network inference with the \code{catnet} package. }
+  \item{method}{ \code{regrnet} for regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package.}
+  \item{ensemble}{\code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
 	\item{nfold}{ number of folds for the cross-validation. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the cross-validation and network inference deterministic. }
-	\item{retoptions}{ if retoptions="all" all the information about the inferred network will be returned. This may require a lot of memory for networks of hundreds of genes. }
 	\item{bayesnet.maxcomplexity}{ maximum complexity for bayesian network inference, see Details. }
 	\item{bayesnet.maxiter}{ maximum number of iterations for bayesian network inference, see Details. }
 }
@@ -33,10 +33,11 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
 	\code{bayesnet.maxcomplexity} and \code{bayesnet.maxiter} are parameters to be passed to the network inference method (see \link[catnet]{cnSearchOrder} and \link[catnet]{cnSearchSA} from the \code{catnet} package for more details).
 }
 \value{
-	\item{net }{ model object of the network inferred using the entire dataset. }
-	\item{net.cv }{ list of network models fitted at each fold of the cross-validation. }
+	\item{method }{name of the method used for network inference. }
 	\item{topology }{ topology of the model inferred using the entire dataset. }
+	\item{topology.coeff }{ if method='regrnet' \code{topology.coeff} contains an adjacency matrix with the coefficients used in the local regression model; parents in rows, children in columns. Additionally the beta_0 values for each model in the first row of the matrix}
 	\item{topology.cv }{ topology of the networks inferred at each fold of the cross-validation. }
+	\item{topology.coeff.cv }{ if method='regrnet' \code{topology.coeff} contains an adjacency matrix with the coefficients used in the local regression model; parents in rows, children in columns. Additionally the beta_0 values for each model in the first row of the matrix. Inferred at each fold of the cross-validation}
 	\item{prediction.score.cv }{ list of prediction scores (R2, NRMSE, MCC) computed at each fold of the cross-validation. }
 	\item{edge.stability }{ stability of the edges inferred during cross-validation; only the stability of the edges present in the network inferred using the entire dataset is reported. }
 	\item{edge.stability.cv }{stability of the edges inferred during cross-validation. }
@@ -89,13 +90,13 @@ print(res$prediction.score.cv)
 ########################
 ## infer a bayesian network network from data and priors
 ## number of fold for cross-validation
-res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, method="bayesnet", nfold=3, seed=54321)
+#res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, method="bayesnet", nfold=3, seed=54321)
 
 ## MCC for predictions in cross-validation
-print(res$prediction.score.cv)
+#print(res$prediction.score.cv)
 
 ## export network as a 'gml' file that you can import into Cytoscape
-\dontrun{rr <- netinf2gml(object=res, file="predictionet_bayesnet")}
+#\dontrun{rr <- netinf2gml(object=res, file="predictionet_bayesnet")}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
