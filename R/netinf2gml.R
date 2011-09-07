@@ -7,6 +7,7 @@
 function(object, edge.info, node.info, file="predictionet") {
 	#require(igraph)
 	## adjacency matrix representing the topology; parents in rows, children in columns
+	if(!missing(edge.info)) { 	edge.info.new<-edge.info }else{ edge.info.new<-NULL}
 	net.topo <- object$topology
 	if(any(dim(net.topo) <= 0)) { stop("network should contain at least one node!") }
 	## matrix of coeffcients for regrnet
@@ -16,11 +17,16 @@ function(object, edge.info, node.info, file="predictionet") {
 		edge.info <- list("relevance"=object$edge.relevance, "stability"=object$edge.stability)
 		node.info <- lapply(object$prediction.score.cv, function(x) { return(apply(X=x, MARGIN=2, FUN=mean, na.rm=FALSE)) })
 	}
-	if(!missing(edge.info)) {
-		if(!is.list(edge.info)) { edge.info <- list("statistic"=edge.info) }
-		edge.info <- edge.info[sapply(edge.info, function(x) { return(!is.null(x) && !all(is.na(x))) })]
+
+	
+	if(!is.null(edge.info.new)) {
+		if(!is.list(edge.info.new)) { edge.info.new <- list("statistic"=edge.info.new)}
+
+		edge.info.new <- edge.info.new[sapply(edge.info.new, function(x) { return(!is.null(x) && !all(is.na(x))) })]	
 		## check dimensions of edge.info
-		if(!all(sapply(edge.info, dim) == nrow(net.topo))) { stop("edge.info should be a matrix or a list of matrices with the same dimensions that the adjacency describing the network topology!") }
+		if(!all(sapply(edge.info.new, dim) == nrow(net.topo))) { stop("edge.info should be a matrix or a list of matrices with the same dimensions that the adjacency describing the network topology!") }else{
+		edge.info<-c(edge.info,edge.info.new)	
+		}
 	}
 	if(!missing(node.info)) {
 		if(!is.list(node.info)) { node.info <- list("statistic"=node.info) }
@@ -28,7 +34,7 @@ function(object, edge.info, node.info, file="predictionet") {
 		## check dimensions of node.info
 		if(!all(sapply(node.info, length) == nrow(net.topo))) { stop("node.info should be a vector or a list of vectors of length equal to the number of rows/columns of the adjacency describing the network topology!") }
 	}
-	
+
 	## create igraph object
 	net.igraph <- igraph::graph.adjacency(adjmatrix=net.topo, mode="directed")
 	## graph attributes
@@ -63,7 +69,7 @@ function(object, edge.info, node.info, file="predictionet") {
 		}
 		nin <- names(node.info)
 	} else { nin <- NULL }
-	.exportGML(graph=net.igraph, edge.attributes=ein, vertex.attributes=nin, file=sprintf("%s.gml", file))
+	exportGML(graph=net.igraph, edge.attributes=ein, vertex.attributes=nin, file=sprintf("%s.gml", file))
 	## copy Vizmap Propoerty file for cytoscape
 	system(sprintf("cp %s %s.props", system.file("extdata/preditionet_vizmap2.props", package="predictionet"), file))
 	invisible(net.igraph)
