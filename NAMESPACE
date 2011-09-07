@@ -1,6 +1,5 @@
 useDynLib(predictionet)
 
-importFrom(igraph, list.edge.attributes, list.vertex.attributes, is.directed, vcount, ecount, V, get.vertex.attribute, get.edgelist, E, get.edge.attribute, graph.adjacency, set.graph.attribute, set.edge.attribute, get.edges, set.vertex.attribute)
 importFrom(penalized, optL1, penalized, predict)
 importFrom(catnet, cnSetSeed, cnNew, cnSetProb, cnOrder, cnSearchOrder, cnSearchSA, cnPredict, cnMatParents, cnFindBIC)
 
