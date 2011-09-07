@@ -69,7 +69,7 @@ function(object, edge.info, node.info, file="predictionet") {
 		}
 		nin <- names(node.info)
 	} else { nin <- NULL }
-	exportGML(graph=net.igraph, edge.attributes=ein, vertex.attributes=nin, file=sprintf("%s.gml", file))
+	.exportGML(graph=net.igraph, edge.attributes=ein, vertex.attributes=nin, file=sprintf("%s.gml", file))
 	## copy Vizmap Propoerty file for cytoscape
 	system(sprintf("cp %s %s.props", system.file("extdata/preditionet_vizmap2.props", package="predictionet"), file))
 	invisible(net.igraph)
