@@ -9,11 +9,6 @@ function(net, data, categories, perturbations, subset, predn, ensemble=FALSE) {
 		   "regrnet"={
 		   res <- .pred.onegene.regrnet.fs(topo.coeff=net$topology.coeff, data=data, perturbations=perturbations, subset=subset, predn=predn, ensemble=ensemble)
 		   }
-#, 
-#		   "regrnet.ensemble"={
-## ensemble network model
-#		   stop("Ensemble regression-based network inference is not implemented yet!")
-#}
-		   )
+	)
 	return(res)
 }

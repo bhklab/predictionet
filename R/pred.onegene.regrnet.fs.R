@@ -21,7 +21,7 @@ function(topo.coeff, data, perturbations, subset, predn,ensemble=FALSE) {
 	
 	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- match(colnames(topo.coeff), dimnames(data)[[2]]) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
 	if(!all(is.element(predn, match(colnames(topo.coeff), dimnames(data)[[2]])))) { stop("some genes cannot be predicted because they have not been fitted in the network!")}
-## variables to predict
+	## variables to predict
 	if(ensemble){
 		perturbations.new<-matrix(FALSE,nr=nrow(data),nc=ncol(topo.coeff))
 		
@@ -36,7 +36,7 @@ function(topo.coeff, data, perturbations, subset, predn,ensemble=FALSE) {
 		dimnames(preds)<-list(rownames(data),colnames(topo.coeff))
 		perturbations<-perturbations.new
 	}else{
-## matrix to store the predictions
+		## matrix to store the predictions
 		preds <- matrix(NA, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
 		preds[,colnames(topo.coeff)]<-t(t(topo.coeff)%*% t(cbind(rep(1,nrow(data)),data)))
 		

@@ -17,24 +17,24 @@ function(data, pred, categories, method=c("r2", "nrmse", "mcc"),ensemble=FALSE) 
 		data<-data.new
 	}
 	if(method %in% c("mcc")) {
-## need to discretize the data to compute this performance criterion
+		## need to discretize the data to compute this performance criterion
 		if(!missing(categories)) {
-## discretize gene expression data
+			## discretize gene expression data
 			if(is.numeric(categories)) {
 				if(length(categories) == 1) {
-## use the same number of categories for each variable
+					## use the same number of categories for each variable
 					categories <- rep(categories, ncol(data))
 					names(categories) <- dimnames(data)[[2]]
 				}
 				cuts.discr <- lapply(apply(rbind("nbcat"=categories, data), 2, function(x) { y <- x[1]; x <- x[-1]; return(list(quantile(x=x, probs=seq(0, 1, length.out=y+1), na.rm=TRUE)[-c(1, y+1)])) }), function(x) { return(x[[1]]) })
 			} else { cuts.discr <- categories }
-## discretize the actual gene expression data using cutoffs identified from the training set
+			## discretize the actual gene expression data using cutoffs identified from the training set
 			data <- data.discretize(data=data, cuts=cuts.discr)
 			pred <- data.discretize(data=pred, cuts=cuts.discr)
 			nbcat <- sapply(cuts.discr, length) + 1
 		} else {
 			nbcat <- apply(rbind(data, pred), 2, max)
-## not ideal solution since we may miss a higher class not present in the data
+			## not ideal solution since we may miss a higher class not present in the data
 		}
 	} else {
 		nbcat <- rep(0, ncol(data))
@@ -42,24 +42,23 @@ function(data, pred, categories, method=c("r2", "nrmse", "mcc"),ensemble=FALSE) 
 	}
 	
 	myfoo <- function(data, pred, nbcat, method) {
-## data and pred should be vectors
+	## data and pred should be vectors
 		if(all(!complete.cases(data, pred))) { return(NA) }
 		switch(method,
 			   "r2"={
-			   mss <- sum((pred - mean(pred))^2)
-			   resids <- (data - pred)
-			   rss <- sum(resids^2)
-			   myperf <- mss/(mss + rss)
+				mss <- sum((pred - mean(pred))^2)
+				resids <- (data - pred)
+				rss <- sum(resids^2)
+				myperf <- mss/(mss + rss)
 			   }, 
 			   "nrmse"={
-			   myperf <- sqrt(mean((data-pred)^2, na.rm=TRUE)) / (max(pred, na.rm=TRUE) - min(pred, na.rm=TRUE))
+				myperf <- sqrt(mean((data-pred)^2, na.rm=TRUE)) / (max(pred, na.rm=TRUE) - min(pred, na.rm=TRUE))
 			   },
 			   "mcc"={ ## Matthews Correlation Coefficient, equivalent to the phi coeffcient (see jurman2010unifying)
-			   tt2 <- as.table(matrix(0, nrow=nbcat, ncol=nbcat, dimnames=list(1:nbcat, 1:nbcat)))
-			   tt <- table("PREDS"=pred, "TRUTH"=data)
-			   tt2[dimnames(tt)[[1]], dimnames(tt)[[2]]] <- tt
-			   myperf <- (mcc(ct=tt2, nbcat=nbcat) + 1) / 2
-#if(is.na(myperf)) { myperf <- 0 }
+				tt2 <- as.table(matrix(0, nrow=nbcat, ncol=nbcat, dimnames=list(1:nbcat, 1:nbcat)))
+				tt <- table("PREDS"=pred, "TRUTH"=data)
+				tt2[dimnames(tt)[[1]], dimnames(tt)[[2]]] <- tt
+				myperf <- (mcc(ct=tt2, nbcat=nbcat) + 1) / 2
 			   })
 		return(myperf)
 	}
