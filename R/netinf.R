@@ -94,6 +94,7 @@
 		   "regrnet"={
 		   if(ensemble){
 ## fit an ensemble regression model
+		   if(missing(predn)){predn<-seq(1,ncol(data))}else if(length(intersect(predn,colnames(data)))>0){predn<-match(predn,colnames(data))}
 		   rep_boot <- 200
 		   if(ensemble.model=="best"){
 		   vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
@@ -110,8 +111,9 @@
 		   }
 		   res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight)
 		   
-		   return(list("method"="regrnet.ensemble", "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "edge.relevance"=res.regrnet.ensemble$edge.relevance))
-		   
+		   tmp.res<-list("method"="regrnet", "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "edge.relevance"=res.regrnet.ensemble$edge.relevance)
+
+			return(.list2matrixens(tmp.res))
 		   }else{
 ## fit regression model
 		   if(priors.count) {

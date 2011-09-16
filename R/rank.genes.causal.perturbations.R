@@ -18,16 +18,18 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	score.causal <- matrix(Inf, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
 	if(priors.weight != 1) {
 		## data will be used to rank the potential parent genes
-		mrmr.global <- NULL
-		if(all(apply(perturbations, 2, sum, na.rm=TRUE) == 0) & sum(is.na(perturbations)) == 0) {
+		mrmr.global <- NULL	
+#if(all(apply(perturbations, 2, sum, na.rm=TRUE) == 0) & sum(is.na(perturbations)) == 0) {
 			## no perturbations
+#	print("no pertubations")
 			## compute mrmr score for the target genes
 			## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
 			mrmr.global <- .Call("mrnet_adapted", data.original,as.integer(is.na(data.original)), maxparents, ncol(data.original), nrow(data.original), predn, length(predn), -1000)
 			mrmr.global <- matrix(mrmr.global, nrow=ncol(data.original), ncol=ncol(data.original), byrow=FALSE)
 			dimnames(mrmr.global) <- list(colnames(data.original), colnames(data.original))
+
 			mrmr.global[mrmr.global == -1000] <- NA
-		}
+#	}
 		for(i in 1:length(predn)) {
 			data <- data.original
 			## remove observation where the target variable was perturbed (no link between observation and target variable)
@@ -41,12 +43,12 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 				mrmr <- matrix(mrmr, nrow=ncol(data), ncol=ncol(data), byrow=FALSE)
 				dimnames(mrmr) <- list(colnames(data),colnames(data))
 				mrmr[mrmr == -1000] <- NA
-			} else { mrmr <- mrmr.global }
+			} else { mrmr <- mrmr.global}
 			## mrmr scores on the diagonal should be NA
 			diag(mrmr) <- NA
+
 			## select only the variables specified by the user (predn)
 			mrmr <- mrmr[ , predn, drop=FALSE]
-			
 			########################
 			### compute mrmr score matrix
 			########################

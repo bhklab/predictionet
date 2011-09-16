@@ -5,10 +5,17 @@
 ## categories: list of categories for each of the nodes (genes) in 'data' matrix. Categories should be integers from 1 to n.
 ## method: scoring metric: nrmse, mcc,...
 `pred.score` <- 
-function(data, pred, categories, method=c("r2", "nrmse", "mcc")) {
+function(data, pred, categories, method=c("r2", "nrmse", "mcc"),ensemble=FALSE) {
 	if(is.vector(data)) { data <- as.matrix(data, ncol=1, dimnames=list(names(data), "X")) }
 	if(is.vector(pred)) { pred <- as.matrix(pred, ncol=1, dimnames=list(names(pred), "X")) }
 	method <- match.arg(method)
+	if(ensemble){	
+		data.new<-matrix(0,nc=ncol(pred),nr=nrow(data),dimnames=list(rownames(data),colnames(pred)))
+		for(i in 1:ncol(pred)){
+			data.new[,i]<-data[,colnames(pred)[i]]
+		}
+		data<-data.new
+	}
 	if(method %in% c("mcc")) {
 ## need to discretize the data to compute this performance criterion
 		if(!missing(categories)) {

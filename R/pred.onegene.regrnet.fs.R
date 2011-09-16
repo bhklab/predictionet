@@ -5,7 +5,7 @@
 ## predn: indices or names of variables (genes) to predict
 ### return continuous predictions for each gene
 `.pred.onegene.regrnet.fs` <- 
-function(net, data, perturbations, subset, predn) {
+function(topo.coeff, data, perturbations, subset, predn,ensemble=FALSE) {
 	if(missing(perturbations) || is.null(perturbations)) {
 		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
 	} else {
@@ -14,20 +14,34 @@ function(net, data, perturbations, subset, predn) {
 		} else { perturbations <- apply(perturbations, 2, as.logical) }
 		dimnames(perturbations) <- dimnames(data)
 	}
-	
 	if(!missing(subset)) {
 		data <- data[subset, , drop=FALSE]
 		perturbations <- perturbations[subset, , drop=FALSE]
 	}
-	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- match(colnames(net), dimnames(data)[[2]]) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
-	if(!all(is.element(predn, match(colnames(net), dimnames(data)[[2]])))) { stop("some genes cannot be predicted because they have not been fitted in the network!")}
+	
+	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- match(colnames(topo.coeff), dimnames(data)[[2]]) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }
+	if(!all(is.element(predn, match(colnames(topo.coeff), dimnames(data)[[2]])))) { stop("some genes cannot be predicted because they have not been fitted in the network!")}
 ## variables to predict
-	nnix <- dimnames(data)[[2]][predn]
-	
+	if(ensemble){
+		perturbations.new<-matrix(FALSE,nr=nrow(data),nc=ncol(topo.coeff))
+		
+		preds <- matrix(NA, nrow=nrow(data), ncol=ncol(topo.coeff))
+		for(i in 1:ncol(preds)){
+			var<-(colnames(topo.coeff)[i])
+			perturbations.new[,i]<-perturbations[,var]
+			preds[,i]<-topo.coeff[,i]%*% t(cbind(rep(1,nrow(data)),data))
+		}
+		colnames(perturbations.new)<-colnames(topo.coeff)
+		rownames(perturbations.new)<-rownames(data)
+		dimnames(preds)<-list(rownames(data),colnames(topo.coeff))
+		perturbations<-perturbations.new
+	}else{
 ## matrix to store the predictions
-	preds <- matrix(NA, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
-	preds[,colnames(net )]<-t(t(net)%*% t(cbind(rep(1,nrow(data)),data)))
-	
+		preds <- matrix(NA, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
+		preds[,colnames(topo.coeff)]<-t(t(topo.coeff)%*% t(cbind(rep(1,nrow(data)),data)))
+		
+	}
 	preds[perturbations] <- NA
+	
 	return(preds)
 }
