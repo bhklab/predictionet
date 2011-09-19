@@ -43,10 +43,10 @@ void build_mim_subset(double mim[],double data[], int namat [],int nvar,int nsam
 	double tmp;
 	double *data_x;
 	int *namat_x;
-
-	data_x = new double [nvar*size_subset];
-	namat_x=new int [nvar*size_subset];
-
+	
+	namat_x = (int*) R_alloc(nvar*size_subset, sizeof(int));
+	data_x = (double *) R_alloc(nvar*size_subset, sizeof(double));
+	
 	for(unsigned int i=0; i< size_subset; ++i){
 		for(unsigned int j=0; j< nvar; ++j){
 			data_x[size_subset*j+i]=data[(subset[i])+nsample*j];
@@ -66,5 +66,4 @@ void build_mim_subset(double mim[],double data[], int namat [],int nvar,int nsam
 			mim[i*nvar+j]=mim[j*nvar+i];
 		}
 	}
-	delete [] data_x;
 }

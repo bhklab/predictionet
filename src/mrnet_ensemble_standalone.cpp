@@ -12,8 +12,14 @@ void remove_equiv_subtrees(tree<int>& res, tree<double>& res_mean){
 	
 	length_vec=res.depth(res.begin_leaf(it));
 	
-	vec1=new int [length_vec]; vec2=new int [length_vec]; vec_main=new int [length_vec];vec_main_sorted=new int [length_vec];vec2_sorted=new int [length_vec];
-	vec_main_mean=new double [length_vec]; vec_tmp_mean=new double[length_vec];
+	vec1=(int*) R_alloc(length_vec, sizeof(int));
+	vec2=(int*) R_alloc(length_vec, sizeof(int));
+	vec_main =(int*) R_alloc(length_vec, sizeof(int));
+	vec_main_sorted =(int*) R_alloc(length_vec, sizeof(int));
+	vec2_sorted=(int*) R_alloc(length_vec, sizeof(int));
+	vec_main_mean =(double*) R_alloc(length_vec, sizeof(double));
+	vec_tmp_mean =(double*) R_alloc(length_vec, sizeof(double));
+	
 	
 	for(unsigned int j=0;j< length_vec;++j){
 		vec1[j]=0;
@@ -109,25 +115,28 @@ int verify_equivalentset_nparents (tree<int>& tr, tree<int>::pre_order_iterator 
 	int depth=tr.depth(li);
 	tree<int>::pre_order_iterator it2;
 	int vec_old[depth+1];
-	int mat_res [power(maxnsol,(depth))][depth+2];
-	int number_leafs=power(maxnsol,(depth));
+	int mat_res [power((maxnsol+1),(depth))][depth+2];
+	int number_leafs=power((maxnsol+1),(depth));
 	int to_remove[number_leafs];
 	
 	for (int k=0; k< number_leafs ; k++) {
 		to_remove[k]=0;
 	}
 	int cnt2=0,cnt_leafs=0;
+	
 	while( li!=tr.end_leaf(it) ){
 		vec_old[0]=*(li);
 		it2=li;
+		
 		while(it2!=tr.begin()){
 			it2=tr.parent(it2);
 			vec_old[cnt]=*(it2);
 			cnt++;
 		}
-		sort(vec_old,vec_old+depth+1);
 		
+		sort(vec_old,vec_old+depth+1);
 		mat_res[index][depth+1]=0;
+		
 		for(int k=0;k<=depth;k++){
 			mat_res[index][k]=vec_old[k];
 			mat_res[index][depth+1]+=vec_old[k]+power(2,k);
@@ -137,8 +146,11 @@ int verify_equivalentset_nparents (tree<int>& tr, tree<int>::pre_order_iterator 
 		li++;
 		cnt_leafs++;
 	}
+	
+	
 	index=0;
 	bool found1=false,found2;
+	
 	for(int k=0;k<(cnt_leafs-1) && !found1;k++){
 		for(int j=k+1;j<(cnt_leafs);j++){
 			found2=false;
@@ -277,11 +289,9 @@ int verify_equivalentset_buildtree (tree<int>& tr, tree<int>::pre_order_iterator
 			it2=li;		
 			li++;
 			if (order_addition[cnt]== -1) {
-				cout<<"remove node "<<*(it2)<<endl;
 				res_vec[cnt]=-1;
 				tr.erase(it2);
 			}
-			//tr.erase(it2);
 			cnt++;
 		}
 	}
@@ -454,11 +464,11 @@ void bootstrap_mrmr_fix(double &mean, double &sd, double data[],int namat[],int 
 	
 	int *ind;
 	double *mim, *boot_val;
-	
-	ind=new int[size_boot];	
-	mim = new double [size*size];
-	
 	double val_mrmr;
+	
+	ind=(int*) R_alloc(size_boot, sizeof(int));
+	mim =(double*) R_alloc(size*size, sizeof(double));
+	
 	
 	for(unsigned int i=1;i<= nsamples;++i){
 		ind[i-1]=i-1;
@@ -468,10 +478,6 @@ void bootstrap_mrmr_fix(double &mean, double &sd, double data[],int namat[],int 
 	
 	mean=val_mrmr;
 	sd=0;
-	
-	delete [] ind;
-	delete [] mim;
-	//delete [] boot_val;
 }
 void bootstrap_mrmr(double &mean, double &sd, double data[],int namat[],int size, int rep_boot, int size_boot,int nsamples, int var_target, int var_interest, int nprev_sel,int* var_ind)
 {
@@ -490,10 +496,9 @@ void bootstrap_mrmr(double &mean, double &sd, double data[],int namat[],int size
 	int *ind;
 	double *mim, *boot_val;
 	
-	ind=new int[size_boot];	
-	mim = new double [size*size];
-	boot_val=new double[rep_boot];
-	
+	ind=(int*) R_alloc(size_boot, sizeof(int));
+	mim =(double*) R_alloc(size*size, sizeof(double));
+	boot_val =(double*) R_alloc(rep_boot, sizeof(double));
 	
 	for(unsigned int k=0; k< rep_boot; ++k){
 		//in total there will be rep_boot times the mrmr sampled
@@ -521,9 +526,6 @@ void bootstrap_mrmr(double &mean, double &sd, double data[],int namat[],int size
 	}
 	sd=sqrt(sd/rep_boot);
 	
-	delete [] ind;
-	delete [] mim;
-	delete [] boot_val;
 }	
 void bootstrap_tree(tree<int>& res,tree<double>& res_mrmr, double data[],int namat[], int nsamples,int n, int rep_boot){
 	int  nsub, *prev_sel,nsamples_boot=nsamples,*to_remove;
@@ -539,18 +541,20 @@ void bootstrap_tree(tree<int>& res,tree<double>& res_mrmr, double data[],int nam
 		li++;
 	}
 	
-	
 	li=res.begin_leaf();	
-	mean=new double[cnt_leafs];
-	sd=new double[cnt_leafs];
-	to_remove=new int[cnt_leafs];
+	
+	mean =(double*) R_alloc(cnt_leafs, sizeof(double));
+	sd =(double*) R_alloc(cnt_leafs, sizeof(double));
+	to_remove=(int*) R_alloc(cnt_leafs, sizeof(int));
+	
 	for(int k=0;k<cnt_leafs;k++){
 		mean[k]=0;sd[k]=0;
 	}
 	
 	int target=*res.begin();
 	int nto_remove=0;
-	prev_sel=new int[max_depth];
+	
+	prev_sel=(int*) R_alloc(max_depth, sizeof(int));
 	
 	int k=0;
 	while (li!=res.end()) {
@@ -675,20 +679,20 @@ void mrmr_ensemble_one_gene (tree<int>& res, tree<int>::pre_order_iterator one, 
 	int rootdepth, max_mrmr_ind,cnt=0, max_elements_tmp=1; //current depth in the tree
 	bool notincremented;
 	
-	res_vec=new double [n];
-	vec_mean=new double [n];
-	vec_sd=new double [n];
-	vec_sort=new double [n];
-	
-	vec_local_max_mean=new double [max_elements];
-	vec_local_max_sd=new double [max_elements];
+	res_vec =(double*) R_alloc(n, sizeof(double));
+	vec_mean =(double*) R_alloc(n, sizeof(double));
+	vec_sd =(double*) R_alloc(n, sizeof(double));
+	vec_sort =(double*) R_alloc(n, sizeof(double));
+	vec_local_max_mean =(double*) R_alloc(max_elements, sizeof(double));
+	vec_local_max_sd =(double*) R_alloc(max_elements, sizeof(double));
 	
 	for(unsigned int k=0;k< max_elements ;++k){
 		vec_local_max_mean[k]=-1000;
 	}
 	
-	prev_sel=new int[max_elements];
-	nsub = new int [max_elements];
+	prev_sel=(int*) R_alloc(max_elements, sizeof(int));
+	nsub=(int*) R_alloc(max_elements, sizeof(int));
+	
 	
 	tree<double> res_mean;
 	tree<double>::iterator top_mean,one_mean;
@@ -703,7 +707,7 @@ void mrmr_ensemble_one_gene (tree<int>& res, tree<int>::pre_order_iterator one, 
 	prev_sel[0]=0; nsub[0]=predn;
 	
 	while (max_elements_tmp<=max_elements) {
-			
+		
 		//initialize different iterators for the two trees
 		tree<int>::pre_order_iterator it=res.begin();
 		tree<double>::pre_order_iterator it_mean=res_mean.begin(), it_mean_tmp=res_mean.begin();
@@ -854,6 +858,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP 
 		//convert tree to vector
 		////////////////////////
 		int *tmp_nchildren,*res_tmp;
+		
 		res_tmp=new int [2*(res_tree.size())+1];
 		tmp_nchildren= new int [(res_tree.size())];
 		
@@ -876,7 +881,9 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP 
 		length_res+=2*(res_tree.size())+1;
 		int *res_all, *res_old;
 		int ind=0;
+		
 		res_all=new int[length_res];
+		//		res_all = (int*) Calloc(length_res, int);
 		if(length_res_old>0){
 			for(unsigned int k=0;k<length_res_old;k++){
 				res_all[k]=res_old[k];
@@ -897,6 +904,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP 
 		}
 		
 		delete [] res_all;
+		
 		if(i==(*npredn-1)){
 			PROTECT(Rres = NEW_INTEGER(length_res));
 			res = INTEGER_POINTER(Rres);
@@ -930,23 +938,26 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 	double *vec_mean, *vec_sort, *vec_sd,  *vec_local_max_mean, *vec_local_max_sd,tmp_val_max, *mrmr_vec_sort,*vec_sol_local_mrmr;
 	
 	int cnt=0, max_elements_tmp=1; //current depth in the tree
-	vec_mean=new double [n];
-	vec_sd=new double [n];
-	mrmr_vec_sort=new double[n];
 	
-	vec_local_max_mean=new double [max_elements];
-	vec_local_max_sd=new double [max_elements];
+	vec_mean =(double*) R_alloc(n, sizeof(double));
+	vec_sd =(double*) R_alloc(n, sizeof(double));
+	mrmr_vec_sort =(double*) R_alloc(n, sizeof(double));
+	vec_local_max_mean =(double*) R_alloc(max_elements, sizeof(double));
+	vec_local_max_sd =(double*) R_alloc(max_elements, sizeof(double));
+	
 	
 	for(unsigned int k=0;k< max_elements ;++k){
 		vec_local_max_mean[k]=-1000;
 	}
 	
-	prev_sel=new int[max_elements];
-	nsub = new int [max_elements];
+	prev_sel=(int*) R_alloc(max_elements, sizeof(int));
+	nsub=(int*) R_alloc(max_elements, sizeof(int));
+	
 	tree<int> res_tmp_new=res ;
 	tree<int>::iterator it_local=res_tmp_new.begin(),it_local2=it_local;
-	vec_sol_local=new int[maxnsol];
-	vec_sol_local_mrmr=new double[maxnsol];
+	
+	vec_sol_local=(int*) R_alloc(maxnsol, sizeof(int));
+	vec_sol_local_mrmr=(double*) R_alloc(maxnsol, sizeof(double));
 	//mrmr score should not be predicted for the target node
 	vec_mean[predn-1]=-1000; vec_sd[predn-1]=-1000;
 	prev_sel[0]=0; nsub[0]=predn;
@@ -960,6 +971,7 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 	tree<double>::iterator it_mrmr_local=res_mrmr.begin(),it_mrmr_local2=it_mrmr_local;
 	int target_depth=max_elements, max_depth=0;
 	int max_depth_local=2;
+	
 	while (res_tmp_new.depth(it_local)<target_depth && it_local!=res_tmp_new.end()) {
 		
 		max_depth=res_tmp_new.depth(it_local);
@@ -992,6 +1004,7 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 			for(unsigned int k=0;k<=max(res_tmp_new.depth(it_local),max_depth) ;++k){
 				vec_mean[nsub[k]-1]=-1000;	vec_sd[nsub[k]-1]=-1000;
 			}
+			
 			for(unsigned int k=0;k< n;++k){
 				if(vec_mean[k]!= (-1000)){
 					bootstrap_mrmr_fix(vec_mean[k],vec_sd[k], data,namat,n, rep_boot,nsamples_boot,nsamples,nsub[0],(k+1), min(cnt,max_elements_tmp),prev_sel);		
@@ -1020,6 +1033,7 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 					cnt_loop_max++;
 				}
 			}
+			
 			for(int k=maxnsol-1;k>=0;k--){
 				res_tmp_new.append_child(it_local,vec_sol_local[k]);
 				res_mrmr.append_child(it_mrmr_local,vec_sol_local_mrmr[k]);
@@ -1032,29 +1046,22 @@ void mrmr_ensemble_one_gene_remove (tree<int>& res, tree<int>::pre_order_iterato
 			}
 			cnt++;
 			
-			
-			
 		}
 		cnt++; max_elements_tmp++; 	
 		ndelete= -1;
+		
 		while (ndelete!=0 ) {
 			ndelete=verify_equivalentset_nparents (res_tmp_new, res_tmp_new.begin(),res_tmp_new.end(),res_mrmr, maxnsol);
 		}
+		
 		remove_childless_nodes(res_tmp_new, res_mrmr,max_depth_local+1);
+		
 		it_local=res_tmp_new.begin_leaf();it_mrmr_local=res_mrmr.begin_leaf();
 		max_depth_local++;
 	}
 	res=res_tmp_new;
 	
 	bootstrap_tree(res,res_mrmr, data, namat,  nsamples, n, rep_boot);
-	//print_tree_int(res,res.begin(),res.end());
-	
-	delete[] vec_mean;
-	delete[] vec_sd;
-	delete[] vec_local_max_mean;
-	delete[] vec_local_max_sd;
-	delete[] prev_sel;
-	delete[] nsub;
 }
 
 
@@ -1071,33 +1078,33 @@ void mrmr_ensemble_one_gene_nparents (tree<int>& res, tree<int>::pre_order_itera
 	int rootdepth, max_mrmr_ind,cnt=0, max_elements_tmp=1,new_child; //current depth in the tree
 	bool notincremented;
 	int local_maxnsol=maxnsol+1;
-	res_vec=new double [n];
-	vec_mean=new double [n];
-	vec_sd=new double [n];
-	vec_sort=new double [n];
 	
-	vec_local_max_mean=new double [max_elements];
-	vec_local_max_sd=new double [max_elements];
+	res_vec =(double*) R_alloc(n, sizeof(double));
+	vec_mean =(double*) R_alloc(n, sizeof(double));
+	vec_sd =(double*) R_alloc(n, sizeof(double));
+	vec_sort =(double*) R_alloc(n, sizeof(double));
+	vec_local_max_mean =(double*) R_alloc(max_elements, sizeof(double));
+	vec_local_max_sd =(double*) R_alloc(max_elements, sizeof(double));
 	
 	for(unsigned int k=0;k< max_elements ;++k){
 		vec_local_max_mean[k]=-1000;
 	}
 	
-	prev_sel=new int[max_elements];
-	prev_sel_tmp=new int[max_elements];
-	nsub = new int [max_elements];
-	nsub_tmp = new int [max_elements];
+	prev_sel=(int*) R_alloc(max_elements, sizeof(int));
+	prev_sel_tmp=(int*) R_alloc(max_elements, sizeof(int));
+	nsub=(int*) R_alloc(max_elements, sizeof(int));
+	nsub_tmp=(int*) R_alloc(max_elements, sizeof(int));
+	
 	int index_mrmr=0;
 	tree<int> res_tmp=res;
 	tree<int>::iterator it_tmp=res_tmp.begin();
 	tree<int>::iterator it_tmp_old=it_tmp;
 	
-	
-	
 	//mrmr score should not be predicted for the target node
 	vec_mean[predn-1]=-1000; vec_sd[predn-1]=-1000; max_mrmr=-1000.0; max_mrmr_ind=-1;notincremented=true;
 	prev_sel[0]=0; nsub[0]=predn;nsub_tmp[0]=predn;
 	tmp_mrmr=new double [n]; tmp_mrmr_back=new double [n]; tmp_mrmr_used=new int [n];
+	
 	
 	tree<int>::pre_order_iterator it;
 	tree<int>::leaf_iterator li,li_old;
@@ -1299,16 +1306,6 @@ void mrmr_ensemble_one_gene_nparents (tree<int>& res, tree<int>::pre_order_itera
 	
 	res=res_tmp;
 	
-	delete[] res_vec;
-	delete[] vec_mean;
-	delete[] vec_sd;
-	delete[] vec_sort;
-	delete[] vec_local_max_mean;
-	delete[] vec_local_max_sd;
-	delete[] prev_sel;
-	delete[] prev_sel_tmp;
-	delete[] nsub;
-	delete[] nsub_tmp;
 }
 
 
@@ -1363,7 +1360,6 @@ SEXP mrmr_ensemble_nparents( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnv
 	
 	int length_res=0;
 	int length_res_old;
-	std::cout << "fixed number of children at each level of the tree"<<std::endl;
 	for(unsigned int i=0;i< *npredn;++i){
 		//initialize tree
 		std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
@@ -1490,7 +1486,6 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar
 	
 	int length_res=0;
 	int length_res_old;
-	std::cout << "fixed number of children at each level of the tree"<<std::endl;
 	for(unsigned int i=0;i< *npredn;++i){
 		//initialize tree
 		std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
@@ -1498,6 +1493,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar
 		
 		//build ensemble tree
 		mrmr_ensemble_one_gene_remove(res_tree, one, data,namat,*nsample,*nvar,*maxparents,predn[i],*rep_boot, *maxnsol, *threshold);
+		
 		//	print_tree_int(res_tree,res_tree.begin(),res_tree.end());
 		////////////////////////
 		//convert tree to vector
@@ -1547,6 +1543,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar
 		
 		delete [] res_all;
 		if(i==(*npredn-1)){
+			
 			PROTECT(Rres = NEW_INTEGER(length_res));
 			res = INTEGER_POINTER(Rres);
 			for(unsigned int k=0;k<length_res;k++){

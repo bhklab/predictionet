@@ -51,9 +51,10 @@ SEXP mrnet_adapted(SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP R
 	red = NUMERIC_POINTER(Rred);
 	res_final = NUMERIC_POINTER(Rres_final);
 	
-	if(*maxparents==*nvar){
+/*	if(*maxparents==*nvar){
 		std::cout<<"warning: the maximum number of parents can be maximally "<<*nvar-1<<std::endl;
 	}
+ */
 	for(unsigned int i=0;i < *nsample; ++i){
 		ind[i]=i;
 	}

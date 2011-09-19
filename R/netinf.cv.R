@@ -59,6 +59,9 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	edge.relevance.cv <- NULL
 	
 	for (i in 1:nfold) {
+		if(ensemble){
+			print(paste("fold: ",i," out of ",nfold,"folds"))
+		}
 		## fold of cross-validation
 		if (i == nfold) { s.ix <- smpl[c(((i - 1) * k + 1):nrow(data))] }	else { s.ix <- smpl[c(((i - 1) * k + 1):(i * k))] }
 		## s.ix contains the indices of the test set
