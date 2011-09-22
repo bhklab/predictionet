@@ -6,7 +6,7 @@
 The function \code{netinf.cv} perform a cross-validation loop and infers a gene network by combining priors and genomic data in each fold. This allows to estimate the predictive ability of the inferred network as well as edge stability.
 }
 \usage{
-netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, regrmodel = c("linear", "linear.penalized"), nfold = 10, causal = TRUE, seed, bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100) 
+netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, ensemble.maxnsol=3, regrmodel = c("linear", "linear.penalized"), nfold = 10, causal = TRUE, seed, bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,6 +22,7 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
   \item{subset}{ vector of indices to select only subset of the observations. }
   \item{method}{ \code{regrnet} for regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package.}
   \item{ensemble}{\code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
+   \item{ensemble.maxnsol}{Number of equivalent solutions chosen at each step.}
 	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
 	\item{nfold}{ number of folds for the cross-validation. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }

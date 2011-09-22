@@ -93,13 +93,15 @@
 		   
 		   "regrnet"={
 		   if(ensemble){
+		   if(sum(perturbations)>0){
+				  stop("perturbations cannot be considered in the ensemble approach")
+		   }
 ## fit an ensemble regression model
 		   if(missing(predn)){predn<-seq(1,ncol(data))}else if(length(intersect(predn,colnames(data)))>0){predn<-match(predn,colnames(data))}
 		   rep_boot <- 200
 		   if(ensemble.model=="best"){
 		   vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 		   }else if (ensemble.model=="full"){
-#	vec_ensemble <- .Call("mrmr_ensemble_nparents", data.matrix(data),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 		   vec_ensemble <- .Call("mrmr_ensemble_remove", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 		   }
 #net <- .extract.adjacency.ensemble(data,vec_ensemble,predn)
@@ -109,7 +111,7 @@
 		   }else{
 		   res.causal<- .rank.genes.ensemble(models.equiv,data)
 		   }
-		   res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight)
+		   res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight,maxparents=maxparents)
 		   
 		   tmp.res<-list("method"="regrnet", "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "edge.relevance"=res.regrnet.ensemble$edge.relevance)
 
