@@ -78,12 +78,6 @@ library(predictionet)
 
 This will load \Rpackage{predictionet} as well as its dependencies. In this vignette we will use two example datasets included in the \Rpackage{predictionet} package, namely \Robject{expO.colon.ras} and \Robject{jorissen.colon.ras}.
 
-<<loadata,echo=TRUE,results=hide,eval=FALSE>>=
-help(expO.colon.ras)
-help(jorissen.colon.ras)
-@
-
-
 The vignette describes in detail all the necessary steps to infer a gene interaction network combining prior biological knowledge and gene expression data.
 
 \medskip
@@ -132,7 +126,7 @@ In order to extract previously published gene interactions, Prof John Quackenbus
 
 One can use the \textit{Predictive Networks} web application (Figure~\ref{fig:pnwebappscreen}) to retrieve a list of interactions involving at least one gene included in our list of RAS-related genes. To do so, one has to first create an account to login to the webapp. Then go to "My Page" and create a new gene list by cutting-and-pasting the gene symbols\footnote{Be extremely careful if you use Microsoft Excel since it will automatically interpret SEPT6, that is gene "SEPTIN 6", as the 6th of September!} included in \texttt{files/bild2006\_ras\_signature\_348.csv}. Lastly, we have to export all the resulting triples (e.g., "$gene_a$ regulates $gene_b$ "represented by the interaction $gene_a \rightarrow gene_b$) in a CSV file, \texttt{priors\_ras\_bild2006\_pnwebapp.csv}, by clicking on "View Triples" and then "Download w/ Sentences As". One can use R to read this file and count how many times a gene interaction has been observed in the biomedical literature and reported structured biological databases. %Actually the results of such manipulations have been incorporated into the \Rpackage{predictionet} package as described below.
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
 \includegraphics[width=1\textwidth]{predictionet-pn_webapp_ras}
 \caption{Screenshot of the \textit{Predictive Networks} web application where one searches known interactions for HRAS. }
@@ -191,13 +185,13 @@ for(i in 1:nrow(pn.priors)) {
 ## negative count represent evidence for ABSENCE of an interaction, positive otherwise
 @
 
-As can be seen, few interactions have been previously reported; this maybe due to the fact that the genes reported in \citep{bild2006oncogenic} have been poorly characterized so far.
+In this example, few interactions have been previously reported.
 
 <<priorscounttab,echo=TRUE,results=verbatim,eval=TRUE>>=
 print(table(pn.priors.counts))
 @
 
-\noindent Out of the \Sexpr{length(genes.ras) * length(genes.ras)} possible interactions, only \Sexpr{sum(pn.priors.counts != 0, na.rm=TRUE)} have been reported at least once.
+\noindent Out of the \Sexpr{length(genes.ras) * length(genes.ras)} possible interactions, only \Sexpr{sum(pn.priors.counts != 0, na.rm=TRUE)} have been reported at least once in our priors.
 
 \subsection{Predictionet package}
 
@@ -225,7 +219,7 @@ help(jorissen.colon.ras)
 Although the objects \Robject{data*.ras}, and \Robject{demo*.ras} are specific to each dataset, the objects \Robject{data*.ras}  and \Robject{data*.ras} are common in the two datasets under study because the same microarray technology has been used to generate them and we extracted the same genes, and subsequently the same known gene interactions (priors). In this tutorial, we will not used the object \Robject{priors.ras} but we will use \Robject{pn.priors.counts} instead.
 
 
-\section{Network inference from priors and gene expression data\label{sec:datanet})}
+\section{Network inference from priors and gene expression data\label{sec:datanet}}
 
 Many methods have been developed for network inference: Bayesian networks, nested $q$-partial graphs, information-theoretic networks, regression-based networks,\dots These methods differ greatly in their way of dealing with the potentially high dimensionality of the problem, handling missing values, learning from observations and/or interventions, combining genomic data and prior knowledge, assessing the quality of fitted networks, and their ability to make predictions.
 
@@ -352,7 +346,7 @@ To reduce the computational time, we will focus on the top 15 genes which are th
 
 <<firstnetinf,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
 ## number of genes to select for the analysis
-genen <- 30
+genen <- 20
 ## select only the top genes
 goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
 @
@@ -366,18 +360,9 @@ mynet <- netinf(data=data.ras[ ,goi], priors=pn.priors.counts[goi,goi], priors.c
 \medskip
 \noindent Now let's display the topology of the network we just inferred (see Figure~\ref{fig:topoglobal}) using the \Rfunction{plot} function of the \Rpackage{network} package.
 
-<<regrnetopofig,echo=TRUE,results=hide,eval=FALSE>>=
-## network topology
-#mytopoglobal <- net2topo(net=mynet)
-mytopoglobal <- mynet$topology
-library(network)
-xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
-mynetlayout <- plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5)
-@
-
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
-<<regrnetopofig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
+<<regrnetopofig,echo=TRUE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 ## network topology
 #mytopoglobal <- net2topo(net=mynet)
 mytopoglobal <- mynet$topology
@@ -410,16 +395,9 @@ myedgecols[mytopoglobal == 1 & pn.priors.counts[goi,goi] < 1] <- mycols["data"]
 myedgecols[mytopoglobal == 1 & pn.priors.counts[goi,goi] >= 1] <- mycols["both"]
 @
 
-<<edgecoldiffig,echo=TRUE,results=hide,eval=FALSE>>=
-mytopoglobal2 <- (myedgecols != "white") + 0
-## network topology
-xnet2 <- network(x=mytopoglobal2, matrix.type="adjacency", directed=TRUE, loops=TRUE, vertex.attrnames=dimnames(mytopoglobal2)[[1]])
-plot.network(x=xnet2, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col=myedgecols, coord=mynetlayout)
-@
-
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
-<<edgecoldiffig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
+<<edgecoldiffig,echo=TRUE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 mytopoglobal2 <- (myedgecols != "white") + 0
 ## network topology
 xnet2 <- network(x=mytopoglobal2, matrix.type="adjacency", directed=TRUE, loops=TRUE, vertex.attrnames=dimnames(mytopoglobal2)[[1]])
@@ -483,7 +461,7 @@ for(k in 1:length(mycols)) { myedgecols[myres.cv$edge.stability == names(mycols)
 myedgecols[!mytopoglobal] <- "#00000000"
 @
 
-<<edgestab,echo=TRUE,results=hide,eval=FALSE>>=
+<<edgestabfig0,echo=TRUE,results=hide,eval=FALSE>>=
 def.par <- par(no.readonly=TRUE)
 layout(rbind(1,2), heights=rbind(8,1))
 par(mar=c(1,1,1,1))
@@ -497,7 +475,7 @@ text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
 par(def.par)
 @
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
 <<edgestabfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -542,7 +520,7 @@ myvertexcols <- mycols[match(myr2, names(mycols))]
 names(myvertexcols) <- names(myr2)
 @
 
-<<edgestab,echo=TRUE,results=hide,eval=FALSE>>=
+<<genepredabr2fig0,echo=TRUE,results=hide,eval=FALSE>>=
 def.par <- par(no.readonly=TRUE)
 layout(rbind(1,2), heights=rbind(8,1))
 par(mar=c(1,1,1,1))
@@ -550,13 +528,13 @@ par(mar=c(1,1,1,1))
 xnet3 <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
 plot.network(x=xnet3, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col=myvertexcols, jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout)
 par(mar=c(0,3,1,3))
-plot(ii+1, ii+10/6+1, bty="n", type="n", yaxt="n", xaxt="n", ylab="", xlab ="", main="R^2", cex.main=1)
+plot(ii+1, ii+10/6+1, bty="n", type="n", yaxt="n", xaxt="n", ylab="", xlab ="", main="$R^2$", cex.main=1)
 rect(xleft=ii+0.5, ybottom=3, xright=ii+1.4, ytop=10+3, col=mycols, border="grey")
 text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
 par(def.par)
 @
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
 <<genepredabr2fig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -590,7 +568,21 @@ myvertexcols <- mycols[match(mymcc, names(mycols))]
 names(myvertexcols) <- names(mymcc)
 @
 
-\begin{figure}[!hb]
+<<genepredabmccfig0,echo=TRUE,results=hide,eval=FALSE>>=
+def.par <- par(no.readonly=TRUE)
+layout(rbind(1,2), heights=rbind(8,1))
+par(mar=c(1,1,1,1))
+## network topology
+xnet3 <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
+plot.network(x=xnet3, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col=myvertexcols, jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout)
+par(mar=c(0,3,1,3))
+plot(ii+1, ii+10/6+1, bty="n", type="n", yaxt="n", xaxt="n", ylab="", xlab ="", main="$MCC$", cex.main=1)
+rect(xleft=ii+0.5, ybottom=3, xright=ii+1.4, ytop=10+3, col=mycols, border="grey")
+text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
+par(def.par)
+@
+
+\begin{figure}[!th]
 \centering
 <<genepredabmccfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -640,7 +632,21 @@ myvertexcols <- mycols[match(mynet.test.r2, names(mycols))]
 names(myvertexcols) <- names(mynet.test.r2)
 @
 
-\begin{figure}[!hb]
+<<genepredabr2testfig0,echo=TRUE,results=hide,eval=FALSE>>=
+def.par <- par(no.readonly=TRUE)
+layout(rbind(1,2), heights=rbind(8,1))
+par(mar=c(1,1,1,1))
+## network topology
+xnet3 <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
+plot.network(x=xnet3, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col=myvertexcols, jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout)
+par(mar=c(0,3,1,3))
+plot(ii+1, ii+10/6+1, bty="n", type="n", yaxt="n", xaxt="n", ylab="", xlab ="", main="$R^2$", cex.main=1)
+rect(xleft=ii+0.5, ybottom=3, xright=ii+1.4, ytop=10+3, col=mycols, border="grey")
+text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
+par(def.par)
+@
+
+\begin{figure}[!th]
 \centering
 <<genepredabr2testfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -671,7 +677,21 @@ myvertexcols <- mycols[match(mynet.test.mcc, names(mycols))]
 names(myvertexcols) <- names(mynet.test.mcc)
 @
 
-\begin{figure}[!hb]
+<<genepredabmcctestfig0,echo=TRUE,results=hide,eval=FALSE>>=
+def.par <- par(no.readonly=TRUE)
+layout(rbind(1,2), heights=rbind(8,1))
+par(mar=c(1,1,1,1))
+## network topology
+xnet3 <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
+plot.network(x=xnet3, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col=myvertexcols, jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout)
+par(mar=c(0,3,1,3))
+plot(ii+1, ii+10/6+1, bty="n", type="n", yaxt="n", xaxt="n", ylab="", xlab ="", main="$MCC$", cex.main=1)
+rect(xleft=ii+0.5, ybottom=3, xright=ii+1.4, ytop=10+3, col=mycols, border="grey")
+text(ii+1, y=2.4, labels=names(mycols), pos=3, cex=1)
+par(def.par)
+@
+
+\begin{figure}[!th]
 \centering
 <<genepredabmcctestfig,echo=FALSE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -702,7 +722,7 @@ netinf2gml(object=myres.cv, file="regrnet_expO_cv")
 
 A GML file called \texttt{regrnet\_expO\_cv.gml} and a Vizmap Property file \texttt{egrnet\_expO\_cv.props} are then created in the working directory, You can import the GML into Cytoscape and  load the corresponding Vizmap property file. You can move vertices, filter them based on prediction scores, color the edges based on stability, and so on.
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
 \includegraphics[width=1\textwidth]{predictionet-cytoscape}
 \caption{Screenshot of a network inferred by \Rpackage{predictionet} and imported into Cytoscape with the Vizmap Property file \textit{predictionet\_vizmap2}. Size of each vertex (gene) is proportional to their prediction score; color of the edges report the edge-specific stability where gray $\rightarrow$ green $\rightarrow$ orange $\rightarrow$ red colors represent edges with low to high stability.}
@@ -732,7 +752,7 @@ myres.cv.pw1 <- netinf.cv(data=data.ras[ ,goi], categories=3, priors=pn.priors.c
 %\medskip
 \noindent Now let's display the topology of the networks we just inferred by varying the weight we put on the priors (see Figure~\ref{fig:topoglobals}).
 
-<<regnetcvpriorsweightfig,echo=TRUE,results=hide,eval=FALSE>>=
+<<regnetcvpriorsweightfig20,echo=TRUE,results=hide,eval=FALSE>>=
 def.par <- par(no.readonly=TRUE)
 layout(mat=matrix(1:4, nrow=2, ncol=2, byrow=TRUE))
 ## priors.weight 0
@@ -748,13 +768,13 @@ mytopot <- myres.cv.pw075$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0.75")
 ## priors.weight 1
-mytopot <- myres.cv.pw1$topology
+mytopot <-  myres.cv.pw1$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 1 (priors only)")
 par(def.par)
 @
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
 <<regnetcvpriorsweightfig2,echo=FALSE,fig=TRUE,height=7,width=7,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -787,17 +807,9 @@ par(def.par)
 
 In order to compare the stability of the network inference, we can draw a boxplot representing the edge-specific stability of the network inference with respect to the weight put on the priors (Figure~\ref{fig:boxplotstabpw}). As expected, the network inferred from priors only is perfectly stable (the inference does not depend on the data anymore) but what is interesting is the gain in stability when the priors are used as compared to networks inferred from data alone.
 
-<<boxplotstabpwcvfig,echo=TRUE,results=hide,eval=FALSE>>=
-gg <- c("0", "0.25", "0.50", "0.75", "1")
-mystab.cv.pw <- list(myres.cv.pw0$edge.stability[myres.cv.pw0$topology == 1], myres.cv.pw025$edge.stability[myres.cv.pw025$topology == 1], myres.cv.pw050$edge.stability[myres.cv.pw050$topology == 1], myres.cv.pw075$edge.stability[myres.cv.pw075$topology == 1], myres.cv.pw1$edge.stability[myres.cv.pw1$topology == 1])
-names(mystab.cv.pw) <- gg
-boxplot(mystab.cv.pw, xlab="priors.weight", ylim=c(0, 1), ylab="Edge stability", border="grey", col="lightgrey")
-points(x=jitter(x=rep(1:length(mystab.cv.pw), times=sapply(mystab.cv.pw, length)), amount=0.15), y=unlist(mystab.cv.pw), cex=0.55, pch=16, col="royalblue")
-@
-
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
-<<boxplotstabpwcvfig2,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
+<<boxplotstabpwcvfig2,echo=TRUE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 gg <- c("0", "0.25", "0.50", "0.75", "1")
 mystab.cv.pw <- list(myres.cv.pw0$edge.stability[myres.cv.pw0$topology == 1], myres.cv.pw025$edge.stability[myres.cv.pw025$topology == 1], myres.cv.pw050$edge.stability[myres.cv.pw050$topology == 1], myres.cv.pw075$edge.stability[myres.cv.pw075$topology == 1], myres.cv.pw1$edge.stability[myres.cv.pw1$topology == 1])
 names(mystab.cv.pw) <- gg
@@ -812,18 +824,10 @@ points(x=jitter(x=rep(1:length(mystab.cv.pw), times=sapply(mystab.cv.pw, length)
 
 In terms of predictive ability, the boxplot representing the gene-specific $R^2$ scores computed in cross-validation, for network models with different prior weights (Figure~\ref{fig:boxplotpw}), suggests that a combination of both data and priors yield better predictive ability.
 
-<<boxplotr2pwcvfig,echo=TRUE,results=hide,eval=FALSE>>=
-gg <- c("0", "0.25", "0.50", "0.75", "1")
-myr2.cv.pw <- cbind(apply(myres.cv.pw0$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw025$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw050$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw075$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw1$prediction.score.cv$r2, 2, mean, na.rm=TRUE))
-colnames(myr2.cv.pw) <- gg
-gg <- factor(rep(gg, each=genen), levels=gg)
-boxplot(myr2.cv.pw, xlab="priors.weight", ylim=c(0, 1), ylab="$R^2$", border="grey", col="lightgrey", outline=FALSE)
-points(x=jitter(x=rep(1:ncol(myr2.cv.pw), times=nrow(myr2.cv.pw)), amount=0.15), y=as.vector(t(myr2.cv.pw)), cex=0.55, pch=16, col="royalblue")
-@
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
-<<boxplotr2pwcvfig2,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
+<<boxplotr2pwcvfig2,echo=TRUE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 gg <- c("0", "0.25", "0.50", "0.75", "1")
 myr2.cv.pw <- cbind(apply(myres.cv.pw0$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw025$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw050$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw075$prediction.score.cv$r2, 2, mean, na.rm=TRUE), apply(myres.cv.pw1$prediction.score.cv$r2, 2, mean, na.rm=TRUE))
 colnames(myr2.cv.pw) <- gg
@@ -868,7 +872,7 @@ myres22.cv <- netinf.cv(data=data2.ras[ ,goi], categories=3, priors=priors2.ras[
 
 Let's display the topologies of the networks inferred from these two datasets. As can be seen in Figure~\ref{fig:topo1topo2}, approximately half of the interactions are inferred in both datasets.
 
-<<regnetcvtopo1topo2fig,echo=TRUE,results=hide,eval=FALSE>>=
+<<regnetcvtopo1topo2fig20,echo=FALSE,results=hide,eval=FALSE>>=
 topo1 <- myres21.cv$topology
 topo2 <- myres22.cv$topology
 ## preparing colors
@@ -880,18 +884,18 @@ def.par <- par(no.readonly=TRUE)
 layout(mat=matrix(1:2, nrow=1, ncol=2, byrow=TRUE))
 ## expO
 mycolt <- myedgecols
-mycolt[myedgecols == "white" & topo1 == 1 ] <- "black"
+mycolt[myedgecols == "white" & topo1 == 1 ] <- "gray"
 xnett <- network(x=topo1, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col=mycolt, coord=mynetlayout, main="Dataset: expO.colon.ras")
 ## jorissen
 mycolt <- myedgecols
-mycolt[myedgecols == "white" & topo2 == 1 ] <- "black"
+mycolt[myedgecols == "white" & topo2 == 1 ] <- "gray"
 xnett <- network(x=topo2, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col=mycolt, coord=mynetlayout, main="Dataset: jorissen.colon.ras")
 par(def.par)
 @
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
 <<regnetcvtopo1topo2fig2,echo=FALSE,fig=TRUE,height=5,width=7,results=hide,eval=TRUE>>=
 topo1 <- myres21.cv$topology
@@ -921,7 +925,7 @@ par(def.par)
 
 We could now ask the question whether the interactions inferred from both datasets are also the ones with high stability and/or involve genes with high prediction scores. We first compared the stability of interactions which are inferred only in one dataset and those which are inferred in both datasets (Figure~\ref{fig:topo1topo2stab}). As can be seen, the interactions common to both datasets tend to have a higher stability.
 
-<<regnetcvtopo1topo2stabfig,echo=TRUE,results=hide,eval=FALSE>>=
+<<regnetcvtopo1topo2stabfig20,echo=TRUE,results=hide,eval=FALSE>>=
 def.par <- par(no.readonly=TRUE)
 layout(mat=matrix(1:2, nrow=1, ncol=2, byrow=TRUE))
 ## expO
@@ -937,7 +941,7 @@ points(x=jitter(x=rep(1:length(stab2), times=sapply(stab2, length)), amount=0.15
 par(def.par)
 @
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
 <<regnetcvtopo1topo2stabfig2,echo=FALSE,fig=TRUE,height=4,width=7,results=hide,eval=TRUE>>=
 def.par <- par(no.readonly=TRUE)
@@ -960,15 +964,10 @@ par(def.par)
 
 We can also compare the prediction scores in the networks inferred from the two different datasets. As illustrated in Figure~\ref{fig:topo1topo2pred}, there is a weak correlation between the prediction scores ($R^2$) computed in the two datasets. So a gene with high prediction score in one dataset may have a low score in another dataset, what makes this statistic not a good surrogate for generalization in network inference. This observation holds true for $MCC$.
 
-<<regnetcvtopo1topo2predfig,echo=TRUE,results=hide,eval=FALSE>>=
-pred2 <- list("expO"=apply(myres21.cv$prediction.score.cv$r2, 2, mean, na.rm=TRUE), "jorissen"=apply(myres22.cv$prediction.score.cv$r2, 2, mean, na.rm=TRUE))
-plot(x=pred2$expO, y=pred2$jorissen, xlim=c(0, 0.6), ylim=c(0, 0.6), pch=16, col="royalblue", xlab="Prediction scores in expO.colon.ras", ylab="Prediction scores in jorissen.colon.ras")
-legend(x="bottomright", legend=sprintf("cor = %.2g", cor(pred2$expO, pred2$jorissen, method="spearman", use="complete.obs")), bty="n")
-@
 
-\begin{figure}[!hb]
+\begin{figure}[!th]
 \centering
-<<regnetcvtopo1topo2predfig2,echo=FALSE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
+<<regnetcvtopo1topo2predfig2,echo=TRUE,fig=TRUE,height=5,width=5,results=hide,eval=TRUE>>=
 pred2 <- list("expO"=apply(myres21.cv$prediction.score.cv$r2, 2, mean, na.rm=TRUE), "jorissen"=apply(myres22.cv$prediction.score.cv$r2, 2, mean, na.rm=TRUE))
 plot(x=pred2$expO, y=pred2$jorissen, xlim=c(0, 0.6), ylim=c(0, 0.6), pch=16, col="royalblue", xlab="Prediction scores in expO.colon.ras", ylab="Prediction scores in jorissen.colon.ras")
 legend(x="bottomright", legend=sprintf("cor = %.2g", cor(pred2$expO, pred2$jorissen, method="spearman", use="complete.obs")), bty="n")

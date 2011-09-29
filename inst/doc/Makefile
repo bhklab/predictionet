@@ -18,6 +18,7 @@ predictionet:
 	rm -f predictionet-*.pdf biblio.bib
 	rm -f Rplots.pdf
 	cp -f vignette-src/predictionet-fake.Rnw predictionet.Rnw
+	if test -d ../../build; then rm -fr ../../build; fi
 
 clean:
 	if test -d cache; then rm -fr cache; fi
@@ -25,6 +26,7 @@ clean:
 	rm -f predictionet-*.pdf biblio.bib
 	rm -f Rplots.pdf
 	cp -f vignette-src/predictionet-fake.Rnw predictionet.Rnw
+	if test -d ../../build; then rm -fr ../../build; fi
 
 pdfclean:
 	rm -f predictionet.pdf
