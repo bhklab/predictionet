@@ -68,7 +68,7 @@ DNA microarrays and other high-throughput omics technologies provide large datas
 
 In this vignette we introduce a platform developed in John Quackenbush's lab, which enables inference of predictive gene interaction networks from prior biological knowledge, in the form of biomedical literature and structured databases, and from gene expression data. Using real data, we will show the benefit of using prior biological knowledge to infer networks and how to quantitatively assess the quality of such networks.
 
-\subsection**{Getting started}
+\subsection*{Getting started}
 
 After starting R, the package should be loaded using the following command:
 
@@ -346,7 +346,7 @@ To reduce the computational time, we will focus on the top 15 genes which are th
 
 <<firstnetinf,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
 ## number of genes to select for the analysis
-genen <- 20
+genen <- 30
 ## select only the top genes
 goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
 @
