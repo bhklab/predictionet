@@ -83,7 +83,7 @@ xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, v
 plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
 
 ## export network as a 'gml' file that you can import into Cytoscape
-\dontrun{rr <- netinf2gml(object=mynet, file="predictionet_regrnet")}
+rr <- netinf2gml(object=mynet, file=paste(tempdir(),"/predictionet_regrnet",sep=""))
 
 ## predictions
 mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
@@ -108,7 +108,7 @@ xnet <- network(x=mytopo, matrix.type="adjacency", directed=TRUE, loops=FALSE, v
 plot.network(x=xnet, displayisolates=TRUE, displaylabels=TRUE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=2, vertex.cex=4, vertex.col="royalblue", jitter=FALSE, pad=0.5)
 
 ## export network as a 'gml' file that you can import into Cytoscape
-\dontrun{rr <- netinf2gml(object=mynet, file="predictionet_bayesnet")}
+rr <- netinf2gml(object=mynet, file=paste(tempdir(),"/predictionet_bayesnet",sep=""))
 
 ## predictions
 mypreds <- netinf.predict(net=mynet, data=mydata, perturbations=mypert)
