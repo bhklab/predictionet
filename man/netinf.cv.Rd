@@ -84,7 +84,7 @@ res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=myprior
 print(res$prediction.score.cv)
 
 ## export network as a 'gml' file that you can import into Cytoscape
-\dontrun{rr <- netinf2gml(object=res, file="predictionet_regrnet")}
+rr <- netinf2gml(object=res, file=paste(tempdir(),"predictionet_regrnet",sep=""))
 
 ########################
 ## bayesian network inference
@@ -97,7 +97,7 @@ res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=myprior
 print(res$prediction.score.cv)
 
 ## export network as a 'gml' file that you can import into Cytoscape
-\dontrun{rr <- netinf2gml(object=res, file="predictionet_bayesnet")}
+rr <- netinf2gml(object=res, file=paste(tempdir(),"predictionet_bayesnet",sep=""))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
