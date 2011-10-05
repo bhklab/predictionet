@@ -16,7 +16,8 @@ pdf:
 	if test -d cache; then rm -fr cache; fi
 	rm -f *.tex *.bbl *.blg *.aux *.out *.log *.tikz *.toc *.map *.sh *.dvi *.bib
 	rm -f predictionet-*.pdf Rplots.pdf
-	echo "<<donotrun>>=\nq(save='no')\n@\n\n" | cat - vignette-src/predictionet.Rnw > tmp && mv -f tmp predictionet.Rnw
+	echo "<<donotrun>>=\n\nq(save='no')\n@\n\n" | cat - vignette-src/predictionet.Rnw > tmp && mv -f tmp predictionet.Rnw
+	cat vignette-src/predictionet-fake.Rnw | cat - predictionet.Rnw > tmp && mv -f tmp predictionet.Rnw
 	if test -d ../../build; then rm -fr ../../build; fi
 
 clean:
