@@ -1,9 +1,14 @@
 % Benjamin Haibe-Kains
 %
 % 
-% February 22 201
+% October 5, 2011
 
 \documentclass[a4paper,11pt]{article}
+
+%\VignetteIndexEntry{predictionet}
+%\VignetteDepends{predictionet}
+%\VignetteKeywords{predictionet}
+%\VignettePackage{predictionet}
 
 \usepackage{helvet}
 \usepackage[helvet]{sfmath}
@@ -45,7 +50,7 @@
 
 \SweaveOpts{highlight=TRUE, tidy=TRUE, keep.space=TRUE, keep.blank.space=FALSE, keep.comment=TRUE}
 
-<<setup,echo=FALSE>>=
+<<setup,echo=FALSE,eval=TRUE>>=
 library(pgfSweave)
 setCacheDir("cache")
 options(keep.source=TRUE)
@@ -980,7 +985,7 @@ legend(x="bottomright", legend=sprintf("cor = %.2g", cor(pred2$expO, pred2$joris
 \clearpage
 \section*{Session Info}
 
-<<sessioninfo,echo=FALSE,results=tex>>=
+<<sessioninfo,echo=FALSE,results=tex,eval=TRUE>>=
 toLatex(sessionInfo(), locale=FALSE)
 @
 
