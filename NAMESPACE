@@ -1,6 +1,5 @@
 useDynLib(predictionet)
 
 importFrom(penalized, optL1, penalized, predict)
-importFrom(catnet, cnSetSeed, cnNew, cnSetProb, cnOrder, cnSearchOrder, cnSearchSA, cnPredict, cnMatParents, cnFindBIC)
 
 exportPattern("^[^\\.]")
