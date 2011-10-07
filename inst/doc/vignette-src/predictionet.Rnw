@@ -347,7 +347,7 @@ To reduce the computational time, we will focus on the top 15 genes which are th
 
 <<firstnetinf,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
 ## number of genes to select for the analysis
-genen <- 6
+genen <- 30
 ## select only the top genes
 goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
 @
