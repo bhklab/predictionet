@@ -110,6 +110,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 			}
 		}
 	}
+	browser()
 	if(causal) {
 		if(!all(is.infinite(score.causal))) { score.causal <- score.causal/(-max(abs(score.causal[!is.infinite(score.causal)]))) }
 		score.causal[is.na(score.causal) | is.infinite(score.causal)] <- -1
