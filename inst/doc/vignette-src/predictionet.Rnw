@@ -48,15 +48,13 @@
 
 \begin{document}
 
-\SweaveOpts{highlight=TRUE, tidy=TRUE, keep.space=TRUE, keep.blank.space=FALSE, keep.comment=TRUE}
+\SweaveOpts{highlight=TRUE, tidy=TRUE, keep.space=TRUE, keep.blank.space=FALSE, keep.comment=TRUE, keep.source=TRUE}
 
 <<setup,echo=FALSE,eval=TRUE>>=
+## setup of pgfSweave
 library(pgfSweave)
 setCacheDir("cache")
-options(keep.source=TRUE)
-@
-
-<<initseed,echo=FALSE,results=hide,eval=TRUE>>=
+## initialize seed
 set.seed(123)
 @
 
@@ -195,8 +193,6 @@ In this example, few interactions have been previously reported.
 <<priorscounttab,echo=TRUE,results=verbatim,eval=TRUE>>=
 print(table(pn.priors.counts))
 @
-
-\noindent Out of the \Sexpr{length(genes.ras) * length(genes.ras)} possible interactions, only \Sexpr{sum(pn.priors.counts != 0, na.rm=TRUE)} have been reported at least once in our priors.
 
 \subsection{Predictionet package}
 
@@ -351,7 +347,7 @@ To reduce the computational time, we will focus on the top 15 genes which are th
 
 <<firstnetinf,echo=TRUE,results=hide,cache=TRUE,eval=TRUE>>=
 ## number of genes to select for the analysis
-genen <- 30
+genen <- 6
 ## select only the top genes
 goi <- dimnames(annot.ras)[[1]][order(abs(log2(annot.ras[ ,"fold.change"])), decreasing=TRUE)[1:genen]]
 @
@@ -607,7 +603,7 @@ par(def.par)
 \end{figure}
 
 \medskip
-\noindent As can be seen in Figures~\ref{fig:topopredabr2} and ~\ref{fig:topopredabmcc}, the local predictive ability we get with the inferred network is quite low. This may be due to the small number of genes we consider in the RAS pathway (only \Sexpr{genen} of them) what provide us with little information about causality of many genes (a majority of them are unconnected or have no parents). If we look at the genes with the best prediction we can see that the assessment of the network predictive ability is concordant with its stability analysis: the genes around PLAUR,, IL13RA and PTGS2 are quite well predicted while the genes connected with unstable edges are poorly predicted.
+\noindent As can be seen in Figures~\ref{fig:topopredabr2} and ~\ref{fig:topopredabmcc}, the local predictive ability we get with the inferred network is quite low. This may be due to the small number of genes we consider in the RAS pathway what provide us with little information about causality of many genes (a majority of them are unconnected or have no parents). If we look at the genes with the best prediction we can see that the assessment of the network predictive ability is concordant with its stability analysis: the genes around PLAUR,, IL13RA and PTGS2 are quite well predicted while the genes connected with unstable edges are poorly predicted.
 
 
 \paragraph{Validation}
