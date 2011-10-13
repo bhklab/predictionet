@@ -16,11 +16,13 @@ pdf:
 	if test -d cache; then rm -fr cache; fi
 	rm -f *.tex *.bbl *.blg *.aux *.out *.log *.tikz *.toc *.map *.sh *.dvi *.bib
 	rm -f predictionet-*.pdf Rplots.pdf
-	cat predictionet.Rnw | perl  -ne 's/>>=$$/>>=\nif(dorun) {/;print $$_' > tmp && mv -f tmp predictionet.Rnw
-	cat predictionet.Rnw | perl  -ne 's/\@$$/}\n\@/;print $$_' > tmp && mv -f tmp predictionet.Rnw
-	echo "<<run>>=\ndorun <- FALSE\n@\n\n" | cat - vignette-src/predictionet.Rnw > tmp && mv -f tmp predictionet.Rnw
-	rm -f tmp
+	cp -f predictionet.Rnw predictionet2.Rnw
+	cat predictionet2.Rnw | perl  -ne 's/>>=$$/>>=\nif(dorun) {/;print $$_' > tmp && mv -f tmp predictionet2.Rnw
+	cat predictionet2.Rnw | perl  -ne 's/\@$$/}\n\@/;print $$_' > tmp && mv -f tmp predictionet2.Rnw
+	echo "<<run>>=\ndorun <- FALSE\n@\n\n" | cat - predictionet2.Rnw > predictionet.Rnw
+	rm -f predictionet2.Rnw
 	if test -d ../../build; then rm -fr ../../build; fi
+	rm -f predictionet.R
 
 clean:
 	if test -d ../../build; then rm -fr ../../build; fi

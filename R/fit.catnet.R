@@ -42,10 +42,11 @@ function(data, categories, perturbations, priors, priors.weight, maxparents=3, m
 		myparents <- lapply(ee@parents, function(x, y) { if(!is.null(x)) { x <- y[x]}; return(x); }, y=ee@nodes)
 		names(myparents) <- ee@nodes
 		## compute edge relevance as the likelihood of the target/child node
-		tt <- exp(sapply(1:ncol(data), function(x, y, z, w) { return(catnet::cnNodeLoglik(object=y, node=x, data=z, perturbations=w)) }, y=ee, z=t(data), w=t(perturbations)))
-		edgerel <- mapply(function(x,y,z) { rr <- rep(0, length(z)); names(rr) <- z; rr[x] <- y; return(rr) }, x=ee@parents, y=tt, MoreArgs=list(z=colnames(data)))
-		dimnames(edgerel) <- list(colnames(data), colnames(data))
-		names(tt) <- colnames(data)
+		#tt <- exp(sapply(1:ncol(data), function(x, y, z, w) { return(catnet::cnNodeLoglik(object=y, node=x, data=z, perturbations=w)) }, y=ee, z=t(data), w=t(perturbations)))
+		#names(tt) <- colnames(data)
+		#edgerel <- mapply(function(x,y,z) { rr <- rep(0, length(z)); names(rr) <- z; rr[x] <- y; return(rr) }, x=ee@parents, y=tt, MoreArgs=list(z=colnames(data)))
+		#dimnames(edgerel) <- list(colnames(data), colnames(data))
+		edgerel <- matrix(NA, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
 		
 		return(list("varnames"=colnames(data), "input"=myparents, "model"=ee, "edge.relevance"=edgerel))
 	}

@@ -116,7 +116,7 @@
 		   tmp.res<-list("method"="regrnet", "topology"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=FALSE), "topology.coeff"=.regrnet2topo.ensemble(net=res.regrnet.ensemble,coefficients=TRUE), "edge.relevance"=res.regrnet.ensemble$edge.relevance)
 
 			return(.list2matrixens(tmp.res))
-		   }else{
+		   } else {
 ## fit regression model
 		   if(priors.count) {
 ## scale the priors
@@ -136,14 +136,18 @@
 		   }
 		   bnet <- .fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, maxparents.push=maxparents.push, priors.weight=priors.weight, causal=causal, regrmodel=regrmodel, seed=seed)
 #return(bnet)
-## rescale score for each edge to [0, 1]
-		   edgerel <- (bnet$edge.relevance + 1) / 2
-## remove edge relevance from the network object to avoid redundancy
+			## topology
+			ttopo <- .regrnet2topo(net=bnet, coefficients=FALSE)
+			## rescale score for each edge to [0, 1] 
+			edgerel <- (bnet$edge.relevance + 1) / 2
+			## absent edges are assigned a relevance score of 0
+			edgerel[ttopo != 1] <- 0
+			## remove edge relevance from the network object to avoid redundancy
 		   bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
 #			if(retoptions=="all") {
 #	return(list("method"=method, "topology"=.regrnet2topo(net=bnet, coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "net"=bnet, "edge.relevance"=edgerel))
 #							} else {
-		   return(list("method"=method, "topology"=.regrnet2topo(net=bnet, coefficients=FALSE), "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "edge.relevance"=edgerel))
+			return(list("method"=method, "topology"=ttopo, "topology.coeff"=.regrnet2topo(net=bnet, coefficients=TRUE), "edge.relevance"=edgerel))
 #							}
 		   }
 		   }

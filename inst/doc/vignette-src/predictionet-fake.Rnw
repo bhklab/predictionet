@@ -1,8 +1,0 @@
-\documentclass{article}
-%\VignetteIndexEntry{predictionet}
-%\VignetteDepends{predictionet}
-%\VignetteKeywords{predictionet}
-%\VignettePackage{predictionet}
-\begin{document}
-\end{document}
-
