@@ -1,0 +1,58 @@
+### Function computing the press statistic for all target variables in topology
+## topo: inferred topology
+## data: matrix of continuous or categorical values (gene expressions for example); observations in rows, features in columns.
+## perturbations: matrix of {0, 1} specifying whether a gene has been pertubed in some experiments. Dimensions should be the same than data
+## returns press statistic for all target variables
+
+`predictionet.press.statistic` <-  function(topo,data,ensemble=FALSE,perturbations=NULL) {
+
+	if(is.null(perturbations)){
+		perturbations<-matrix(0,nc=ncol(data),nr=nrow(data),dimnames=dimnames(data))
+	}
+	
+	
+	if(ensemble){
+		mypert.ens<-NULL
+		for(i in 1:ncol(topo)){
+			mypert.ens<-cbind(mypert.ens,perturbations[,colnames(topo)[i]])
+		}
+		colnames(mypert.ens)<-colnames(topo)
+		perturbations<-mypert.ens
+	}
+	
+	res<-matrix(0,nc=ncol(topo),nr=nrow(data),dimnames=list(rownames(data),colnames(topo)))
+	vec.nsamples<-rep(0,ncol(topo))
+	
+	for(i in 1:ncol(topo)){
+			target<-colnames(topo)[i]
+			ind<-which(topo[,i]!=0)
+			ind.pert<-which(perturbations[,i]==1)
+			vec.nsamples[i]<-nrow(data)-length(ind.pert)
+			if(length(ind.pert)>0){
+				mydata<-data[-ind.pert,]
+			}else{
+				mydata<-data
+			}
+			if(length(ind)>0){
+				if(length(ind)==1){
+					if(length(ind.pert)>0){
+						res[-ind.pert,i]<- .regrlin(as.numeric(mydata[,ind]),mydata[,target])
+					}else{
+						res[,i]<- .regrlin(as.numeric(mydata[,ind]),mydata[,target])
+					}
+				}else{
+					if(length(ind.pert)>0){
+						res[-ind.pert,i]<- .regrlin(apply(mydata[,ind],2,as.numeric),mydata[,target])
+					}else{
+						res[,i]<- .regrlin(apply(mydata[,ind],2,as.numeric),mydata[,target])
+					}
+				}
+			}else{
+				res[,i]<- .regrlin(as.numeric(rep(1,nrow(mydata))),mydata[,target])
+			}
+	}
+		res<-res^2
+		res<-apply(res,2,sum)
+		res<-res/vec.nsamples
+		return(res)
+}

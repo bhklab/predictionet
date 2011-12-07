@@ -54,7 +54,7 @@ res <- netinf(data=mydata, categories=3, priors=mypriors, priors.weight=0.5, met
 ## extract adjacency matrix from inferred network
 net2topo(net=res)
 ## with coefficients
-net2topo(net=res, coefficients=TRUE)
+net2topo(net=res, regr.model=build.regression.regrnet(data=mydata,topo=res$topology),coefficients=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

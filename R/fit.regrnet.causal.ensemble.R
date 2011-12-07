@@ -55,24 +55,26 @@ function(res.causal,models, data, perturbations, priors, predn, maxparents=3, ma
 			tmp.causal<-tmp.causal[-1]
 			tmp.causal<-(sort(tmp.causal,decreasing=TRUE))
 			
-			if(length(tmp.causal)>0){
-				modelv<-sort(names(tmp.causal[1:min(maxparents,length(tmp.causal))]))
-				ff <- formula(sprintf("%s ~ 1 + %s", nn[i], paste(modelv, collapse=" + ")))
+#			if(length(tmp.causal)>0){
+#		modelv<-sort(names(tmp.causal[1:min(maxparents,length(tmp.causal))]))
+#				ff <- formula(sprintf("%s ~ 1 + %s", nn[i], paste(modelv, collapse=" + ")))
 				
 				tmp.relevance[names(tmp.causal[1:min(maxparents,length(tmp.causal))])]<-tmp.causal[1:min(maxparents,length(tmp.causal))]
-			}else{
-				ff <- formula(sprintf("%s ~ 1", nn[i]))
-			}
-		}else{
-			ff <- formula(sprintf("%s ~ 1", nn[i]))
+#			}else{
+#				ff <- formula(sprintf("%s ~ 1", nn[i]))
+#			}
 		}
-		mm.reg <- lm(formula=ff, data=dd)
-		regrnet <- c(regrnet, list(mm.reg))
+#else{
+#			ff <- formula(sprintf("%s ~ 1", nn[i]))
+#		}
+#		mm.reg <- lm(formula=ff, data=dd)
+#		regrnet <- c(regrnet, list(mm.reg))
 		edge.relevance<-c(edge.relevance,list(tmp.relevance))
 
 	}
-	names(regrnet)<-nn
+#	names(regrnet)<-nn
 	names(edge.relevance)<-nn
-	return(list("input"=models[1,],"varnames"=colnames(data), "model"=regrnet, "edge.relevance"=edge.relevance))
+#return(list("input"=models[1,],"varnames"=colnames(data), "model"=regrnet, "edge.relevance"=edge.relevance))
+return(list("input"=models[1,],"varnames"=colnames(data), "edge.relevance"=edge.relevance))
 	
 }

@@ -1,4 +1,5 @@
-### Function inferring a network
+### Function inferring networks in cross-validation 
+### (compared to netinf.cv no regression is carried out, thus less computational cost but no prediction scores)
 ## data: matrix of continuous or categorical values (gene expressions for example); observations in rows, features in columns.
 ## categories: Either a single integer or a vector of integers specifying the number of categories used to discretize each variable (data are then discretized using equal-frequency bins) or a list of cutoffs to use to discretize each of the variables in 'data' matrix. If method='bayesnet', this parameter should be specified by the user.
 ## perturbations: matrix of {0, 1} specifying whether a gene has been pertubed in some experiments. Dimensions should be the same than data
@@ -11,7 +12,8 @@
 ## nfold: number of folds for the cross-validation
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
-`netinf.cv` <- 
+## returns: method, topology, topology.cv, edge.stability and edge.stability.cv
+`predictionet.stability.cv` <- 
 function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, ensemble.maxnsol=3, regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(perturbations)) {
@@ -59,87 +61,21 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	edge.relevance.cv <- NULL
 	
 	for (i in 1:nfold) {
-		if(ensemble){
-			print(paste("fold: ",i," out of ",nfold,"folds"))
-		}
 		## fold of cross-validation
 		if (i == nfold) { s.ix <- smpl[c(((i - 1) * k + 1):nrow(data))] }	else { s.ix <- smpl[c(((i - 1) * k + 1):(i * k))] }
 		## s.ix contains the indices of the test set
 		
 		## infer network from training data and priors
 		mynet <- netinf(data=data[-s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[-s.ix, , drop=FALSE], priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method,ensemble=ensemble, ensemble.maxnsol=ensemble.maxnsol, regrmodel=regrmodel, causal=causal, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
-		mynets <- c(mynets, list(mynet))
-		
-		if(ensemble){
-			mynet<-c(mynet,list("topology.coeff"=.regrnet2matrixtopo(mynet$topology, build.regression.regrnet(data[-s.ix, , drop=FALSE],colnames(mynet$topology),mynet$topology,ensemble=TRUE) )))
-			mytopo2 <- c(mytopo2, list(mynet$topology.coeff))
-
-		}else{
-			mynet<-c(mynet,list("topology.coeff"=.regrnet2matrixtopo(mynet$topology, build.regression.regrnet(data[-s.ix, , drop=FALSE],predn,mynet$topology) )))
-		
-			mytopo2 <- c(mytopo2, list(mynet$topology.coeff))
-		}
-		## edge relevance score
-		edge.relevance.cv <- c(edge.relevance.cv,list(mynet$edge.relevance))
-		## compute predictions
-		mynet.pred <- netinf.predict(net=mynet, data=data[s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[s.ix, , drop=FALSE], predn=predn, ensemble=ensemble,topo.coeff=TRUE)
-		resnull <- rep(NA, ncol(data))
-		names(resnull) <- colnames(data)
-		## performance estimation: R2
-		mynet.r2 <- resnull
-	
-		if(method %in% c("regrnet")) { 
-			if(ensemble){
-				mynet.r2 <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="r2",ensemble=ensemble)
-			}else{
-				mynet.r2 <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="r2",ensemble=ensemble)[nn] 
-			}
-		}
-			
-		## performance estimation: NRMSE
-		mynet.nrmse <- resnull
-		if(method %in% c("regrnet")) { 
-			if(ensemble){
-				mynet.nrmse <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="nrmse",ensemble=ensemble)
-			}else{
-				mynet.nrmse <- pred.score(data=data[s.ix, , drop=FALSE], pred=mynet.pred, method="nrmse")[nn] 
-			}
-		}
-		## performance estimation: MCC
-		pred.discr <- mynet.pred
-		if(method %in% c("regrnet") && !missing(categories)) {
-			## discretize predicted gene expression data 
-			pred.discr <- data.discretize(data=mynet.pred, cuts=cuts.discr[dimnames(mynet.pred)[[2]]])
-		}
-		if((method %in% c("regrnet") && !missing(categories)) || method %in% c("bayesnet")) { 
-			if(ensemble){
-				mynet.mcc <- pred.score(data=mydata.discr[s.ix, dimnames(mynet.pred)[[2]], drop=FALSE], pred=pred.discr, method="mcc",ensemble=ensemble)
-			}else{
-				mynet.mcc <- pred.score(data=mydata.discr[s.ix, dimnames(mynet.pred)[[2]], drop=FALSE], pred=pred.discr, method="mcc")[nn] 
-			}
-		} else { 
-			mynet.mcc <- rep(NA, length(nn))
-			names(mynet.mcc) <- nn
-		}
 		
 		## adjacency matrix
-		topol <- mynet$topology
-		## save results
-		if(ensemble){
-			myr2 <- c(myr2, list(mynet.r2))
-			mynrmse <- c(mynrmse, list(mynet.nrmse))
-			mymcc <-  c(mymcc, list(mynet.mcc))
-		}else{
-			myr2 <- rbind(myr2, mynet.r2)
-			mynrmse <- rbind(mynrmse, mynet.nrmse)
-			mymcc <- rbind(mymcc, mynet.mcc)
-		}
-		mytopo <- c(mytopo, list(topol))
+		mytopo <- c(mytopo, list(mynet$topology))
 	}
+#print(mytopo)
 	if(ensemble){
-		names(myr2)<- names(mynrmse) <- names(mymcc) <- names(mytopo) <- names(mynets) <- names(edge.relevance.cv) <- paste("fold", 1:nfold, sep=".")
+		names(mytopo) <- paste("fold", 1:nfold, sep=".")
 	}else{
-		dimnames(myr2)[[1]] <- dimnames(mynrmse)[[1]] <- dimnames(mymcc)[[1]] <- names(mytopo) <- names(mynets) <- names(edge.relevance.cv) <- paste("fold", 1:nfold, sep=".")
+		names(mytopo) <- paste("fold", 1:nfold, sep=".")
 	}
 	## mean edge relevance score across cv folds
 	
@@ -158,11 +94,11 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 
 	}
 	## report stability of edges present in the global network
-	names(mytopo2) <-  paste("fold", 1:nfold, sep=".")
+
 	if(ensemble){
-		return(list("method"=method,"topology"=mytopoglobal, "topology.coeff"=.regrnet2matrixtopo(mynetglobal$topology, build.regression.regrnet(data,colnames(mynetglobal$topoly),mynetglobal$topology,ensemble=TRUE) ), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=(myr2), "nrmse"=(mynrmse), "mcc"=(mymcc)), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edge.relevance.cv))
+		return(list("method"=method,"topology"=mytopoglobal, "topology.cv"=mytopo , "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
 	}else{
-		return(list("method"=method,"topology"=mytopoglobal, "topology.coeff"=.regrnet2matrixtopo(mynetglobal$topology, build.regression.regrnet(data,predn,mynetglobal$topology) ), "topology.cv"=mytopo, "topology.cv.coeff"=mytopo2, "prediction.score.cv"=list("r2"=(myr2), "nrmse"=(mynrmse), "mcc"=(mymcc)), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edge.relevance.cv))
+		return(list("method"=method,"topology"=mytopoglobal, "topology.cv"=mytopo, "edge.stability"=edgestab2, "edge.stability.cv"=edgestab))
 
 	}
 }

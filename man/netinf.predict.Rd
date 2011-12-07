@@ -8,7 +8,7 @@ Function to make prediction of a node values given its parents using an inferred
 This function predict the value of a node given its parents using an inferred network
 }
 \usage{
-netinf.predict(net, data, categories, perturbations, subset, predn, ensemble=FALSE)
+netinf.predict(net, data, categories, perturbations, subset, predn, ensemble=FALSE, topo.coeff=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,7 +28,8 @@ netinf.predict(net, data, categories, perturbations, subset, predn, ensemble=FAL
 %%     ~~Describe \code{subset} here~~
 }
 	\item{predn}{indices or names of variables to fit during network inference. If missing, all the variables will be used for network inference. }
-		  \item{ensemble}{\code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
+	\item{ensemble}{\code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
+	\item{topo.coeff}{\code{TRUE} if the object net contains the adjacency matrix with regression coefficients, \code{FALSE} otherwise. }
 }
 %%\details{
 %%  ~~ If necessary, more details than the description above ~~

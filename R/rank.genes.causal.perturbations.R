@@ -21,13 +21,21 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 		mrmr.global <- NULL	
 		## no perturbations
 		## compute mrmr score for the target genes
+		
+#		if(causal){
+#			local.maxparents<-floor(min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
+#		}else{
+#			local.maxparents<-maxparents
+#		}
+		
+		
 		mrmr.global <- .Call("mrnet_adapted", data.original,as.integer(is.na(data.original)), maxparents, ncol(data.original), nrow(data.original), predn, length(predn), -1000)
 		mrmr.global <- matrix(mrmr.global, nrow=ncol(data.original), ncol=ncol(data.original), byrow=FALSE)
 		dimnames(mrmr.global) <- list(colnames(data.original), colnames(data.original))
 
 		mrmr.global[mrmr.global == -1000] <- NA
 
-		
+
 		for(i in 1:length(predn)) {
 			data <- data.original
 			## remove observation where the target variable was perturbed (no link between observation and target variable)
@@ -116,6 +124,8 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 		score.causal[is.na(score.causal) | is.infinite(score.causal)] <- -1
 		res.netw <- score.causal[,predn]
 	}
+	
+
 	########################
 	## (1-w)*M+w*P weighted score from prior knowledge and data
 	########################

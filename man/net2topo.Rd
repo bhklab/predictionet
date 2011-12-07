@@ -8,12 +8,15 @@ Function transforming a network model into an adjacency matrix: parents in rows,
 This function transforms a network model into an adjacency matrix: parents in rows, children in columns.
 }
 \usage{
-net2topo(net, coefficients=FALSE)
+net2topo(net, regr.model=NULL, coefficients=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{net}{
 %%     ~~Describe \code{net} here~~
+}
+  \item{regr.model}{
+%%     ~~Describe \code{regr.model} here~~
 }
   \item{coefficients}{
 %%     ~~Describe \code{coefficients} here~~
@@ -56,7 +59,7 @@ res <- netinf(data=mydata, categories=3, priors=mypriors, priors.weight=0.5, met
 ## extract adjacency matrix from inferred network
 net2topo(net=res)
 ## with coefficients
-net2topo(net=res, coefficients=TRUE)
+net2topo(net=res, regr.model=build.regression.regrnet(data=mydata,topo=res$topology),coefficients=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

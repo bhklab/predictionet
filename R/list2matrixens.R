@@ -1,16 +1,12 @@
 `.list2matrixens` <- 
 function(myres) {
-	names.target<-names(myres$topology)
-	res<-matrix(0,nc=length(myres$topology),nr=length(myres$topology[[1]]),dimnames=list(names(myres$topology[[1]]),names.target))
-	res.coeff<-matrix(0,nc=length(myres$topology),nr=length(myres$topology.coeff[[1]]),dimnames=list(names(myres$topology.coeff[[1]]),names.target))
-	res.edge.relevance<-res
+	res.edge.relevance<-matrix(0,nc=ncol(myres$topology),nr=nrow(myres$topology),dimnames=dimnames(myres$topology))
 
-	for(i in 1:length(myres$topology)){
-		res[,i]<-myres$topology[[i]]
-		res.coeff[,i]<-myres$topology.coeff[[i]]
+
+	for(i in 1:ncol(myres$topology)){
 		res.edge.relevance[,i]<-myres$edge.relevance[[i]]
 	}
 	
 
-	return(list("method"=myres$method,"topology"=res,"topology.coeff"=res.coeff,"edge.relevance"=res.edge.relevance))
+	return(list("method"=myres$method,"topology"=myres$topology,"edge.relevance"=res.edge.relevance))
 }
