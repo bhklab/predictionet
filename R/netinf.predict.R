@@ -8,27 +8,39 @@
 ## returns matrix containg a prediction for each sample and each variable in predn
 
 `netinf.predict` <- 
-function(net, data, categories, perturbations, subset, predn, ensemble=FALSE, topo.coeff=FALSE) {
+function(net, data, categories, perturbations, subset, predn, method=c("linear", "linear.penalized", "cpt")) {
+	method <- match.arg(method)
+	if(length(method) > 1) { stop("only one prediction can be specified!") }
+	if(is.element(method, c("linear", "linear.penalized")) && !is.element("lrm", names(net))) { stop(sprintf("the network model should be made prediction first!\nuse function net2pred with method %s", method)) }
+	if(is.element(method, c("cpt")) && !is.element("cpt", names(net))) { stop(sprintf("the network model should be made prediction first!\nuse function net2pred with method %s", method)) }
+	if(missing(perturbations) || is.null(perturbations)) {
+		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
+	} else {
+		if(nrow(perturbations) == 1) {
+			perturbations[1, ] <- as.logical(perturbations[1, ])
+		} else { perturbations <- apply(perturbations, 2, as.logical) }
+		dimnames(perturbations) <- dimnames(data)
+	}
+	ensemble <- net$ensemble
 	res <- matrix(NA, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
-	switch(net$method, 
-		   "bayesnet"={
-			res <- .pred.onegene.bayesnet.fs(net=net$net, data=data, categories=categories, perturbations=perturbations, subset=subset, predn=predn)
-		   }, 
-		   "regrnet"={
-		   if(ensemble){
-				if(missing(predn)){predn<-colnames(net$topology)}else if(length(intersect(predn,colnames(net$topology)))>0){predn<-match(predn,colnames(data))}
-		   }else{
-				if(missing(predn)){predn<-seq(1,ncol(data))}else if(length(intersect(predn,colnames(data)))>0){predn<-match(predn,colnames(data))}
+	switch(method, 
+	"cpt"={
+			stop("cpt method is not implemented yet!")
+			#res <- .pred.onegene.bayesnet.fs(net=net$net, data=data, categories=categories, perturbations=perturbations, subset=subset, predn=predn)
+	}, 
+	"linear"=, 
+	"linear.penalized"={
+		   if(ensemble) {
+				if(missing(predn)) { predn<-colnames(net$topology) } else if(length(intersect(predn,colnames(net$topology)))>0) { predn<-match(predn,colnames(data)) }
+		   } else {
+				if(missing(predn)) { predn<-seq(1,ncol(data)) } else if(length(intersect(predn,colnames(data)))>0) { predn<-match(predn,colnames(data)) }
 		   }
-		   if(topo.coeff==FALSE && ensemble){
-				stop("The input options don't agree on what to do, set topo.coeff=TRUE if you have an ensemble object, this needs to contain the topology.coeff information")
-		   }
-		   if(topo.coeff && ensemble){
-				res <- .pred.onegene.regrnet.fs(topo.coeff=net$topology.coeff, data=data, perturbations=perturbations, subset=subset, predn=predn, ensemble=ensemble)
-		   }else{
-				res <- .pred.onegene.regrnet.fs(topo.coeff=.regrnet2matrixtopo(net$topology[,predn,drop=FALSE] , build.regression.regrnet(data,predn,net$topology)), data=data, perturbations=perturbations, subset=subset, predn=predn, ensemble=ensemble)
-		   }
-		   }
+			## make the predictions
+			
+			res <- .pred.onegene.regrnet.fs(topo.coeff=.regrnet2matrixtopo(net), data=data, perturbations=perturbations, subset=subset, predn=predn, ensemble=ensemble)
+
+	}, 
+	stop("no default parameter for method!")
 	)
 	return(res)
 }

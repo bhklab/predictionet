@@ -1,12 +1,9 @@
 `.list2matrixens` <- 
-function(myres) {
-	res.edge.relevance<-matrix(0,nc=ncol(myres$topology),nr=nrow(myres$topology),dimnames=dimnames(myres$topology))
-
-
-	for(i in 1:ncol(myres$topology)){
-		res.edge.relevance[,i]<-myres$edge.relevance[[i]]
+function(netmp) {
+	res.edge.relevance<-matrix(0, ncol=ncol(netmp$topology), nrow=nrow(netmp$topology), dimnames=dimnames(netmp$topology))
+	for(i in 1:ncol(netmp$topology)){
+		res.edge.relevance[,i] <- netmp$edge.relevance[[i]]
 	}
-	
-
-	return(list("method"=myres$method,"topology"=myres$topology,"edge.relevance"=res.edge.relevance))
+	netmp$edge.relevance <- res.edge.relevance
+	return(netmp)
 }

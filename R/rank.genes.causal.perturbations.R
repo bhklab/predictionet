@@ -7,11 +7,14 @@
 ## maxparents: maximum number of parents allowed for each gene
 ### returns matrix: each row corresponds to a target gene, columns contain the ranked genes (non NA values; gene names)
 `.rank.genes.causal.perturbations` <- 
-function(priors, data, perturbations, predn, priors.weight, maxparents, maxparents.push=FALSE, causal=TRUE) {
+function(priors, data, perturbations, predn, priors.weight, maxparents, causal=TRUE) {
 	
 	########################
 	### initialize variables
 	########################
+	if(missing(perturbations) || is.null(perturbations)) {
+		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
+	}
 	res <- matrix(NA, nrow=length(predn), ncol=ncol(data) - 1, dimnames=list(dimnames(data)[[2]][predn], seq(1, ncol(data) - 1)))
 	res.netw <- matrix(-1, nrow=ncol(data), ncol=length(predn), dimnames=list(dimnames(data)[[2]], dimnames(data)[[2]][predn]))
 	data.original <- data.matrix(data)
@@ -134,11 +137,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, maxparen
 	diag(score[dimnames(score)[[2]], dimnames(score)[[2]]]) <- -1
 	for(j in 1:length(predn)){
 		tmp.s <- sort(score[,j],decreasing=TRUE,index.return=TRUE)
-		if(priors.weight != 1 && maxparents.push) {
-			ttt <- tmp.s$ix[tmp.s$ix != j][1:maxparents] 
-			if(causal) { ttt <- ttt[tmp.s$x[tmp.s$ix != j][1:maxparents] > 0] }
-			ind.rm <- which(!is.element(tmp.s$ix, ttt))
-		} else { ind.rm <- (which(tmp.s$x<=0)) }
+		ind.rm <- (which(tmp.s$x<=0))
 		if(length(tmp.s$x[-ind.rm])>0){
 			res[j,(1:(length(tmp.s$x[-ind.rm])))] <- names(tmp.s$x[-ind.rm])
 			if(length(tmp.s$x[-ind.rm])>maxparents){

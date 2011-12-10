@@ -9,9 +9,6 @@ function(net, data, categories, perturbations, subset, predn) {
 	#require(catnet)
 	if(missing(perturbations) || is.null(perturbations)) {
 		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
-	} else {
-		perturbations <- apply(perturbations, 2, as.logical)
-		dimnames(perturbations) <- dimnames(data)
 	}
 	if(!missing(subset)) {
 		data <- data[subset, , drop=FALSE]

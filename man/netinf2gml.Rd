@@ -61,7 +61,7 @@ mydemo <- demo.ras
 mynet <- netinf.cv(data=mydata, categories=3, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", nfold=3, seed=54321)
 
 ## create an igraph obkect and export it into a GML file
-netinf2gml(object=mynet, file = "predictionet")
+\dontrun{netinf2gml(object=mynet, file = "predictionet")}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

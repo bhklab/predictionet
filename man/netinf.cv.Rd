@@ -6,7 +6,7 @@
 The function \code{netinf.cv} perform a cross-validation loop and infers a gene network by combining priors and genomic data in each fold. This allows to estimate the predictive ability of the inferred network as well as edge stability.
 }
 \usage{
-netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, maxparents.push = FALSE, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, ensemble.maxnsol=3, regrmodel = c("linear", "linear.penalized"), nfold = 10, causal = TRUE, seed, bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100) 
+netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, ensemble.maxnsol=3, predmodel = c("linear", "linear.penalized", "cpt"), nfold = 10, causal = TRUE, seed, bayesnet.maxcomplexity = 0, bayesnet.maxiter = 100, verbose = FALSE) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,17 +18,17 @@ netinf.cv(data, categories, perturbations, priors, predn, priors.count = TRUE, p
 	\item{priors.count}{ \code{TRUE} if priors specified by the user are number of citations (count) for each interaction, \code{FALSE} if probabilities or any other weight in [0,1] are reported instead. }
   \item{priors.weight}{ real value in [0,1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network).}
   \item{maxparents}{ maximum number of parents allowed for each gene. }
- 	\item{maxparents.push}{ if TRUE it forces the method to select the maximum number of parents for each variable in the network, FALSE otherwise. For now, this parameters has little effect when method='regrnet' and causal=TRUE. For method='bayesnet', this parameter has an effect the the maximum number of parents is not always chosen, we will fix that in a future release.}
   \item{subset}{ vector of indices to select only subset of the observations. }
   \item{method}{ \code{regrnet} for regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package.}
   \item{ensemble}{\code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
    \item{ensemble.maxnsol}{Number of equivalent solutions chosen at each step.}
-	\item{regrmodel }{ type of regression model to fit when \code{regrnet} method is selected. }
+	\item{predmodel }{ type of predictive model to fit; \code{linear} for linear regression model, \code{linear.penalized} for regularized linear regression model, \code{cpt} for conditional probability tables estimated after discretization of the data. }
 	\item{nfold}{ number of folds for the cross-validation. }
 	\item{causal}{ 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 	\item{seed}{ set the seed to make the cross-validation and network inference deterministic. }
 	\item{bayesnet.maxcomplexity}{ maximum complexity for bayesian network inference, see Details. }
 	\item{bayesnet.maxiter}{ maximum number of iterations for bayesian network inference, see Details. }
+	\item{verbose}{ \code{TRUE} if messages should be printed, \code{FALSE} otherwise. }
 }
 \details{
 	\code{bayesnet.maxcomplexity} and \code{bayesnet.maxiter} are parameters to be passed to the network inference method (see \link[catnet]{cnSearchOrder} and \link[catnet]{cnSearchSA} from the \code{catnet} package for more details).
@@ -84,7 +84,7 @@ res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=myprior
 print(res$prediction.score.cv)
 
 ## export network as a 'gml' file that you can import into Cytoscape
-rr <- netinf2gml(object=res, file=paste(tempdir(),"predictionet_regrnet",sep=""))
+\dontrun{rr <- netinf2gml(object=res, file="predictionet_regrnet")}
 
 ########################
 ## bayesian network inference
@@ -97,7 +97,7 @@ res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=myprior
 print(res$prediction.score.cv)
 
 ## export network as a 'gml' file that you can import into Cytoscape
-rr <- netinf2gml(object=res, file=paste(tempdir(),"predictionet_bayesnet",sep=""))
+\dontrun{rr <- netinf2gml(object=res, file="predictionet_bayesnet")}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

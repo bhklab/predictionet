@@ -1,24 +1,24 @@
 ### function computing the f1-score, comparing an inferred topology with a given topology
-## net: inferred topology
-## true.net: topology the user wants to compare the inferred topology with, e.g. the true network using generated datasets
+## topo: inferred topology
+## true.topo: topology the user wants to compare the inferred topology with, e.g. the true topowork using generated datasets
 ### returns f1-score 
 `eval.network` <- 
-function(net, true.net) {
+function(topo, true.topo) {
 	
 	tp<-fn<-fp<-fd<-0	
 	
 	### find counts for tp, fn, fp, fd
-	for(i in 1:nrow(net)){
-		for(j in 1:ncol(net)){
-			if(true.net[i,j]>0){
-				if(net[i,j]>0){
+	for(i in 1:nrow(topo)){
+		for(j in 1:ncol(topo)){
+			if(true.topo[i,j]>0){
+				if(topo[i,j]>0){
 					tp<-tp+1
 				}else{
 					fn<-fn+1
 				}
-			}else if(true.net[j,i]>0 && net[i,j]>0){
+			}else if(true.topo[j,i]>0 && topo[i,j]>0){
 				fd<-fd+1
-			}else if( net[i,j]>0){
+			}else if(topo[i,j]>0){
 				fp<-fp+1
 			}
 		}

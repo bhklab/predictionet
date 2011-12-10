@@ -8,7 +8,7 @@ Function computing performance of prediction; methods include r2, nrmse and mcc
 This function computes prediction performance; methods include r2, nrmse and mcc.
 }
 \usage{
-pred.score(data, pred, categories, method = c("r2", "nrmse", "mcc") ,ensemble=FALSE)
+pred.score(data, pred, categories, method = c("r2", "nrmse", "mcc"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,7 +22,6 @@ pred.score(data, pred, categories, method = c("r2", "nrmse", "mcc") ,ensemble=FA
   \item{method}{
 %%     ~~Describe \code{method} here~~
 }
-  \item{ensemble}{\code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
 }
 %%\details{
 %%  ~~ If necessary, more details than the description above ~~

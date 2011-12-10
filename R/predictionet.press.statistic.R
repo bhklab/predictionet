@@ -6,10 +6,14 @@
 
 `predictionet.press.statistic` <-  function(topo,data,ensemble=FALSE,perturbations=NULL) {
 
-	if(is.null(perturbations)){
-		perturbations<-matrix(0,nc=ncol(data),nr=nrow(data),dimnames=dimnames(data))
+	if(missing(perturbations) || is.null(perturbations)) {
+		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
+	} else {
+		if(nrow(perturbations) == 1) {
+			perturbations[1, ] <- as.logical(perturbations[1, ])
+		} else { perturbations <- apply(perturbations, 2, as.logical) }
+		dimnames(perturbations) <- dimnames(data)
 	}
-	
 	
 	if(ensemble){
 		mypert.ens<-NULL

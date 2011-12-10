@@ -365,7 +365,6 @@ mynet <- netinf(data=data.ras[ ,goi], priors=pn.priors.counts[goi,goi], priors.c
 \centering
 <<regrnetopofig,echo=TRUE,fig=TRUE,height=6,width=6,results=hide,eval=TRUE>>=
 ## network topology
-#mytopoglobal <- net2topo(net=mynet)
 mytopoglobal <- mynet$topology
 library(network)
 xnet <- network(x=mytopoglobal, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopoglobal)[[1]])
@@ -614,6 +613,8 @@ In this course, we use our second dataset of colon cancer patients to validate t
 
 
 <<validationpred,echo=TRUE,results=hide,eval=TRUE>>=
+## make the network model predictive
+mynet <- net2pred(net=mynet, data=data.ras[ ,goi], method="linear")
 ## compute predictions
 mynet.test.pred <-  netinf.predict(net=mynet, data=data2.ras[ ,goi])
 ## performance estimation: R2

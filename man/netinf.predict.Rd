@@ -8,28 +8,17 @@ Function to make prediction of a node values given its parents using an inferred
 This function predict the value of a node given its parents using an inferred network
 }
 \usage{
-netinf.predict(net, data, categories, perturbations, subset, predn, ensemble=FALSE, topo.coeff=FALSE)
+netinf.predict(net, data, categories, perturbations, subset, predn, method=c("linear", "linear.penalized", "cpt"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{net}{
-%%     ~~Describe \code{net} here~~
-}
-  \item{data}{
-%%     ~~Describe \code{data} here~~
-}
-  \item{categories}{
-%%     ~~Describe \code{categories} here~~
-}
-  \item{perturbations}{
-%%     ~~Describe \code{perturbations} here~~
-}
-  \item{subset}{
-%%     ~~Describe \code{subset} here~~
-}
+  \item{net}{ a network object with local regression models. }
+  \item{data}{ matrix of continuous or categorical values (gene expressions for example); observations in rows, features in columns. }
+  \item{categories}{ if this parameter missing, 'data' should be already discretize; otherwise either a single integer or a vector of integers specifying the number of categories used to discretize each variable (data are then discretized using equal-frequency bins) or a list of cutoffs to use to discretize each of the variables in 'data' matrix. If method='bayesnet', this parameter should be specified by the user. }
+  \item{perturbations}{ matrix of {0, 1} specifying whether a gene has been perturbed (e.g., knockdown, overexpression) in some experiments. Dimensions should be the same than \code{data}. }
+ \item{subset}{ vector of indices to select only subset of the observations. }
 	\item{predn}{indices or names of variables to fit during network inference. If missing, all the variables will be used for network inference. }
-	\item{ensemble}{\code{TRUE} if the ensemble approach should be used, \code{FALSE} otherwise. }
-	\item{topo.coeff}{\code{TRUE} if the object net contains the adjacency matrix with regression coefficients, \code{FALSE} otherwise. }
+	\item{method}{ \code{regrnet} for regression-based network inference, \code{bayesnet} for bayesian network inference with the \code{catnet} package.}
 }
 %%\details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -65,11 +54,15 @@ mypriors <- priors.ras[goi, goi, drop=FALSE]
 mydemo <- demo.ras
 ## infer global network from data and priors
 mynet <- netinf(data=mydata, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
+mynet <- net2pred(net=mynet, data=mydata, method="linear")
 
 ## predict gene expression of the first gene
 mypreds <- netinf.predict(net=mynet, data=mydata, predn=goi[1])[ ,goi[1]]
 ## root mean squared error (RMSE)
-sqrt(mean((mydata[ ,goi[1]] - mypreds)^2))
+nrmse <- sqrt(mean((mydata[ ,goi[1]] - mypreds)^2))
+## R2
+r2 <- cor(mydata[ ,goi[1]], mypreds)^2
+plot(mydata[ ,goi[1]], mypreds, xlab="Observed gene expression", ylab="Predicted gene expression")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

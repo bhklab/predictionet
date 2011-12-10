@@ -2,7 +2,7 @@ Package: predictionet
 Type: Package
 Title: Inference for predictive networks designed for (but not limited to) genomic data
 Version: 1.1.1
-Date: 2011-10-05
+Date: 2011-12-07
 Author: Benjamin Haibe-Kains, Catharina Olsen, Gianluca Bontempi, John Quackenbush
 Maintainer: Benjamin Haibe-Kains <bhaibeka@jimmy.harvard.edu>, Catharina Olsen <colsen@ulb.ac.be>
 Description: This package contains a set of functions related to network inference combining genomic data and prior information extracted from biomedical literature and structured biological databases. The main function is able to generate networks using Bayesian or regression-based inference methods; while the former is limited to < 100 of variables, the latter may infer networks with hundreds of variables. Several statistics at the edge and node levels have been implemented (edge stability, predictive ability of each node, ...) in order to help the user to focus on high quality subnetworks. Ultimately, this package is used in the 'Predictive Networks' web application developed by the Dana-Farber Cancer Institute in collaboration with Entagen.

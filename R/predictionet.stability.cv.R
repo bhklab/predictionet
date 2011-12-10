@@ -14,11 +14,15 @@
 ## seed: set the seed to make the cross-validation and network inference deterministic
 ## returns: method, topology, topology.cv, edge.stability and edge.stability.cv
 `predictionet.stability.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, maxparents.push=FALSE, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, ensemble.maxnsol=3, regrmodel=c("linear", "linear.penalized"), nfold=10, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, ensemble.maxnsol=3, nfold=10, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
 	if(!missing(seed)) { set.seed(seed) }
-	if(missing(perturbations)) {
-		## create matrix of no perturbations
-		perturbations <- matrix(0, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
+	if(missing(perturbations) || is.null(perturbations)) {
+		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
+	} else {
+		if(nrow(perturbations) == 1) {
+			perturbations[1, ] <- as.logical(perturbations[1, ])
+		} else { perturbations <- apply(perturbations, 2, as.logical) }
+		dimnames(perturbations) <- dimnames(data)
 	}	
 	if(!missing(subset)) {
 		## select subset of the data (observations)
@@ -43,7 +47,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	} else { mydata.discr <- data }
 	
 	## infer network from the whole dataset
-	mynetglobal <- netinf(data=data, categories=categories, perturbations=perturbations, priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method,ensemble=ensemble, regrmodel=regrmodel, causal=causal)
+	mynetglobal <- netinf(data=data, categories=categories, perturbations=perturbations, priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method,ensemble=ensemble, causal=causal)
 	## and the global topology
 	mytopoglobal <- mynetglobal$topology
 	
@@ -66,7 +70,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		## s.ix contains the indices of the test set
 		
 		## infer network from training data and priors
-		mynet <- netinf(data=data[-s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[-s.ix, , drop=FALSE], priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method,ensemble=ensemble, ensemble.maxnsol=ensemble.maxnsol, regrmodel=regrmodel, causal=causal, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
+		mynet <- netinf(data=data[-s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[-s.ix, , drop=FALSE], priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method,ensemble=ensemble, ensemble.maxnsol=ensemble.maxnsol, causal=causal, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
 		
 		## adjacency matrix
 		mytopo <- c(mytopo, list(mynet$topology))
