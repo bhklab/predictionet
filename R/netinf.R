@@ -121,6 +121,9 @@
 		   models.equiv<-NULL
 		   
 		   for(ind in 1:length(predn)){
+		   if(verbose){
+				print(paste("model for node",predn[ind],"is being built!"))
+		   }
 		   vec_ensemble<-c(vec_ensemble,list(.Call("mrmr_ensemble_remove", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn[ind], 1, rep_boot, ensemble.maxnsol, -1000)))
 		   models.equiv <- cbind(models.equiv,.extract.all.parents(data,vec_ensemble[[ind]],maxparents,predn[ind]))
 		   }
@@ -141,8 +144,32 @@
 			}
 			topores[topores != 0] <- 1
 			## build network object
+		   
 		   tmp.res<-list("method"="regrnet", "ensemble"=ensemble, "topology"=topores, "edge.relevance"=res.regrnet.ensemble$edge.relevance, "edge.relevance.global"=NULL)
-		   return(.list2matrixens(tmp.res))
+		   tmp.res<-.list2matrixens(tmp.res)
+		   
+		   ind.rebuild<-NULL
+		   unique.colnames<-unique(colnames(tmp.res$topology))
+		   
+		   for(i in 1:length(unique.colnames)){
+				ind<-which(colnames(tmp.res$topology)==unique.colnames[i])
+				if(length(ind)==1){
+					ind.rebuild<-c(ind.rebuild,ind)
+				}else{
+					tmp.topo<-tmp.res$topology[,ind,drop=FALSE]
+					ind.mult<-which(duplicated(tmp.topo, MARGIN = 2))
+					if(length(ind.mult)>0){
+						ind.rebuild<-c(ind.rebuild,ind[-ind.mult])
+					}else{
+						ind.rebuild<-c(ind.rebuild,ind)
+					}
+				}
+		   }
+		   tmp.res$topology<-tmp.res$topology[,ind.rebuild,drop=FALSE]
+		   tmp.res$edge.relevance<-tmp.res$edge.relevance[,ind.rebuild,drop=FALSE]
+
+		
+		   return(tmp.res)
 
 		   } else {
 ## fit regression model

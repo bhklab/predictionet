@@ -759,7 +759,7 @@ SEXP mrmr_ensemble( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar, SEXP 
 	
 	for(unsigned int i=0;i< *npredn;++i){
 		//initialize tree
-		std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
+		//std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
 		one=res_tree.insert(top, predn[i]);
 		
 		//build ensemble tree
@@ -1028,7 +1028,7 @@ SEXP mrmr_ensemble_remove( SEXP Rdata, SEXP Rnamat, SEXP Rmaxparents, SEXP Rnvar
 	int length_res_old;
 	for(unsigned int i=0;i< *npredn;++i){
 		//initialize tree
-		std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
+	//	std::cout<<"model for node "<<predn[i]<< " is being built!"<<std::endl;
 		one=res_tree.insert(top, predn[i]);
 		
 		//build ensemble tree
