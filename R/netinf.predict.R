@@ -37,7 +37,8 @@ function(net, data, categories, perturbations, subset, predn, method=c("linear",
 		   }
 			## make the predictions
 			
-			res <- .pred.onegene.regrnet.fs(topo.coeff=.regrnet2matrixtopo(net), data=data, perturbations=perturbations, subset=subset, predn=predn, ensemble=ensemble)
+#	res <- .pred.onegene.regrnet.fs(topo.coeff=.regrnet2matrixtopo(net), data=data, perturbations=perturbations, subset=subset, predn=predn, ensemble=ensemble)
+		   res <- .pred.onegene.regrnet.fs(topo.coeff=net$lrm, data=data, perturbations=perturbations, subset=subset, predn=predn, ensemble=ensemble)
 
 	}, 
 	stop("no default parameter for method!")

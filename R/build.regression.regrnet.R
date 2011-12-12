@@ -52,6 +52,7 @@ function(net, data, predn, perturbations, regrmodel=c("linear", "linear.penalize
 		regrnet <- c(regrnet, list(mm.reg))
 	}
 	names(regrnet) <- nn
-	
-	return(c(net, "lrm"=list(regrnet)))
+	return(c(net, "lrm"=list(.regrnet2matrixtopo(c(net, "lrm"=list(regrnet))))))
+
+#	return(c(net, "lrm"=list(regrnet), "topo.coeff"=list(.regrnet2matrixtopo(c(net, "lrm"=list(regrnet))))))
 }
