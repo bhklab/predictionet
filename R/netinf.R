@@ -13,7 +13,7 @@
 ## bayesnet.maxcomplexity: maximum complexity for bayesian network inference
 ## bayesnet.maxiter: maximum number of iterations for bayesian network inference
 
-`netinf` <-  function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"), ensemble=FALSE, ensemble.model=c("full", "best"), ensemble.maxnsol=3, causal=TRUE, seed=54321, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose=FALSE) {
+`netinf` <-  function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"), ensemble=FALSE, ensemble.model=c("full", "best"), ensemble.maxnsol=3, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose=FALSE) {
 ## select more genes to find a number of cauqal variables close or more than maxparents
 	if(ncol(data) < 2) { stop("Number of variables is too small to infer a network!") }
 	if(!missing(predn) && !is.null(predn) && length(predn) < 2) { stop("length of parameter 'predn' should be >= 2!") }
@@ -83,8 +83,6 @@
 		   
 			   bnet <- .fit.catnet(data=data, categories=categories, perturbations=perturbations, priors=priors, priors.weight=priors.weight, maxparents=maxparents, seed=seed, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
 			   edgerel <- bnet$edge.relevance
-	## remove edge relevance from the network object to avoid redunddancy
-			   bnet <- bnet[!is.element(names(bnet), "edge.relevance")]
 				return(list("method"=method, "ensemble"=ensemble, "topology"=t(cnMatParents(bnet$model)), "edge.relevance"=edgerel, "edge.relevance.global"=NULL))
 			}
 		  }, 

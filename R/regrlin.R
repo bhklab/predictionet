@@ -10,7 +10,7 @@
   
 	XX<-cbind(array(1,c(N,1)),X)
 
-	H1<-ginv(t(XX)%*%XX+lambda*diag(p))
+	H1<-MASS::ginv(t(XX)%*%XX+lambda*diag(p))
 	beta.hat<-H1%*%t(XX)%*%Y
 	H<-XX%*%H1%*%t(XX)
 	Y.hat<-XX%*%beta.hat

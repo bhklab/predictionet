@@ -6,7 +6,7 @@
 Function to fit a regression model for each variable in the dataset or alternatively each variable of interest.
 }
 \usage{
-net2pred(net, data, categories, predn, perturbations, method = c("linear", "linear.penalized", "cpt"), seed = 54321)
+net2pred(net, data, categories, predn, perturbations, method = c("linear", "linear.penalized", "cpt"), seed)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -57,7 +57,7 @@ mypert <- pert[ , goi, drop=FALSE]
 ## regression-based network inference
 ########################
 ## infer global network from data and priors
-mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
+mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed)
 
 net2pred(net=mynet, data=mydata, method="linear")
 }

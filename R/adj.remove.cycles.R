@@ -2,7 +2,7 @@
 ## adjmat: adjacency matrix; parents in rows, children in collumns
 ## return the adjacency matrix with the lowest entries being removed such that the network is now acyclic
 'adj.remove.cycles' <- 
-function(adjmat) {
+function(adjmat, from) {
 	
 	####################
 	## internal functions
@@ -52,14 +52,19 @@ function(adjmat) {
 	}
 	adjmat2[adjmat.mask] <- 0
 	## bidirectional edges
-	iix <- which(upper.tri(adjmat2), arr.ind=TRUE)
-	iix2 <- t(apply(iix, 1, function(x, y) { if(y[x[1], x[2]] <= y[x[2], x[1]]) { return(x) } else { return(rev(x)) } }, y=adjmat2))
-	iix2 <- iix2[which(adjmat2[iix2] != 0), ]
-	adjmat.mask[iix2] <- TRUE
-	adjmat2[adjmat.mask] <- 0
+	#iix <- which(upper.tri(adjmat2), arr.ind=TRUE)
+	#iix2 <- t(apply(iix, 1, function(x, y) { if(y[x[1], x[2]] <= y[x[2], x[1]]) { return(x) } else { return(rev(x)) } }, y=adjmat2))
+	#iix2 <- iix2[which(adjmat2[iix2] != 0), ]
+	#adjmat.mask[iix2] <- TRUE
+	#adjmat2[adjmat.mask] <- 0
 	
 	## order nodes with the maximum prior
-	nnix <- order(apply(adjmat2, 1, max), decreasing=FALSE)
+	if(missing(from)) {
+	## for all the nodes cycles will be removed
+		nnix <- order(apply(adjmat2, 1, max), decreasing=FALSE)
+	} else {
+		if(is.integer(from)) { nnix <- from } else { nnix <- match(from, nNames) }
+	}
 	for(i in 1:length(nnix)) {
 		nodest <- rep(0, ncol(adjmat2))
 		names(nodest) <- colnames(adjmat2)

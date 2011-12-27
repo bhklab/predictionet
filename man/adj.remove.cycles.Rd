@@ -8,13 +8,12 @@ Function to remove cycles that may be present in a directed graph represented by
 This function removes cycles that may be present in a directed graph represented by an adjacency matrix, 
 }
 \usage{
-adj.remove.cycles(adjmat)
+adj.remove.cycles(adjmat, from)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{adjmat}{
-adjacency matrix with positive entries represent evidence for the presence of an edge and entries less or equal than zero represent absence of an edge; parents in row, children in columns.
-}
+  \item{adjmat}{ adjacency matrix with positive entries represent evidence for the presence of an edge and entries less or equal than zero represent absence of an edge; parents in row, children in columns. }
+	\item{from}{indices or names of nodes for which the cycles present in the childhood should be removed; if missing, all cycles will be removed.}
 }
 \details{
 This function may be useful when it comes to generate a bayesian network using a topology identified from an  source of information where cycles are allowed. When cycles are removed, the function tries to keep the most positive entries.

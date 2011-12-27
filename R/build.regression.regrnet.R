@@ -4,8 +4,8 @@
 ## topo: inferred topology (matrix containing {0,1})
 ### returns a regression network 
 `.build.regression.regrnet` <- 
-function(net, data, predn, perturbations, regrmodel=c("linear", "linear.penalized"), seed=54321) {
-	set.seed(seed)
+function(net, data, predn, perturbations, regrmodel=c("linear", "linear.penalized"), seed) {
+	if(!missing(seed)) { set.seed(seed) }
 	topo <- net$topology
 	ensemble <- net$ensemble
 	if(ensemble) {

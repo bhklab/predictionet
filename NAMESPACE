@@ -1,5 +1,7 @@
 useDynLib(predictionet)
 
 importFrom(penalized, optL1, penalized, predict)
+importFrom(RBGL, floyd.warshall.all.pairs.sp)
+importFrom(MASS, ginv)
 
 exportPattern("^[^\\.]")

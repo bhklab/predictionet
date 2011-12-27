@@ -12,8 +12,8 @@
 ## causal: 'TRUE' if the causality should be inferred from the data, 'FALSE' otherwise }
 ## seed: set the seed to make the cross-validation and network inference deterministic
 `netinf.cv` <- 
-function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, ensemble.maxnsol=3, predmodel=c("linear", "linear.penalized", "cpt"), nfold=10, causal=TRUE, seed=54321, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose=FALSE) {
-	set.seed(seed)
+function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"),ensemble=FALSE, ensemble.maxnsol=3, predmodel=c("linear", "linear.penalized", "cpt"), nfold=10, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose=FALSE) {
+	if(!missing(seed)) { set.seed(seed) }
 	method <- match.arg(method)
 	predmodel <- match.arg(predmodel)
 	if(missing(perturbations) || is.null(perturbations)) {

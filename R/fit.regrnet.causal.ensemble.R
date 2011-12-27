@@ -1,5 +1,5 @@
 `.fit.regrnet.causal.ensemble` <- 
-function(res.causal,models, data, perturbations, priors, predn, maxparents=3, priors.weight=0.5, causal=TRUE, seed=54321) {
+function(res.causal,models, data, perturbations, priors, predn, maxparents=3, priors.weight=0.5, causal=TRUE, seed) {
 	if(causal && maxparents > (ncol(data) * 0.5)) { warning("maximum number of parents may be too large, causal inference requires sparsity in the inferred network; please decrease maxparents parameter for better results!") }
 	if(!missing(seed)) { set.seed(seed) }
 	if(missing(predn) || is.null(predn) || length(predn) == 0) { predn <- 1:ncol(data) } else { if(is.character(predn)) { predn <- match(predn, dimnames(data)[[2]]) } else { if(!is.numeric(predn) || !all(predn %in% 1:ncol(data))) { stop("parameter 'predn' should contain either the names or the indices of the variables to predict!")} } }

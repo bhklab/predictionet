@@ -6,7 +6,7 @@
 Main function of the \code{predictionet} package, \code{netinf} infers a gene network by combining priors and genomic data. The two main network inference methodologies implemented so far are the bayesian and regression-based inferences.
 }
 \usage{
-netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, ensemble.model = c("full","best"), ensemble.maxnsol = 3, causal=TRUE, seed=54321, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose = FALSE)
+netinf(data, categories, perturbations, priors, predn, priors.count = TRUE, priors.weight = 0.5, maxparents = 3, subset, method = c("regrnet", "bayesnet"), ensemble = FALSE, ensemble.model = c("full","best"), ensemble.maxnsol = 3, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

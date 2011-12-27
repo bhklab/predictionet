@@ -6,13 +6,13 @@
 ## seed: seed to get deterministic results
 ### returns a bayesian network model
 '.fit.catnet' <- 
-function(data, categories, perturbations, priors, priors.weight, maxparents=3, seed=54321, bayesnet.maxcomplexity=0, bayesnet.maxiter=100) {
+function(data, categories, perturbations, priors, priors.weight, maxparents=3, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, seed) {
 	#require(catnet)
 	## perturbations should be a matrix of [0, 1] for the catnet package
 	pp <- matrix(0, nrow=nrow(perturbations), ncol=ncol(perturbations), dimnames=dimnames(perturbations))
 	pp[perturbations] <- 1
 	pertwurbations <- pp
-	catnet::cnSetSeed(seed)
+	if(!missing(seed)) { catnet::cnSetSeed(seed) }
 	## be aware that catnet package consider any adjacency matrix to have parents in COLUMNS and children in ROWS, that is the inverse of the predictionet package
 	#edgrel <- matrix(0, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
 	## topology identified from the priors

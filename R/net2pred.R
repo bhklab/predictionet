@@ -1,6 +1,6 @@
 ## function to make the network model predictive either by fitting local regression models or by estimating CPTs
 `net2pred` <- 
-function(net, data, categories, predn, perturbations, method=c("linear", "linear.penalized", "cpt"), seed=54321) {
+function(net, data, categories, predn, perturbations, method=c("linear", "linear.penalized", "cpt"), seed) {
 	method <- match.arg(method)
 	if(missing(perturbations) || is.null(perturbations)) {
 		perturbations <- matrix(FALSE, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
