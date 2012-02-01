@@ -6,7 +6,7 @@
 ## priors.weight: real value in [0, 1] specifying the weight to put on the priors (0=only the data are used, 1=only the priors are used to infer the topology of the network). If 'priors.weight' is missing it will be optimized gene by hene in an automatic way.
 ## maxparents: maximum number of parents allowed for each gene
 ### returns matrix: each row corresponds to a target gene, columns contain the ranked genes (non NA values; gene names)
-`.rank.genes.causal.perturbations` <- 
+`.rank.genes.causal.perturbations2` <- 
 function(priors, data, perturbations, predn, priors.weight, maxparents, causal=TRUE) {
 	
 	########################
@@ -32,7 +32,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 #		}
 		
 		
-		mrmr.global <- .Call("mrnet_adapted", data.original,as.integer(is.na(data.original)), maxparents, ncol(data.original), nrow(data.original), predn, length(predn), -1000)
+		mrmr.global <- .Call("mrnet_adapted2", data.original,as.integer(is.na(data.original)), priors, priors.weight, maxparents, ncol(data.original), nrow(data.original), predn, length(predn), -1000)
 		mrmr.global <- matrix(mrmr.global, nrow=ncol(data.original), ncol=ncol(data.original), byrow=FALSE)
 		dimnames(mrmr.global) <- list(colnames(data.original), colnames(data.original))
 
@@ -48,7 +48,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 				## since the target gene has been perturbed in some of the experiments we should recompute the mim and mrmr matrices
 				## compute mrmr score for the target genes
 				## mrmr_adapted(SEXP data, SEXP maxparents, SEXP nvar, SEXP nsample, SEXP predn, SEXP npredn, SEXP threshold);
-				mrmr <- .Call("mrnet_adapted", data,as.integer(is.na(data)), maxparents, ncol(data), nrow(data), predn, length(predn), -1000)
+				mrmr <- .Call("mrnet_adapted2", data,as.integer(is.na(data)), priors, priors.weight, maxparents, ncol(data), nrow(data), predn, length(predn), -1000)
 				mrmr <- matrix(mrmr, nrow=ncol(data), ncol=ncol(data), byrow=FALSE)
 				dimnames(mrmr) <- list(colnames(data),colnames(data))
 				mrmr[mrmr == -1000] <- NA
