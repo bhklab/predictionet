@@ -7,7 +7,7 @@
 function(object, edge.info, node.info, file="predictionet") {
 	#require(igraph)
 	## adjacency matrix representing the topology; parents in rows, children in columns
-	if(!missing(edge.info)) { 	edge.info.new<-edge.info }else{ edge.info.new<-NULL}
+	if(!missing(edge.info)) { 	edge.info.new <- edge.info }else{ edge.info.new <- NULL}
 	net.topo <- object$topology
 	if(any(dim(net.topo) <= 0)) { stop("network should contain at least one node!") }
 	## matrix of coeffcients for regrnet
@@ -25,7 +25,7 @@ function(object, edge.info, node.info, file="predictionet") {
 		edge.info.new <- edge.info.new[sapply(edge.info.new, function(x) { return(!is.null(x) && !all(is.na(x))) })]	
 		## check dimensions of edge.info
 		if(!all(sapply(edge.info.new, dim) == nrow(net.topo))) { stop("edge.info should be a matrix or a list of matrices with the same dimensions that the adjacency describing the network topology!") }else{
-		edge.info<-c(edge.info,edge.info.new)	
+		edge.info <- c(edge.info,edge.info.new)	
 		}
 	}
 	if(!missing(node.info)) {

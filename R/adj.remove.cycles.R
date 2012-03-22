@@ -2,7 +2,7 @@
 ## adjmat: adjacency matrix; parents in rows, children in collumns
 ## return the adjacency matrix with the lowest entries being removed such that the network is now acyclic
 'adj.remove.cycles' <- 
-function(adjmat, from) {
+function(adjmat, from, maxlength) {
 	
 	####################
 	## internal functions
@@ -12,27 +12,31 @@ function(adjmat, from) {
 	## nodix.from: index of the previous node
 	## nodix: index of the current node
 	'.adj.remove.cycles.DFS' <- 
-	function(adjmat, adjmat.mask, nodix.from, nodix, nodest) {
+	function(adjmat, adjmat.mask, nodix.from, nodix, nodest, pathlength, maxlength) {
 		
 		if(nodix.from %in% (1:length(nodest)) && nodest[nodix] == 1) { ## the current node has already been visited
 			## remove edge
 			adjmat.mask[nodix.from, nodix] <- TRUE
 			return(adjmat.mask)
 		} else {
-			## the current node has never been visited
-			## remove the edges previously identified as responsible for a cycle
-			adjmat2 <- adjmat
-			adjmat2[adjmat.mask] <- 0
-			ee <- which(adjmat2[nodix, ] > 0) ## all children of nodix
-			ee <- ee[order(adjmat2[nodix, ee], decreasing=FALSE)] ## order them based on number of citations
-			if(length(ee) > 0) { ## some children to look at
-				for(i in 1:length(ee)) { ## for all children
-					nodest2 <- nodest
-					nodest2[nodix] <- 1
-					adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat, adjmat.mask=adjmat.mask, nodix.from=nodix, nodix=ee[i], nodest=nodest2)
-				}
+			if(pathlength > maxlength) {
 				return(adjmat.mask)
-			} else { return(adjmat.mask) }
+			} else {
+				## the current node has never been visited
+				## remove the edges previously identified as responsible for a cycle
+				adjmat2 <- adjmat
+				adjmat2[adjmat.mask] <- 0
+				ee <- which(adjmat2[nodix, ] > 0) ## all children of nodix
+				ee <- ee[order(adjmat2[nodix, ee], decreasing=FALSE)] ## order them based on number of citations
+				if(length(ee) > 0) { ## some children to look at
+					for(i in 1:length(ee)) { ## for all children
+						nodest2 <- nodest
+						nodest2[nodix] <- 1
+						adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat, adjmat.mask=adjmat.mask, nodix.from=nodix, nodix=ee[i], nodest=nodest2, pathlength=)
+					}
+					return(adjmat.mask)
+				} else { return(adjmat.mask) }
+			}
 		}
 	}
 	####################

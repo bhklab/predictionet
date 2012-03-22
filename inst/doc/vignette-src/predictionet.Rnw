@@ -616,7 +616,7 @@ In this course, we use our second dataset of colon cancer patients to validate t
 ## make the network model predictive
 mynet <- net2pred(net=mynet, data=data.ras[ ,goi], method="linear")
 ## compute predictions
-mynet.test.pred <-  netinf.predict(net=mynet, data=data2.ras[ ,goi])
+mynet.test.pred <- netinf.predict(net=mynet, data=data2.ras[ ,goi])
 ## performance estimation: R2
 mynet.test.r2 <- pred.score(data=data2.ras[ ,goi], pred=mynet.test.pred, method="r2")
 ## performance estimation: MCC
@@ -770,7 +770,7 @@ mytopot <- myres.cv.pw075$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0.75")
 ## priors.weight 1
-mytopot <-  myres.cv.pw1$topology
+mytopot <- myres.cv.pw1$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 1 (priors only)")
 par(def.par)
@@ -794,7 +794,7 @@ mytopot <- myres.cv.pw075$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 0.75")
 ## priors.weight 1
-mytopot <-  myres.cv.pw1$topology
+mytopot <- myres.cv.pw1$topology
 xnett <- network(x=mytopot, matrix.type="adjacency", directed=TRUE, loops=FALSE, vertex.attrnames=dimnames(mytopot)[[1]])
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col="black", coord=mynetlayout, main="Priors weight = 1 (priors only)")
 par(def.par)

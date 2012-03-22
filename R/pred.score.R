@@ -11,9 +11,9 @@ function(data, pred, categories, method=c("r2", "nrmse", "mcc")) {
 	method <- match.arg(method)
 	data.new <- matrix(0,ncol=ncol(pred), nrow=nrow(data), dimnames=list(rownames(data), colnames(pred)))
 	for(i in 1:ncol(pred)){
-		data.new[,i]<-data[,colnames(pred)[i]]
+		data.new[,i] <- data[,colnames(pred)[i]]
 	}
-	data<-data.new
+	data <- data.new
 	if(method %in% c("mcc")) {
 		## need to discretize the data to compute this performance criterion
 		if(!missing(categories)) {

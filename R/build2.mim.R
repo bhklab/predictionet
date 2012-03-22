@@ -10,7 +10,7 @@ function(dataset, estimator=c("pearson", "spearman", "kendall")) {
 		diag(mim) <- 0
 		maxi <- 0.999999
 		mim[which(mim>maxi)] <- maxi
-		mim  <- -0.5*log(1-mim)
+		mim <- -0.5*log(1-mim)
 	} else { stop("unknown estimator") }
 	
 	mim[mim<0] <- 0

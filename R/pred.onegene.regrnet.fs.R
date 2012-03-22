@@ -25,22 +25,22 @@ function(topo.coeff, data, perturbations, subset, predn,ensemble=FALSE) {
 	}
 	## variables to predict
 	if(ensemble){
-		perturbations.new<-matrix(FALSE,nr=nrow(data),nc=ncol(topo.coeff))
+		perturbations.new <- matrix(FALSE,nr=nrow(data),nc=ncol(topo.coeff))
 		
 		preds <- matrix(NA, nrow=nrow(data), ncol=ncol(topo.coeff))
 		for(i in 1:ncol(preds)){
-			var<-(colnames(topo.coeff)[i])
-			perturbations.new[,i]<-perturbations[,var]
-			preds[,i]<-topo.coeff[,i]%*% t(cbind(rep(1,nrow(data)),data))
+			var <- (colnames(topo.coeff)[i])
+			perturbations.new[,i] <- perturbations[,var]
+			preds[,i] <- topo.coeff[,i]%*% t(cbind(rep(1,nrow(data)),data))
 		}
-		colnames(perturbations.new)<-colnames(topo.coeff)
-		rownames(perturbations.new)<-rownames(data)
-		dimnames(preds)<-list(rownames(data),colnames(topo.coeff))
-		perturbations<-perturbations.new
+		colnames(perturbations.new) <- colnames(topo.coeff)
+		rownames(perturbations.new) <- rownames(data)
+		dimnames(preds) <- list(rownames(data),colnames(topo.coeff))
+		perturbations <- perturbations.new
 	}else{
 		## matrix to store the predictions
 		preds <- matrix(NA, nrow=nrow(data), ncol=ncol(data), dimnames=dimnames(data))
-		preds[,colnames(topo.coeff)]<-t(t(topo.coeff)%*% t(cbind(rep(1,nrow(data)),data)))
+		preds[,colnames(topo.coeff)] <- t(t(topo.coeff)%*% t(cbind(rep(1,nrow(data)),data)))
 		
 	}
 	preds[perturbations] <- NA

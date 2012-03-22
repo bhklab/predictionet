@@ -4,10 +4,10 @@
 ### returns adjacency matrix with entries corresponding to the regression coefficients: parents in rows and children in columns (res[i,j]==1 means edge from i to j)
 `.regrnet2matrixtopo` <- 
 function(net) {
-	nr<-ncol(net$topology)
+	nr <- ncol(net$topology)
 	res <- net$topology
 	net.model <- net$lrm
-	beta_0<-NULL
+	beta_0 <- NULL
 	for (i in 1:nr) {
 		model.i <- net.model[[i]]
 		if(!is.numeric(model.i)) { ## non null model
@@ -18,7 +18,7 @@ function(net) {
 				beta_0 <- c(beta_0,model.i)
 		}
 	}
-	names(beta_0)<-colnames(res)
-	res<-rbind(beta_0,res)
+	names(beta_0) <- colnames(res)
+	res <- rbind(beta_0,res)
 	return(res)
 }

@@ -26,9 +26,9 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 		## compute mrmr score for the target genes
 		
 #		if(causal){
-#			local.maxparents<-floor(min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
+#			local.maxparents <- floor(min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
 #		}else{
-#			local.maxparents<-maxparents
+#			local.maxparents <- maxparents
 #		}
 		
 		

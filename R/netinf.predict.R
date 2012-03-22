@@ -31,9 +31,9 @@ function(net, data, categories, perturbations, subset, predn, method=c("linear",
 	"linear"=, 
 	"linear.penalized"={
 		   if(ensemble) {
-				if(missing(predn)) { predn<-colnames(net$topology) } else if(length(intersect(predn,colnames(net$topology)))>0) { predn<-match(predn,colnames(data)) }
+				if(missing(predn)) { predn <- colnames(net$topology) } else if(length(intersect(predn,colnames(net$topology)))>0) { predn <- match(predn,colnames(data)) }
 		   } else {
-				if(missing(predn)) { predn<-seq(1,ncol(data)) } else if(length(intersect(predn,colnames(data)))>0) { predn<-match(predn,colnames(data)) }
+				if(missing(predn)) { predn <- seq(1,ncol(data)) } else if(length(intersect(predn,colnames(data)))>0) { predn <- match(predn,colnames(data)) }
 		   }
 			## make the predictions
 			

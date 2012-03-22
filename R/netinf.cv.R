@@ -81,7 +81,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		mynet <- net2pred(net=mynet, data=data[-s.ix, , drop=FALSE], categories=categories, predn=predn, perturbations=perturbations[-s.ix, , drop=FALSE], method=predmodel)
 		mynets <- c(mynets, list(mynet))
 		
-		#mynet<-c(mynet,list("topology.coeff"=.regrnet2matrixtopo(net=mynet)))
+		#mynet <- c(mynet,list("topology.coeff"=.regrnet2matrixtopo(net=mynet)))
 		mytopo2 <- c(mytopo2, list(mynet$topology))
 
 		## edge relevance score
@@ -151,6 +151,6 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 
 	}
 	## report stability of edges present in the global network
-	names(mytopo2) <-  paste("fold", 1:nfold, sep=".")
+	names(mytopo2) <- paste("fold", 1:nfold, sep=".")
 	return(list("method"=method, "topology"=mytopoglobal, "topology.cv"=mytopo, "prediction.score.cv"=list("r2"=(myr2), "nrmse"=(mynrmse), "mcc"=(mymcc)), "edge.stability"=edgestab2, "edge.stability.cv"=edgestab, "edge.relevance"=mynetglobal$edge.relevance, "edge.relevance.cv"=edge.relevance.cv))
 }

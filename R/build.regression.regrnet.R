@@ -11,7 +11,7 @@ function(net, data, predn, perturbations, regrmodel=c("linear", "linear.penalize
 	if(ensemble) {
 		nn <- colnames(topo) ## variables (genes) to fit during network inference
 	} else {
-		if(missing(predn)){predn<-seq(1,ncol(data))}else if(length(intersect(predn,colnames(data)))>0){predn<-match(predn,colnames(data))}
+		if(missing(predn)) { predn <- seq(1,ncol(data)) } else if(length(intersect(predn, colnames(data))) > 0) { predn <- match(predn,colnames(data)) }
 		nn <- dimnames(data)[[2]][predn] ## variables (genes) to fit during network inference
 	}
 	regrmodel <- match.arg(regrmodel)
@@ -45,8 +45,9 @@ function(net, data, predn, perturbations, regrmodel=c("linear", "linear.penalize
 				   },
 				   "linear.penalized"={
 				   #require(penalized)
-				   optlambda1 <- penalized::optL1(response=ff, data=dd2, model="linear", lambda2=0, minlambda1=1, maxlambda1=10, trace=FALSE, fold=10)
-				   mm.reg <- penalized::penalized(response=ff, data=dd2, model="linear", lambda1=optlambda1$lambda, lambda2=0, trace=FALSE)
+					ccix <- !perturbations[ , nn[i]]
+				   optlambda1 <- penalized::optL1(response=ff, data=dd2[ccix, ,drop=FALSE], model="linear", lambda2=0, minlambda1=1, maxlambda1=10, trace=FALSE, fold=10)
+				   mm.reg <- penalized::penalized(response=ff, data=dd2[ccix, ,drop=FALSE], model="linear", lambda1=optlambda1$lambda, lambda2=0, trace=FALSE)
 				   })
 		}
 		regrnet <- c(regrnet, list(mm.reg))

@@ -13,7 +13,7 @@
 ## bayesnet.maxcomplexity: maximum complexity for bayesian network inference
 ## bayesnet.maxiter: maximum number of iterations for bayesian network inference
 
-`netinf2` <-  function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"), ensemble=FALSE, ensemble.model=c("full", "best"), ensemble.maxnsol=3, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose=FALSE) {
+`netinf2` <- function(data, categories, perturbations, priors, predn, priors.count=TRUE, priors.weight=0.5, maxparents=3, subset, method=c("regrnet", "bayesnet"), ensemble=FALSE, ensemble.model=c("full", "best"), ensemble.maxnsol=3, causal=TRUE, seed, bayesnet.maxcomplexity=0, bayesnet.maxiter=100, verbose=FALSE) {
 ## select more genes to find a number of cauqal variables close or more than maxparents
 	if(ncol(data) < 2) { stop("Number of variables is too small to infer a network!") }
 	if(!missing(predn) && !is.null(predn) && length(predn) < 2) { stop("length of parameter 'predn' should be >= 2!") }
@@ -110,19 +110,19 @@
 					stop("perturbations cannot be considered in the ensemble approach")
 				}
 ## fit an ensemble regression model
-				if(missing(predn)){predn<-seq(1,ncol(data))}else if(length(intersect(predn,colnames(data)))>0){predn<-match(predn,colnames(data))}
+				if(missing(predn)){predn <- seq(1,ncol(data))}else if(length(intersect(predn,colnames(data)))>0){predn <- match(predn,colnames(data))}
 				rep_boot <- 200
 				if(ensemble.model=="best"){
 					vec_ensemble <- .Call("mrmr_ensemble", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn, length(predn), rep_boot, ensemble.maxnsol, -1000)
 				}else if(ensemble.model=="full"){
-		   vec_ensemble<-NULL
-		   models.equiv<-NULL
+		   vec_ensemble <- NULL
+		   models.equiv <- NULL
 		   
 		   for(ind in 1:length(predn)){
 		   if(verbose){
 				print(paste("model for node",predn[ind],"is being built!"))
 		   }
-		   vec_ensemble<-c(vec_ensemble,list(.Call("mrmr_ensemble_remove", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn[ind], 1, rep_boot, ensemble.maxnsol, -1000)))
+		   vec_ensemble <- c(vec_ensemble,list(.Call("mrmr_ensemble_remove", data.matrix(data),as.integer(is.na(data)),maxparents, ncol(data), nrow(data), predn[ind], 1, rep_boot, ensemble.maxnsol, -1000)))
 		   models.equiv <- cbind(models.equiv,.extract.all.parents(data,vec_ensemble[[ind]],maxparents,predn[ind]))
 		   }
 		  
@@ -130,11 +130,11 @@
 				if(verbose) { message("ensemble done") }
 #	models.equiv <- .extract.all.parents(data,vec_ensemble,maxparents,predn)
 				if(causal){
-					res.causal<- .rank.genes.causal.ensemble(models.equiv,data)
+					res.causal <- .rank.genes.causal.ensemble(models.equiv,data)
 				}else{
-					res.causal<- .rank.genes.ensemble(models.equiv,data)
+					res.causal <- .rank.genes.ensemble(models.equiv,data)
 				}
-				res.regrnet.ensemble<- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight,maxparents=maxparents)
+				res.regrnet.ensemble <- .fit.regrnet.causal.ensemble(res.causal,models.equiv,data,priors=priors,priors.weight=priors.weight,maxparents=maxparents)
 			## identify topology
 			topores <- matrix(0, nrow=length(res.regrnet.ensemble$varnames), ncol=length(res.regrnet.ensemble$input), dimnames=list(res.regrnet.ensemble$varnames, res.regrnet.ensemble$input))
 			for(i in 1:length(res.regrnet.ensemble$input)){
@@ -143,28 +143,28 @@
 			topores[topores != 0] <- 1
 			## build network object
 		   
-		   tmp.res<-list("method"="regrnet", "ensemble"=ensemble, "topology"=topores, "edge.relevance"=res.regrnet.ensemble$edge.relevance, "edge.relevance.global"=NULL)
-		   tmp.res<-.list2matrixens(tmp.res)
+		   tmp.res <- list("method"="regrnet", "ensemble"=ensemble, "topology"=topores, "edge.relevance"=res.regrnet.ensemble$edge.relevance, "edge.relevance.global"=NULL)
+		   tmp.res <- .list2matrixens(tmp.res)
 		   
-		   ind.rebuild<-NULL
-		   unique.colnames<-unique(colnames(tmp.res$topology))
+		   ind.rebuild <- NULL
+		   unique.colnames <- unique(colnames(tmp.res$topology))
 		   
 		   for(i in 1:length(unique.colnames)){
-				ind<-which(colnames(tmp.res$topology)==unique.colnames[i])
+				ind <- which(colnames(tmp.res$topology)==unique.colnames[i])
 				if(length(ind)==1){
-					ind.rebuild<-c(ind.rebuild,ind)
+					ind.rebuild <- c(ind.rebuild,ind)
 				}else{
-					tmp.topo<-tmp.res$topology[,ind,drop=FALSE]
-					ind.mult<-which(duplicated(tmp.topo, MARGIN = 2))
+					tmp.topo <- tmp.res$topology[,ind,drop=FALSE]
+					ind.mult <- which(duplicated(tmp.topo, MARGIN = 2))
 					if(length(ind.mult)>0){
-						ind.rebuild<-c(ind.rebuild,ind[-ind.mult])
+						ind.rebuild <- c(ind.rebuild,ind[-ind.mult])
 					}else{
-						ind.rebuild<-c(ind.rebuild,ind)
+						ind.rebuild <- c(ind.rebuild,ind)
 					}
 				}
 		   }
-		   tmp.res$topology<-tmp.res$topology[,ind.rebuild,drop=FALSE]
-		   tmp.res$edge.relevance<-tmp.res$edge.relevance[,ind.rebuild,drop=FALSE]
+		   tmp.res$topology <- tmp.res$topology[,ind.rebuild,drop=FALSE]
+		   tmp.res$edge.relevance <- tmp.res$edge.relevance[,ind.rebuild,drop=FALSE]
 
 		
 		   return(tmp.res)
@@ -193,7 +193,7 @@
 			topores <- matrix(0, nrow=length(bnet$varnames), ncol=length(bnet$input), dimnames=list(bnet$varnames, names(bnet$input)))
 			for(i in 1:length(bnet$input)) { topores[bnet$input[[i]], names(bnet$input)[i]] <- 1 }
 			## rescale score for each edge to [0, 1] 
-		   score<-bnet$edge.relevance
+		   score <- bnet$edge.relevance
 		   
 			edgerel <- (bnet$edge.relevance + 1) / 2
 			## absent edges are assigned a relevance score of 0
