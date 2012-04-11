@@ -26,9 +26,9 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 		## compute mrmr score for the target genes
 		
 #		if(causal){
-#			local.maxparents <- floor(min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
+#			local.maxparents<-floor(min(max(3*maxparents,0.05*ncol(data)),0.5*(ncol(data))))
 #		}else{
-#			local.maxparents <- maxparents
+#			local.maxparents<-maxparents
 #		}
 		
 		
@@ -78,7 +78,7 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 				########################
 				## determine all triplets X.k-X.j-X.l from these adjecencies
 				########################
-				trip <- (.network2triplets(tmp.adj))
+				trip <- (.network2triplets(tmp.adj,predn[i]))
 				parents <- NULL
 				score.parents <- NULL
 				if(length(trip)>0){
