@@ -10,9 +10,6 @@
 %\VignetteKeywords{predictionet}
 %\VignettePackage{predictionet}
 
-\usepackage{helvet}
-\usepackage[helvet]{sfmath}
-\renewcommand{\familydefault}{\sfdefault}
 \usepackage[american]{babel}
 \usepackage{url}
 \usepackage{hyperref}

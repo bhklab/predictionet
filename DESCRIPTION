@@ -9,6 +9,6 @@ Description: This package contains a set of functions related to network inferen
 Depends: igraph, catnet
 Suggests: network, minet, pgfSweave
 Imports: penalized, RBGL, MASS
-License: Artistic 2.0
+License: Artistic-2.0
 URL: http://compbio.dfci.harvard.edu, http://www.ulb.ac.be/di/mlg
 LazyData: yes
