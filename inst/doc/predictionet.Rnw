@@ -18,6 +18,7 @@
 \usepackage{graphicx}
 \usepackage{authblk}
 \usepackage{wasysym}
+\usepackage{color}
 
 \newcommand{\Rfunction}[1]{{\texttt{#1}}}
 \newcommand{\Robject}[1]{{\texttt{#1}}}
@@ -149,7 +150,6 @@ pn.priors <- pn.priors[sample(1:nrow(pn.priors)), ]
 @
 
 <<tablepriors,echo=TRUE,results=verbatim,eval=TRUE>>=
-## print the first rows of 'pn.priors'
 print(head(pn.priors))
 @
 
