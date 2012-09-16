@@ -53,7 +53,7 @@ myannot <- annot.ras[goi, , drop=FALSE]
 mypriors <- priors.ras[goi, goi, drop=FALSE]
 mydemo <- demo.ras
 ## infer global network from data and priors
-mynet <- netinf(data=mydata, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
+mynet <- netinf2(data=mydata, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
 mynet <- net2pred(net=mynet, data=mydata, method="linear")
 
 ## predict gene expression of the first gene

@@ -902,7 +902,10 @@ xnett <- network(x=topo2, matrix.type="adjacency", directed=TRUE, loops=FALSE, v
 plot.network(x=xnett, displayisolates=TRUE, displaylabels=FALSE, boxed.labels=FALSE, label.pos=0, arrowhead.cex=1.5, vertex.cex=2, vertex.col="royalblue", jitter=FALSE, pad=0.5, edge.col=mycolt, coord=mynetlayout, main="Dataset: jorissen.colon.ras")
 par(def.par)
 @
-\caption{Directed graph representing the topology of the networks inferred from two different datasets, \Robject{expO.colon.ras}  and \Robject{jerissen.colon.ras}. The \textbf{\textcolor{orange}{orange}} edges represent interactions that are both supported by the data and the priors during network inference; the \textbf{\textcolor{red}{red}} edges represent the interactions that are supported only by the gene expression data and inferred in both networks; the \textbf{\textcolor{gray}{gray}} edges represent interactions identified only in one dataset but not the other. }
+\caption{Directed graph representing the topology of the networks inferred from two different datasets, \Robject{expO.colon.ras}  and \Robject{jerissen.colon.ras}. The %\textbf{\textcolor{orange}{orange}} 
+orange edges represent interactions that are both supported by the data and the priors during network inference; the \textbf{\textcolor{red}{red}} edges represent the interactions that are supported only by the gene expression data and inferred in both networks; the 
+%\textbf{\textcolor{gray}{gray}}
+gray edges represent interactions identified only in one dataset but not the other. }
 \label{fig:topo1topo2}
 \end{figure}
 

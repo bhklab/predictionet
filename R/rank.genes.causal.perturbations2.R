@@ -82,13 +82,10 @@ function(priors, data, perturbations, predn, priors.weight, maxparents, causal=T
 				parents <- NULL
 				score.parents <- NULL
 				if(length(trip)>0){
-					if(length(trip)==3){
-						trip <- (t(as.matrix(trip)))
-					}
+
 					########################
 					## compute I(X.k,X.l)-I(X.k,X.l|X.j)
 					########################
-					
 					trip <- as.data.frame(cbind(trip,(.get.ii4triplets.gaussian(data,trip))))
 					########################
 					## remove those triplets for which the outer nodes are connected

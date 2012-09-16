@@ -3,7 +3,7 @@
 ## return the adjacency matrix with the lowest entries being removed such that the network is now acyclic
 'adj.remove.cycles' <- 
 function(adjmat, from, maxlength) {
-	
+pathlength=0	
 	####################
 	## internal functions
 	####################
@@ -32,7 +32,7 @@ function(adjmat, from, maxlength) {
 					for(i in 1:length(ee)) { ## for all children
 						nodest2 <- nodest
 						nodest2[nodix] <- 1
-						adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat, adjmat.mask=adjmat.mask, nodix.from=nodix, nodix=ee[i], nodest=nodest2, pathlength=)
+						adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat, adjmat.mask=adjmat.mask, nodix.from=nodix, nodix=ee[i], nodest=nodest2, pathlength=pathlength+1,maxlength=maxlength)
 					}
 					return(adjmat.mask)
 				} else { return(adjmat.mask) }
@@ -72,7 +72,7 @@ function(adjmat, from, maxlength) {
 	for(i in 1:length(nnix)) {
 		nodest <- rep(0, ncol(adjmat2))
 		names(nodest) <- colnames(adjmat2)
-		adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat2, adjmat.mask=adjmat.mask, nodix.from=-1, nodix=nnix[i], nodest=nodest)
+		adjmat.mask <- .adj.remove.cycles.DFS(adjmat=adjmat2, adjmat.mask=adjmat.mask, nodix.from=-1, nodix=nnix[i], nodest=nodest,pathlength=pathlength,maxlength=maxlength)
 		adjmat2[adjmat.mask] <- 0
 	}
 	return(list("adjmat.acyclic"=adjmat2, "adjmat.removed"=adjmat.mask))

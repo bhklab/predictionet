@@ -91,10 +91,10 @@ print(res$prediction.score.cv)
 ########################
 ## infer a bayesian network network from data and priors
 ## number of fold for cross-validation
-res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, method="bayesnet", nfold=3, seed=54321)
+\dontrun{res <- netinf.cv(data=mydata, categories=3, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, method="bayesnet", nfold=3, seed=54321)}
 
 ## MCC for predictions in cross-validation
-print(res$prediction.score.cv)
+\dontrun{print(res$prediction.score.cv)}
 
 ## export network as a 'gml' file that you can import into Cytoscape
 \dontrun{rr <- netinf2gml(object=res, file="predictionet_bayesnet")}
