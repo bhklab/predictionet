@@ -65,12 +65,15 @@ SEXP mrnet_adapted2(SEXP Rdata, SEXP Rnamat, SEXP Rprior, SEXP Rprior_weight, SE
 		
 	build_mim_subset(mim, data, namat, n, *nsample, ind, *nsample);
 
-	for( unsigned int i=0; i< n; ++i ){
+	
+/*	for( unsigned int i=0; i< n; ++i ){
 		for( unsigned int j=0; j<n; ++j ){ 
 			mim[i*n+j] = (1- (*prior_weight))*mim[i*n+j] + (*prior_weight) * prior[i*n+j];
 		}
 	}
+*/	
 	
+	// initialize res and res_final to threshold (usually something like -1000)
 	for( unsigned int i=0; i< n; ++i ){
 		for( unsigned int j=0; j<n; ++j ){ 
 			res[i*n+j]=*threshold;
@@ -78,9 +81,11 @@ SEXP mrnet_adapted2(SEXP Rdata, SEXP Rnamat, SEXP Rprior, SEXP Rprior_weight, SE
 		}
 	}
 	
+	// outer loop: every variable is target exactly once
 	for(unsigned int i=0; i<n; ++i ) {
-				//init rel and red and select first
 		for( unsigned int j=0; j<n; ++j ) {
+			//first variable to be selected will be that with highest mutual information
+			// init rel and red and select first
 			rel[j]= mim[i*n+j];
 			red[j]=0;
 			if( rel[j] > rel[jmax])
@@ -92,7 +97,10 @@ SEXP mrnet_adapted2(SEXP Rdata, SEXP Rnamat, SEXP Rprior, SEXP Rprior_weight, SE
 			res[jmax*n+i] = score;
 			res[i*n+jmax] = score;
 		}
+		
 		rel[jmax]=-1000; 
+		
+		// redundancy for each variable with the previously selected variable is increased by their MI
 		for(unsigned int l=0; l<n; ++l )  
 			red[l] += mim[l*n+jmax];
 				
@@ -118,6 +126,7 @@ SEXP mrnet_adapted2(SEXP Rdata, SEXP Rnamat, SEXP Rprior, SEXP Rprior_weight, SE
 				if( score < *threshold ) k=n;
 		}
 	}
+
 		// force diagonal to zero
 	for( unsigned int i=0; i< n; ++i ) {
 		for( unsigned int j=0; j<n; ++j ){
@@ -126,6 +135,10 @@ SEXP mrnet_adapted2(SEXP Rdata, SEXP Rnamat, SEXP Rprior, SEXP Rprior_weight, SE
 			}
 		}
 	}
+
+
+
+	double maxmrmr=*threshold;
 	// force symmetry
 	for( unsigned int i=0; i< n; ++i ) {
 		for( unsigned int j=i+1; j<n; ++j ){
@@ -134,9 +147,40 @@ SEXP mrnet_adapted2(SEXP Rdata, SEXP Rnamat, SEXP Rprior, SEXP Rprior_weight, SE
 			}else{
 				res[i*n+j]=res[j*n+i];
 			}
+			if(abs(res[j*n+i])>maxmrmr){
+				maxmrmr=abs(res[j*n+i]);
+			}
 		}
 	}
 
+	//normalize with maximum absolute value
+	for( unsigned int i=0; i< n; ++i ) {
+		for( unsigned int j=i+1; j<n; ++j ){
+			res[i*n+j]=res[i*n+j]/maxmrmr;
+			res[j*n+i]=res[j*n+i]/maxmrmr;
+		}
+	}
+	cout << "normalized mrmr matrix"<<endl;
+	for( unsigned int i=0; i< n; ++i ) {
+		cout << res[i]<< " ";
+	}
+	cout<<endl;
+	for( unsigned int i=0; i< n; ++i ){
+		for( unsigned int j=0; j<n; ++j ){ 
+			res[i*n+j] = (1- (*prior_weight))*res[i*n+j] + (*prior_weight) * prior[i*n+j];
+		}
+	}
+	// force symmetry after prior integration
+/*	for( unsigned int i=0; i< n; ++i ) {
+		for( unsigned int j=i+1; j<n; ++j ){
+			if(res[i*n+j]>res[j*n+i]){
+				res[j*n+i]=res[i*n+j];
+			}else{
+				res[i*n+j]=res[j*n+i];
+			}
+		}
+	}*/
+	
 	//i corresponds to column; j to row in mrmr matrix; for columns which actually should be predicted
 	for(unsigned int j=0; j< *npredn; ++j ) {
 		for(unsigned int i=0; i< n; ++i ) {

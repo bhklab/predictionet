@@ -19,7 +19,7 @@ function(data, triplets, estimator=c("pearson", "spearman", "kendall")) {
 		j <- tmp[2]
 		k <- tmp[3]
 		
-		vec.ci.val[l] <- -1/2 *log10(((1-allcor[i,j]^2)*(1-allcor[i,k]^2)*(1-allcor[j,k]^2))/(1+2*allcor[i,j]*allcor[i,k]*allcor[j,k]-allcor[i,j]^2-allcor[i,k]^2-allcor[j,k]^2))
+		vec.ci.val[l] <- -1/2 *log(((1-allcor[i,j]^2)*(1-allcor[i,k]^2)*(1-allcor[j,k]^2))/(1+2*allcor[i,j]*allcor[i,k]*allcor[j,k]-allcor[i,j]^2-allcor[i,k]^2-allcor[j,k]^2))
 	}
 	return(vec.ci.val)
 }

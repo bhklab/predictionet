@@ -54,7 +54,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 	mynetglobal <- netinf2(data=data, categories=categories, perturbations=perturbations, priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method, ensemble=ensemble, causal=causal)
 	## and the global topology
 	mytopoglobal <- mynetglobal$topology
-#return(mynetglobal)
+
 	## compute folds for cross-validation
 	if (nfold == 1) {
 		k <- 1
@@ -77,7 +77,7 @@ function(data, categories, perturbations, priors, predn, priors.count=TRUE, prio
 		## s.ix contains the indices of the test set
 		
 		## infer network from training data and priors
-#	return(s.ix)
+
 		mynet <- netinf2(data=data[-s.ix, , drop=FALSE], categories=categories, perturbations=perturbations[-s.ix, , drop=FALSE], priors=priors, predn=predn, priors.count=priors.count, priors.weight=priors.weight, maxparents=maxparents, method=method, ensemble=ensemble, ensemble.maxnsol=ensemble.maxnsol, causal=causal, bayesnet.maxcomplexity=bayesnet.maxcomplexity, bayesnet.maxiter=bayesnet.maxiter)
 		mynet <- net2pred(net=mynet, data=data[-s.ix, , drop=FALSE], categories=categories, predn=predn, perturbations=perturbations[-s.ix, , drop=FALSE], method=predmodel)
 		mynets <- c(mynets, list(mynet))
