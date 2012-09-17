@@ -74,7 +74,7 @@ mypert <- pert[ , goi, drop=FALSE]
 ## regression-based network inference
 ########################
 ## infer global network from data and priors
-mynet <- netinf2(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
+mynet <- netinf(data=mydata, perturbations=mypert, priors=mypriors, priors.count=TRUE, priors.weight=0.5, maxparents=3, method="regrnet", seed=54321)
 
 ## plot network topology
 mytopo <- mynet$topology

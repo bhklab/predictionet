@@ -10,7 +10,7 @@
 		tmp.adj <- matrix(0,ncol=ncol(data),nrow=ncol(data), dimnames=list(colnames(data), colnames(data)))
 		tmp.adj[models[1,i],models[2:nrow(models),i]]<-tmp.adj[models[2:nrow(models),i],models[1,i]]<-1
 		
-		trip <- (.network2triplets(tmp.adj,predn[i]))
+		trip <- (.network2triplets(tmp.adj,models[1,i]))
 		
 		if(length(trip)>0){
 			if(length(trip)==3){

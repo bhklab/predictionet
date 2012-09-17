@@ -187,7 +187,7 @@
 ## priors are probabilties that should be rescaled in [-1, 1]
 		   priors <- (priors - 0.5) * 2
 		   }
-		   bnet <- .fit.regrnet.causal(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, priors.weight=priors.weight, causal=causal, seed=seed)
+		   bnet <- .fit.regrnet.causal2(data=data, perturbations=perturbations, priors=priors, predn=predn, maxparents=maxparents, priors.weight=priors.weight, causal=causal, seed=seed)
 
 ## topology
 			topores <- matrix(0, nrow=length(bnet$varnames), ncol=length(bnet$input), dimnames=list(bnet$varnames, names(bnet$input)))
