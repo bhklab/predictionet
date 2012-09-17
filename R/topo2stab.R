@@ -1,8 +1,8 @@
 `.topo2stab` <- function(topo){
 	tmp.topo <- topo
 	tmp.names <- intersect(colnames(topo[[1]]),colnames(topo[[1]]))
-	res <- matrix(0,nc=length(tmp.names),nr=nrow(topo[[1]]),dimnames=list(rownames(topo[[1]]),tmp.names))
-	counts <- rep(0,length(tmp.names))
+	res <- matrix(0,ncol=length(tmp.names),nrow=nrow(topo[[1]]),dimnames=list(rownames(topo[[1]]),tmp.names))
+	counts <- rep(0,ncol=length(tmp.names))
 	names(counts) <- tmp.names
 	
 	for(j in 1:length(tmp.topo)){

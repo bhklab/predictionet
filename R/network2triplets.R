@@ -11,7 +11,7 @@ function(X,target) {
 		cand<-sort(cand)
 		ntrip<-(length(cand)-1)*length(cand)/2
 		if(ntrip>0){
-			trip<-matrix(0,nc=3,nr=ntrip)
+			trip<-matrix(0,ncol=3,nrow=ntrip)
 			trip[,2]<-rep(target,ntrip)
 			cnt<-1
 			to.rm<-NULL

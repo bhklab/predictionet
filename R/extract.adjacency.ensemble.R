@@ -1,6 +1,6 @@
 '.extract.adjacency.ensemble' <- 
 function(data,res.vec,predn) {
-	res <- matrix(0,nc=ncol(data),nr=ncol(data),dimnames=list(colnames(data),colnames(data)))
+	res <- matrix(0,ncol=ncol(data),nrow=ncol(data),dimnames=list(colnames(data),colnames(data)))
 	ind.start <- 1
 	for(i in 1:length(predn)){
 		target <- res.vec[ind.start+1]

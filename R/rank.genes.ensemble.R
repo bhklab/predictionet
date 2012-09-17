@@ -2,7 +2,7 @@
 	
 #	models <- res.ensemble$models
 	mynames <- colnames(data)
-	models.parents <- matrix(Inf,nc=ncol(models),nr=nrow(models))
+	models.parents <- matrix(Inf,ncol=ncol(models),nrow=nrow(models))
 	colnames(models.parents) <- models[1,]
 	
 	mim <- .build2.mim(data,estimator="pearson")

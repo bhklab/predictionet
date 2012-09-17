@@ -24,7 +24,7 @@
 		perturbations <- mypert.ens
 	}
 	
-	res <- matrix(0,nc=ncol(topo),nr=nrow(data),dimnames=list(rownames(data),colnames(topo)))
+	res <- matrix(0,ncol=ncol(topo),nrow=nrow(data),dimnames=list(rownames(data),colnames(topo)))
 	vec.nsamples <- rep(0,ncol(topo))
 	
 	for(i in 1:ncol(topo)){

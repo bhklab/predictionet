@@ -25,7 +25,7 @@ function(topo.coeff, data, perturbations, subset, predn,ensemble=FALSE) {
 	}
 	## variables to predict
 	if(ensemble){
-		perturbations.new <- matrix(FALSE,nr=nrow(data),nc=ncol(topo.coeff))
+		perturbations.new <- matrix(FALSE,nrow=nrow(data),ncol=ncol(topo.coeff))
 		
 		preds <- matrix(NA, nrow=nrow(data), ncol=ncol(topo.coeff))
 		for(i in 1:ncol(preds)){

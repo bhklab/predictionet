@@ -36,35 +36,35 @@ function(object, edge.info, node.info, file="predictionet") {
 	}
 
 	## create igraph object
-	net.igraph <- igraph::graph.adjacency(adjmatrix=net.topo, mode="directed")
+	net.igraph <- igraph0::graph.adjacency(adjmatrix=net.topo, mode="directed")
 	## graph attributes
-	net.igraph <- igraph::set.graph.attribute(graph=net.igraph, name="Source", value=sprintf("predictionet (R) package version %s", sessionInfo(package="predictionet")$otherPkgs[[1]]$Version))
+	net.igraph <- igraph0::set.graph.attribute(graph=net.igraph, name="Source", value=sprintf("predictionet (R) package version %s", sessionInfo(package="predictionet")$otherPkgs[[1]]$Version))
 	## edge attributes
-	ee <- igraph::E(graph=net.igraph)
+	ee <- igraph0::E(graph=net.igraph)
 	## colors for the edges
 	rr <- rep("#000000", length(ee))
-	net.igraph <- igraph::set.edge.attribute(graph=net.igraph, name="color", index=ee, value=rr)
+	net.igraph <- igraph0::set.edge.attribute(graph=net.igraph, name="color", index=ee, value=rr)
 	## edge info
 	if(!missing(edge.info) && ecount(net.igraph) > 0) {
 		for(i in 1:length(edge.info)) {
 			if(!is.null(edge.info[[i]])) {
-				rr <- edge.info[[i]][igraph::get.edges(graph=net.igraph, es=ee)+1]
-				net.igraph <- igraph::set.edge.attribute(graph=net.igraph, name=names(edge.info)[[i]], index=ee, value=rr)
+				rr <- edge.info[[i]][igraph0::get.edges(graph=net.igraph, es=ee)+1]
+				net.igraph <- igraph0::set.edge.attribute(graph=net.igraph, name=names(edge.info)[[i]], index=ee, value=rr)
 			}
 		}
 		ein <- names(edge.info)
 	} else { ein <- NULL }
 	## node attributes
-	vv <- igraph::V(graph=net.igraph)
+	vv <- igraph0::V(graph=net.igraph)
 	## color
 	rr <- rep("#0099ff", length(vv))
-	net.igraph <- igraph::set.vertex.attribute(graph=net.igraph, name="color", index=vv, value=rr)
+	net.igraph <- igraph0::set.vertex.attribute(graph=net.igraph, name="color", index=vv, value=rr)
 	## node info
 	if(!missing(node.info) && vcount(net.igraph) > 0) {
 		for(i in 1:length(node.info)) {
 			if(!is.null(node.info[[i]])) {
 				rr <- node.info[[i]][vv+1]
-				net.igraph <- igraph::set.vertex.attribute(graph=net.igraph, name=names(node.info)[[i]], index=vv, value=rr)
+				net.igraph <- igraph0::set.vertex.attribute(graph=net.igraph, name=names(node.info)[[i]], index=vv, value=rr)
 			}
 		}
 		nin <- names(node.info)

@@ -2,7 +2,7 @@
 	
 #	models<-res.ensemble$models
 	mynames<-colnames(data)
-	models.parents<-matrix(Inf,nc=ncol(models),nr=nrow(models))
+	models.parents<-matrix(Inf,ncol=ncol(models),nrow=nrow(models))
 	colnames(models.parents)<-models[1,]
 	score.causal <- matrix(Inf, nrow=ncol(data), ncol=ncol(data), dimnames=list(colnames(data), colnames(data)))
 	
